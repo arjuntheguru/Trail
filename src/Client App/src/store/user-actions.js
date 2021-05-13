@@ -1,8 +1,9 @@
-import axios from "axios";
 import { tokenConfig } from "../utils/tokenUtility";
 
 import { notifyError, notifySuccess } from '../components/Toast/Toast';
 import { userActions } from "./user-slice";
+
+import API from '../utils/api';
 
 export const registerUser = (userInfo, callback = () => {}) => (dispatch) => {
 
@@ -11,9 +12,9 @@ export const registerUser = (userInfo, callback = () => {}) => (dispatch) => {
     let config = tokenConfig();
 
     const body = JSON.stringify(userInfo);
-    const URL = 'https://localhost:44305/api/users/register';
+    const URL = 'api/users/register';
 
-    axios.post(URL, body, config)
+    API.post(URL, body, config)
         .then((res) => {
 
             dispatch(userActions.register_user_success());
@@ -32,9 +33,9 @@ export const getAdmin = (companyId) => (dispatch) => {
 
     let config = tokenConfig();
 
-    const URL = `https://localhost:44305/api/users/admin/${companyId}`;
+    const URL = `api/users/admin/${companyId}`;
 
-    axios.get(URL, config)
+    API.get(URL, config)
         .then((res) => {
            dispatch(userActions.load_user_success(res.data))
            notifySuccess("Admin loaded successfully");
@@ -51,9 +52,9 @@ export const updateUser = (user) => (dispatch) => {
 
     let config = tokenConfig();
 
-    const URL = `https://localhost:44305/api/users/update`;
+    const URL = `api/users/update`;
 
-    axios.put(URL, user, config)
+    API.put(URL, user, config)
         .then((res) => {
            dispatch(userActions.update_user_success(res.data))
            notifySuccess("User updated successfully");
@@ -70,9 +71,9 @@ export const changePassword = (authenticateModal) => (dispatch) => {
     console.log(authenticateModal)
     let config = tokenConfig();
 
-    const URL = `https://localhost:44305/api/users/changePassword`;
+    const URL = `api/users/changePassword`;
 
-    axios.post(URL, authenticateModal, config)
+    API.post(URL, authenticateModal, config)
     .then((res) => {
        dispatch(userActions.update_user_password_success(res.data))
        notifySuccess("Password updated successfully");

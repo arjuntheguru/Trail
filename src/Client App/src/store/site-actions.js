@@ -1,9 +1,10 @@
-import axios from "axios";
 import { siteActions } from "./site-slice";
 import { tokenConfig } from "../utils/tokenUtility";
 
 import { notifyError, notifySuccess } from '../components/Toast/Toast';
 import { registerUser } from "./user-actions";
+
+import API from '../utils/api';
 
 
 export const addSite = (item, userInfo, callback) => dispatch => {
@@ -12,7 +13,7 @@ export const addSite = (item, userInfo, callback) => dispatch => {
 
     let config = tokenConfig();
 
-    axios.post('https://localhost:44305/api/site', item, config)
+    API.post('api/site', item, config)
         .then(res => {
             dispatch(siteActions.add_site_success(res.data));
             
@@ -34,7 +35,7 @@ export const updateSite = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    axios.put('https://localhost:44305/api/site', item, config)
+    API.put('api/site', item, config)
         .then(res => {
             console.log(res);
             dispatch(siteActions.update_site_sucess(res.data));            
@@ -53,7 +54,7 @@ export const deleteSite = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    axios.patch(`https://localhost:44305/api/site/${item.id}`, config)
+    API.patch(`api/site/${item.id}`, config)
         .then(res => {
             console.log(res);
             dispatch(siteActions.update_site_sucess(res.data));            
@@ -72,7 +73,7 @@ export const getSite = (item = { pageNumber: 1, pageSize: 10 }) => (dispatch) =>
     console.log(item);
     let config = tokenConfig();
 
-    axios.get(`https://localhost:44305/api/site?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
+    API.get(`api/site?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
         .then(res => {
             dispatch(siteActions.load_site_success(res.data));
         })

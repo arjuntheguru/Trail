@@ -1,9 +1,10 @@
-import axios from "axios";
 import { companyActions } from "./company-slice";
 import { tokenConfig } from "../utils/tokenUtility";
 
 import { notifyError, notifySuccess } from '../components/Toast/Toast';
 import { registerUser } from "./user-actions";
+
+import API from '../utils/api';
 
 
 export const addCompany = (item, userInfo, callback) => dispatch => {
@@ -12,7 +13,7 @@ export const addCompany = (item, userInfo, callback) => dispatch => {
 
     let config = tokenConfig();
 
-    axios.post('https://localhost:44305/api/company', item, config)
+    API.post('api/company', item, config)
         .then(res => {
             dispatch(companyActions.add_company_success(res.data));
             
@@ -34,7 +35,7 @@ export const updateCompany = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    axios.put('https://localhost:44305/api/company', item, config)
+    API.put('https://localhost:44305/api/company', item, config)
         .then(res => {
             console.log(res);
             dispatch(companyActions.update_company_sucess(res.data));            
@@ -53,7 +54,7 @@ export const deleteCompany = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    axios.patch(`https://localhost:44305/api/company/${item.id}`, config)
+    API.patch(`https://localhost:44305/api/company/${item.id}`, config)
         .then(res => {
             console.log(res);
             dispatch(companyActions.update_company_sucess(res.data));            
@@ -72,7 +73,7 @@ export const getCompany = (item = { pageNumber: 1, pageSize: 10 }) => (dispatch)
     console.log(item);
     let config = tokenConfig();
 
-    axios.get(`https://localhost:44305/api/company?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
+    API.get(`api/company?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
         .then(res => {
             dispatch(companyActions.load_company_success(res.data));
         })
