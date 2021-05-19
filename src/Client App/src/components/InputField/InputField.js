@@ -4,8 +4,7 @@ import { Col, FormGroup } from 'react-bootstrap'
 import '../../App.css'
 
 export const InputField = ({ label, ...props }) => {
-    const [field, meta] = useField(props);
-    
+    const [field, meta] = useField(props);    
     switch (props.size) {
         case 50:
             return (

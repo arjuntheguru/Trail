@@ -5,7 +5,7 @@ import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
 import { logout } from './../../store/auth-actions';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faBuilding } from '@fortawesome/free-solid-svg-icons'
+import { faBuilding, faStore, faTasks } from '@fortawesome/free-solid-svg-icons'
 
 const Header = () => {
 
@@ -32,6 +32,9 @@ const Header = () => {
                                     <NavDropdown title="Manage" className="text-info" show={show} onToggle={() => {setShow(!show)}}>
                                         <Link to='/company' className='dropdown-item'onClick={()=>{setShow(!show)}}>
                                             <FontAwesomeIcon icon={faBuilding} className="mr-2"/> Company
+                                        </Link>   
+                                        <Link to='/task' className='dropdown-item'onClick={()=>{setShow(!show)}}>
+                                            <FontAwesomeIcon icon={faTasks} className="mr-2"/> Task
                                         </Link>                                       
                                     </NavDropdown>
                                 </>
@@ -40,7 +43,7 @@ const Header = () => {
                                    <Link to='/' className='nav-link text-light'>Home</Link>
                                     <NavDropdown title="Manage" className="text-info" show={show} onToggle={() => {setShow(!show)}}>
                                         <Link to='/site' className='dropdown-item'onClick={()=>{setShow(!show)}}>
-                                            <FontAwesomeIcon icon={faBuilding} className="mr-2"/> Site
+                                            <FontAwesomeIcon icon={faStore} className="mr-2"/> Site
                                         </Link>                                       
                                     </NavDropdown>
                                    </> : '' : ''

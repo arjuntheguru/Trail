@@ -2,12 +2,11 @@ import { siteActions } from "./site-slice";
 import { tokenConfig } from "../utils/tokenUtility";
 
 import { notifyError, notifySuccess } from '../components/Toast/Toast';
-import { registerUser } from "./user-actions";
 
 import API from '../utils/api';
 
 
-export const addSite = (item, userInfo, callback) => dispatch => {
+export const addSite = (item, callback = () => {}) => dispatch => {
 
     dispatch(siteActions.start_loading());
 
@@ -15,10 +14,7 @@ export const addSite = (item, userInfo, callback) => dispatch => {
 
     API.post('api/site', item, config)
         .then(res => {
-            dispatch(siteActions.add_site_success(res.data));
-            
-            userInfo.siteId = res.data.data;
-            dispatch(registerUser(userInfo));
+            dispatch(siteActions.add_site_success(res.data)); 
             callback();
             notifySuccess(res.data.message);           
         })

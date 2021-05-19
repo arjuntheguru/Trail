@@ -12,6 +12,7 @@ import NotFound from './containers/Common/NotFound';
 import SuperAdminRoute from './components/Common/SuperAdminRoute';
 import AdminRoute from './components/Common/AdminRoute';
 import Company from './containers/Company/Index';
+import Task from './containers/Task/Index';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -41,6 +42,7 @@ const App = () => {
           <Switch>
             <Route exact strict path="/" component={Login} />
             <SuperAdminRoute exact strict path ='/company' component={Company}/>
+            <SuperAdminRoute exact strict path ='/task' component={Task}/>
             <AdminRoute exact strict path ='/site' component={Site}/>
             <Route exact strict path="/welcome" component={Welcome} />
             <Route path="*" component={NotFound} />

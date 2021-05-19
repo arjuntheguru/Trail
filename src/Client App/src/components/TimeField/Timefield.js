@@ -1,9 +1,8 @@
 import React from 'react';
 import { ErrorMessage, useField } from 'formik';
 
-export const TimeField = ({...props }) => {
+export const TimeField = ({ ...props }) => {
     const [field, meta] = useField(props);
-    console.log(field)
 
     return (
         <>

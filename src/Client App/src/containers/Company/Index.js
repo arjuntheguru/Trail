@@ -155,7 +155,7 @@ const Company = () => {
                     <h1 className="display-4"> Company </h1>
                 </Col>
                 <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4'  onClick={() => {addHandler()}}>Add Company</Button>
+                    <Button type="button" variant="outline-dark" className='mt-4 float-right'  onClick={() => {addHandler()}}>Add Company</Button>
                 </Col>
             </Row>
             <hr />

@@ -35,6 +35,12 @@ const Site = () => {
             }
         },
         {
+            name: 'isActive', defaultFlex: 0.5, header: 'Active', className:"text-center",
+            render: ({ value }) =>  <div className="text-center"> {value ?            
+                <FontAwesomeIcon icon={faCheck} className="text-success"/>
+             :  <FontAwesomeIcon icon={faTimes} className="text-danger"/>} </div>
+        },
+        {
             header: 'Edit',
             name: 'id',
             defaultFlex: 0.5,
@@ -67,7 +73,8 @@ const Site = () => {
         setShowAddModal(true);
     }
 
-    const editHandler = (data) => {        
+    const editHandler = (data) => {
+        console.log(data)        
         setEditData(data);
         setShowEditModal(true);
     }
@@ -101,7 +108,7 @@ const Site = () => {
                     <h1 className="display-4"> Site </h1>
                 </Col>
                 <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4'  onClick={() => {addHandler()}}>Add Site</Button>
+                    <Button type="button" variant="outline-dark" className='mt-4 float-right'  onClick={() => {addHandler()}}>Add Site</Button>
                 </Col>
             </Row>
             <hr />
