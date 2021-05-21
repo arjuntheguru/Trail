@@ -206,7 +206,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, skip }) => {
                         dispatch(getSite({ pageNumber: pageNumberValue, pageSize: 10 }));
                     };
                     console.log(siteInfo);
-                    // dispatch(addSite(siteInfo, callback));
+                    dispatch(addSite(siteInfo, callback));
                     onClose();                
                     
                 }
