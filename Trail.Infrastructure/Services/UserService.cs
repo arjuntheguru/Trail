@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -12,6 +13,7 @@ using Trail.Application.Common.Filters;
 using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Models.DTO;
+using Trail.Application.Common.Wrappers;
 using Trail.Domain.Entities;
 using Trail.Domain.Settings;
 
@@ -134,6 +136,7 @@ namespace Trail.Infrastructure.Services
                 UserName = user.UserName,
                 Role = user.Role,
                 Email = user.Email,
+                CompanyId = user.CompanyId,
                 Token = tokenHandler.WriteToken(token)
             };
 
@@ -144,6 +147,11 @@ namespace Trail.Infrastructure.Services
         {
             var inputPasswordBytes = GenerateHash(Encoding.UTF8.GetBytes(inputPassword), Convert.FromBase64String(user.Salt), 5, 5);
             return user.Password == Encoding.UTF8.GetString(inputPasswordBytes);
+        }
+
+        public User ChangePasswordWithoutOldPassword(User user, string password)
+        {
+            return UserWithEncryptedPassword(user, password);
         }
 
 

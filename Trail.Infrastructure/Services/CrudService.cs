@@ -35,6 +35,13 @@ namespace Trail.Infrastructure.Services
             return PluralizationProvider.Pluralize(documentType.Name);
         }
 
+        public virtual IEnumerable<TDocument> AsQueryable()
+        {
+            var result = _collection.AsQueryable();
+
+            return result;
+        }
+
         public virtual RecordCount<TDocument> AsQueryable(PaginationFilter filter)
         {
             var result = new RecordCount<TDocument>
@@ -44,6 +51,13 @@ namespace Trail.Infrastructure.Services
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
             };
+
+            return result;
+        }
+
+        public virtual IEnumerable<TDocument> FilterBy(Expression<Func<TDocument, bool>> filterExpression)
+        {
+            var result = _collection.Find(filterExpression).ToEnumerable();
 
             return result;
         }
@@ -122,11 +136,11 @@ namespace Trail.Infrastructure.Services
             return response.Id;
         }
 
-        public virtual async Task<string> ReplaceOneAsync(TDocument document)
+        public virtual async Task<TDocument> ReplaceOneAsync(TDocument document)
         {
             var filter = Builders<TDocument>.Filter.Eq(doc => doc.Id, document.Id);
             var response = await _collection.FindOneAndReplaceAsync(filter, document);
-            return response.Id;
+            return document;
         }
 
         public void DeleteOne(Expression<Func<TDocument, bool>> filterExpression)

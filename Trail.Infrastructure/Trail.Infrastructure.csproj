@@ -14,6 +14,9 @@
     <PackageReference Include="MongoDB.Driver" Version="2.12.1" />    
     <PackageReference Include="PluralizeService.Core" Version="1.2.21070.12" />    
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.20" />
+    <PackageReference Include="Hangfire.Core" Version="1.7.20" />
+    <PackageReference Include="Hangfire.Mongo" Version="0.7.20" />
   </ItemGroup>
 
   <ItemGroup>

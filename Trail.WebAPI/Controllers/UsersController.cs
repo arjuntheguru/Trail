@@ -10,6 +10,9 @@ using Trail.Application.Common.Models;
 using Trail.Domain.Entities;
 using Trail.Domain.Settings;
 using Trail.Infrastructure.Services;
+using Trail.Domain.Enums;
+using Trail.Domain.Common;
+using Trail.Application.Common.Wrappers;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -28,6 +31,7 @@ namespace Trail.WebAPI.Controllers
             _settings = settings.Value;
         }
 
+        
         [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Authenticate(AuthenticateModel model)
@@ -40,7 +44,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(user);
         }
 
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost("register")]
         public IActionResult Create(User user)
         {
@@ -51,5 +55,58 @@ namespace Trail.WebAPI.Controllers
 
             return Ok(createdUser);
         }
+
+        [Authorize]
+        [HttpPost("logout")]        
+        public IActionResult Logout()
+        {
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("admin/{companyId}")]
+        public IActionResult GetAdmin(string companyId)
+        {
+            var admins = _userCrudService.FilterBy(p => p.CompanyId == companyId && p.Role == Role.Admin);
+
+            return Ok(admins);
+        }
+
+        [HttpPost("changePassword")]
+        public async Task<IActionResult> ChangePassword(AuthenticateModel model)
+        {
+            var user = _userCrudService.FindOne(p => p.UserName == model.UserName );
+
+            if (user == null)
+                return BadRequest(new { message = "User does not exist." });
+
+            var updatedUser = _userService.ChangePasswordWithoutOldPassword(user, model.Password);
+
+            var response = await _userCrudService.ReplaceOneAsync(updatedUser);
+
+            return Ok(new Response<User>(response, "Password updated successfully"));
+
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> Update(User user)
+        {
+            var item = await _userCrudService.FindByIdAsync(user.Id);
+
+            if (item == null)
+            {
+                return NotFound(new Response<Company>("Company does not exist"));
+            }
+
+            item.FirstName = user.FirstName;
+            item.LastName = user.LastName;
+            item.UserName = user.UserName;
+            item.Email = user.Email;
+
+            var response = await _userCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<User>(response, "User updated successfully"));
+        }
+        
     }
 }

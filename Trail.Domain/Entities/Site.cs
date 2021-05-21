@@ -11,8 +11,10 @@ namespace Trail.Domain.Entities
     {        
         public string Name { get; set; }
         public string CompanyId { get; set; }
-        public int ScoreCount { get; set; }
-        public int ScoreValue { get; set; }
+        public bool IsActive { get; set; } = true;
+        public int ScoreCount { get; set; } = 0;
+        public int ScoreValue { get; set; } = 0;
+        public Address Address { get; set; }
         public DateTime LastSeen { get; set; } = DateTime.Now;
         public IEnumerable<BuisnessHour> BuisnessHours { get; set; }
     }
@@ -22,7 +24,7 @@ namespace Trail.Domain.Entities
         public SiteValidator()
         {
             RuleFor(p => p.Name).NotEmpty();
-            RuleFor(p => p.CompanyId).NotEmpty();
+            RuleFor(p => p.CompanyId).NotEmpty();            
             RuleForEach(p => p.BuisnessHours).SetValidator(new BuisnessHourValidator());
         }
     }

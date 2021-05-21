@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 namespace Trail.Domain.Enums
 {
     public enum TaskStatus
-    {
+    {        
+        Incomplete = 0,
         Completed = 1,
-        Incomplete = 0
+        LateCompleted = 2
     }
 }

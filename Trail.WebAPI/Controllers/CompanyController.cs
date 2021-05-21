@@ -74,7 +74,25 @@ namespace Trail.WebAPI.Controllers
 
             var response = await _companyCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<string>(response, "Company updated successfully"));
+            return Ok(new Response<Company>(response, "Company updated successfully"));
+
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var item = await _companyCrudService.FindByIdAsync(id);
+
+            if (item == null)
+            {
+                return NotFound(new Response<Company>("Company does not exist"));
+            }
+
+            item.IsActive = false;
+
+            var response = await _companyCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<Company>(response, "Company deleted successfully"));
 
         }
 

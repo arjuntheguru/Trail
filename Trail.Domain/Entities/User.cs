@@ -14,5 +14,6 @@ namespace Trail.Domain.Entities
         public string Password { get; set; }
         public string Salt { get; set; }
         public string Role { get; set; } = Common.Role.User;
+        public string CompanyId { get; set; }
     }
 }

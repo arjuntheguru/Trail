@@ -14,5 +14,6 @@ namespace Trail.Application.Common.Interfaces
         UserDTO Create(User user);
         IEnumerable<User> GetAll(PaginationFilter filter);
         Task<User> GetByUserNameAsync(string userName);
+        User ChangePasswordWithoutOldPassword(User user, string password);
     }
 }

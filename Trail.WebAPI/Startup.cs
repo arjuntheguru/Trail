@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System;
 using System.Text;
 using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
@@ -39,7 +40,7 @@ namespace Trail.WebAPI
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
 
             services.AddSingleton<IDatabaseSettings>(serviceProvider =>
-            serviceProvider.GetRequiredService<IOptions<DatabaseSettings>>().Value);         
+            serviceProvider.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
             services.AddScoped(typeof(ICrudService<>), typeof(CrudService<>));
 
@@ -79,13 +80,13 @@ namespace Trail.WebAPI
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
 
-             services.AddCors(options =>
-            {
-                options.AddPolicy("CorsPolicy",
-                    builder => builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader());
-            });
+            services.AddCors(options =>
+           {
+               options.AddPolicy("CorsPolicy",
+                   builder => builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader());
+           });
 
             var mongoConnection = Configuration.GetConnectionString("HangfireConnection");
             var migrationOptions = new MongoStorageOptions
@@ -94,14 +95,14 @@ namespace Trail.WebAPI
                 {
                     MigrationStrategy = new MigrateMongoMigrationStrategy(),
                     BackupStrategy = new CollectionMongoBackupStrategy()
-                }               
+                }
             };
 
             services.AddHangfire(config =>
             {
-                config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);   
+                config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
                 config.UseSimpleAssemblyNameTypeSerializer();
-                config.UseRecommendedSerializerSettings();               
+                config.UseRecommendedSerializerSettings();
 
                 config.UseMongoStorage(mongoConnection, migrationOptions);
 
@@ -112,7 +113,7 @@ namespace Trail.WebAPI
             services.AddControllers()
                 .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CompanyValidator>())
                 .AddJsonOptions(options =>
-                 options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter())); 
+                 options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter()));
 
             services.AddSwaggerGen(c =>
             {
@@ -123,16 +124,16 @@ namespace Trail.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider provider)
         {
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            if (env.IsDevelopment())
-            {
+            //if (env.IsDevelopment())
+           // {
                 //app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1"));
-            }
+            //}
 
             app.UseHangfireDashboard();
 
@@ -150,6 +151,10 @@ namespace Trail.WebAPI
             {
                 endpoints.MapControllers();
             });
+
+            TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));
+
+            taskManger.RunTasks();
         }
     }
 }

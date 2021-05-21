@@ -8,6 +8,7 @@ namespace Trail.Domain.Entities
         public string Name { get; set; }
         public string RegistrationNo { get; set; }
         public string Email { get; set; }
+        public bool IsActive { get; set; } = true;
         public Address Address { get; set; }
     }
 
@@ -19,6 +20,7 @@ namespace Trail.Domain.Entities
             RuleFor(p => p.RegistrationNo).NotEmpty();
             RuleFor(p => p.Email).EmailAddress();
             RuleFor(p => p.Address).NotNull();
+            RuleFor(p => p.IsActive).NotEmpty();
         }
     }
 }

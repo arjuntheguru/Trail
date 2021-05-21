@@ -73,15 +73,35 @@ namespace Trail.WebAPI.Controllers
 
             if (item == null)
             {
-                return NotFound(new Response<Company>("Site does not exist"));
+                return NotFound(new Response<Site>("Site does not exist"));
             }
 
-            item.Name = site.Name;           
+            item.Name = site.Name;
+            item.Address = site.Address;
             item.BuisnessHours = site.BuisnessHours;
+            item.LastSeen = DateTime.Now;
 
             var response = await _siteCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<string>(response, "Site updated successfully"));
+            return Ok(new Response<Site>(response, "Site updated successfully"));
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var item = await _siteCrudService.FindByIdAsync(id);
+
+            if (item == null)
+            {
+                return NotFound(new Response<Site>("Site does not exist"));
+            }
+
+            item.IsActive = false;
+
+            var response = await _siteCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<Site>(response, "Site deleted successfully"));
+
         }
     }
 }

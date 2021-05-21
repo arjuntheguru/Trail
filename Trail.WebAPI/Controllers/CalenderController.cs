@@ -94,7 +94,7 @@ namespace Trail.WebAPI.Controllers
 
             var response = await _calendarCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<string>(response, "Calendar updated successfully"));
+            return Ok(new Response<Calendar>(response, "Calendar updated successfully"));
         }
     }
 }

@@ -13,7 +13,10 @@ namespace Trail.Application.Common.Interfaces
 {
     public interface ICrudService<TDocument> where TDocument : IBaseEntity
     {
+        IEnumerable<TDocument> AsQueryable();
         RecordCount<TDocument> AsQueryable(PaginationFilter filter);
+
+        IEnumerable<TDocument> FilterBy(Expression<Func<TDocument, bool>> filterExpression);
 
         RecordCount<TDocument> FilterBy(PaginationFilter filter,
             Expression<Func<TDocument, bool>> filterExpression);
@@ -40,7 +43,7 @@ namespace Trail.Application.Common.Interfaces
 
         string ReplaceOne(TDocument document);
 
-        Task<string> ReplaceOneAsync(TDocument document);
+        Task<TDocument> ReplaceOneAsync(TDocument document);
 
         void DeleteOne(Expression<Func<TDocument, bool>> filterExpression);
 

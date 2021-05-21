@@ -82,7 +82,7 @@ namespace Trail.WebAPI.Controllers
 
             var response = await _taskListInfoCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<string>(response, "TaskListInfo updated successfully"));
+            return Ok(new Response<TaskListInfo>(response, "TaskListInfo updated successfully"));
         }
 
         [HttpGet("allocation/{id}")]
@@ -129,16 +129,15 @@ namespace Trail.WebAPI.Controllers
 
             if (item == null)
             {
-                return NotFound(new Response<Company>("TaskAllocation does not exist"));
+                return NotFound(new Response<TaskAllocation>("TaskAllocation does not exist"));
             }
 
             item.TaskFrequency = taskAllocation.TaskFrequency;
-            item.WeeklyRepetition = taskAllocation.WeeklyRepetition;
-            item.MonthlyRepetition = taskAllocation.MonthlyRepetition;
+            item.WeeklyRepetition = taskAllocation.WeeklyRepetition;            
 
             var response = await _taskAllocationCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<string>(response, "TaskAllocation updated successfully"));
+            return Ok(new Response<TaskAllocation>(response, "TaskAllocation updated successfully"));
         }
 
         [HttpDelete("allocation/{id}")]

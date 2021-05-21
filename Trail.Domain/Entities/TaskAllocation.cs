@@ -11,8 +11,8 @@ namespace Trail.Domain.Entities
         public string SiteId { get; set; }
         public string TaskId { get; set; }
         public TaskFrequency TaskFrequency { get; set; }
-        public DayOfWeek WeeklyRepetition { get; set; }
-        public int MonthlyRepetition { get; set; }
+        public DayOfWeek WeeklyRepetition { get; set; }        
+        public TimeSpan DueBy { get; set; }
 
     }
 }
