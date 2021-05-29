@@ -38,19 +38,21 @@ namespace Trail.Infrastructure.Services
             {
                 var task = await _taskListInfoCrudService.FindByIdAsync(taskAllocation.TaskId);
 
-                var taskItems = new List<TaskItem>();
+                var taskItems = new List<TaskItem>();               
 
                 foreach (var taskItem in task.TaskItemInfo)
                 {
                     taskItems.Add(new TaskItem
                     {
+                        Id = Guid.NewGuid().ToString(),
                         Name = taskItem.Name,
                         Status = Domain.Enums.TaskStatus.Incomplete
                     });
-                }
+                }                
 
                 var taskListItem = new TaskList
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Name = task.Name,
                     Description = task.Description,
                     Status = Domain.Enums.TaskStatus.Incomplete,
@@ -61,7 +63,8 @@ namespace Trail.Infrastructure.Services
                         DateTime.Today.Day,
                         taskAllocation.DueBy.Hours,
                         taskAllocation.DueBy.Minutes,
-                        taskAllocation.DueBy.Seconds)
+                        taskAllocation.DueBy.Seconds),
+                    Comments = new List<Comment>()
                 };
 
                 var calendar = await _calendarCrudService.FindOneAsync(p => p.SiteId == taskAllocation.SiteId && p.Date == DateTime.Today);
@@ -106,6 +109,7 @@ namespace Trail.Infrastructure.Services
                     {
                         taskItems.Add(new TaskItem
                         {
+                            Id = Guid.NewGuid().ToString(),
                             Name = taskItem.Name,
                             Status = Domain.Enums.TaskStatus.Incomplete
                         });
@@ -113,6 +117,7 @@ namespace Trail.Infrastructure.Services
 
                     var taskListItem = new TaskList
                     {
+                        Id = Guid.NewGuid().ToString(),
                         Name = task.Name,
                         Description = task.Description,
                         Status = Domain.Enums.TaskStatus.Incomplete,
@@ -123,8 +128,9 @@ namespace Trail.Infrastructure.Services
                             DateTime.Today.Day,
                             taskAllocation.DueBy.Hours,
                             taskAllocation.DueBy.Minutes,
-                            taskAllocation.DueBy.Seconds)
-                    };
+                            taskAllocation.DueBy.Seconds),
+                        Comments = new List<Comment>()
+                };
 
                     var calendar = await _calendarCrudService.FindOneAsync(p => p.SiteId == taskAllocation.SiteId && p.Date == DateTime.Today);
 
