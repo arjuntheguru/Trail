@@ -13,6 +13,8 @@ import SuperAdminRoute from './components/Common/SuperAdminRoute';
 import AdminRoute from './components/Common/AdminRoute';
 import Company from './containers/Company/Index';
 import Task from './containers/Task/Index';
+import Site from './containers/Site/Index';
+import SiteDashboard from './containers/Site/SiteDashboard';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -20,7 +22,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import '@inovua/reactdatagrid-community/base.css';
 import '@inovua/reactdatagrid-community/theme/default-light.css';
 
-import Site from './containers/Site/Index';
+import "react-datepicker/dist/react-datepicker.css";
+
+
 import { Welcome } from './containers/Common/Welcome';
 
 const App = () => {
@@ -44,6 +48,7 @@ const App = () => {
             <SuperAdminRoute exact strict path ='/company' component={Company}/>
             <SuperAdminRoute exact strict path ='/task' component={Task}/>
             <AdminRoute exact strict path ='/site' component={Site}/>
+            <AdminRoute strict path ='/site/:id' component={SiteDashboard}/>
             <Route exact strict path="/welcome" component={Welcome} />
             <Route path="*" component={NotFound} />
           </Switch>          

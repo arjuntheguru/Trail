@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Col, Row, Spinner, Button } from 'react-bootstrap';
 import { getSite } from '../../store/site-actions';
@@ -10,8 +11,10 @@ import { faCheck, faTimes, faEdit, faTrash } from '@fortawesome/free-solid-svg-i
 
 import '../../App.css';
 import EditSite from './EditSite';
-// import DeleteSite from './DeleteSite';
 import AddSite from './AddSite';
+import DeleteSite from './DeleteSite';
+
+import _ from 'lodash';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
@@ -20,25 +23,29 @@ const Site = () => {
 
     const columns = [
 
-        { name: 'name', defaultFlex: 1, header: 'Name' },
-        { name: 'scoreValue', defaultFlex: 1, header: 'Average Score'},
-        { 
+        {
+            name: 'name', defaultFlex: 1, header: 'Name',
+            render: ({ data }) => <Link to={`/site/${data.id}`}>{data.name}</Link>
+
+        },
+        { name: 'scoreValue', defaultFlex: 1, header: 'Average Score' },
+        {
             name: 'lastSeen', defaultFlex: 1, header: 'Last Seen',
-            render: ({value}) => {
+            render: ({ value }) => {
                 let date, time;
-                [ date , time] = value.split('T')        
+                [date, time] = value.split('T')
                 return (
                     <>
-                       <span>{date}</span>
+                        <span>{date}</span>
                     </>
                 )
             }
         },
         {
-            name: 'isActive', defaultFlex: 0.5, header: 'Active', className:"text-center",
-            render: ({ value }) =>  <div className="text-center"> {value ?            
-                <FontAwesomeIcon icon={faCheck} className="text-success"/>
-             :  <FontAwesomeIcon icon={faTimes} className="text-danger"/>} </div>
+            name: 'isActive', defaultFlex: 0.5, header: 'Active', className: "text-center",
+            render: ({ value }) => <div className="text-center"> {value ?
+                <FontAwesomeIcon icon={faCheck} className="text-success" />
+                : <FontAwesomeIcon icon={faTimes} className="text-danger" />} </div>
         },
         {
             header: 'Edit',
@@ -49,36 +56,60 @@ const Site = () => {
                 return (
                     <div className="text-center">
                         <Button variant="dark" size="sm" block onClick={() => editHandler(data)}>
-                            <FontAwesomeIcon icon={faEdit} className="text-light"/>
+                            <FontAwesomeIcon icon={faEdit} className="text-light" />
                         </Button>
                     </div>
                 )
             }
-        } 
-        
+        },
+        {
+
+            header: 'Delete',
+            defaultFlex: 0.5,
+            className: "text-center",
+            render: ({ data }) => {
+                return (
+                    <div className="text-center">
+                        <Button variant="dark" size="sm" block onClick={() => { deleteHandler(data) }}>
+                            <FontAwesomeIcon icon={faTrash} className="text-light" />
+                        </Button>
+                    </div>
+                )
+            }
+
+        }
+
     ];
 
     const { isLoading, siteInfo } = useSelector(state => state.site);
+    const { user } = useSelector(state => state.auth);
     const [skip, setSkip] = useState(0);
 
-    const [showEditModal, setShowEditModal] = useState(false);    
+    const [showEditModal, setShowEditModal] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-    const [editData, setEditData] = useState({});    
+    const [editData, setEditData] = useState({});
+    const [deleteData, setDeleteData] = useState({});
 
     const dispatch = useDispatch();
 
-    const addHandler = () => {        
-        
+    const addHandler = () => {
+
         setShowAddModal(true);
     }
 
     const editHandler = (data) => {
-        console.log(data)        
+        console.log(data)
         setEditData(data);
         setShowEditModal(true);
     }
-    
+
+    const deleteHandler = (data) => {
+
+        setDeleteData(data);
+        setShowDeleteModal(true);
+    }
 
     const addModalCloseHandler = () => {
         setShowAddModal(false);
@@ -86,7 +117,11 @@ const Site = () => {
 
     const editModalCloseHandler = () => {
         setShowEditModal(false);
-    }   
+    }
+
+    const deleteModalCloseHandler = () => {
+        setShowDeleteModal(false);
+    }
 
     const skipChangeHandler = (skipValue) => {
 
@@ -96,10 +131,10 @@ const Site = () => {
     }
 
     useEffect(() => {
-        
-        dispatch(getSite())
 
-    }, [dispatch])
+        dispatch(getSite(user.companyId))
+
+    }, [dispatch, user])
 
     return (
         <div>
@@ -108,16 +143,17 @@ const Site = () => {
                     <h1 className="display-4"> Site </h1>
                 </Col>
                 <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4 float-right'  onClick={() => {addHandler()}}>Add Site</Button>
+                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
                 </Col>
             </Row>
             <hr />
-            <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip}/>
-            {showEditModal ? <EditSite show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}            
+            <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
+            {showEditModal ? <EditSite show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
+            {showDeleteModal ? <DeleteSite show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
             <Row>
                 {
                     !isLoading ?
-                        Object.keys(siteInfo).length !== 0 && siteInfo.constructor === Object
+                        !_.isEmpty(siteInfo)
                             ? <ReactDataGrid
                                 idProperty="id"
                                 style={gridStyle}
@@ -142,7 +178,7 @@ const Site = () => {
         </div>
     )
 
-   
+
 
 };
 

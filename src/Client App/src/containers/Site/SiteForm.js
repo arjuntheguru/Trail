@@ -203,7 +203,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
                     const callback =  () => {
                         const pageNumberValue = (skip / 10) + 1;                   
-                        dispatch(getSite({ pageNumber: pageNumberValue, pageSize: 10 }));
+                        dispatch(getSite(auth.user.companyId, { pageNumber: pageNumberValue, pageSize: 10 }));
                     };
                     console.log(siteInfo);
                     dispatch(addSite(siteInfo, callback));

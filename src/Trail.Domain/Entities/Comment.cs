@@ -5,6 +5,7 @@ namespace Trail.Domain.Entities
 {
     public class Comment
     {
+        public string Id { get; set; }
         public string Description { get; set; }
         public string[] Files { get; set; }
         public DateTime CreatedDate { get; set; }

@@ -51,7 +51,6 @@ const companySlice = createSlice({
                 ...state,
                 isLoading: false,
                 companyInfo: updatedState
-
             }
         },
         error: (state) => {

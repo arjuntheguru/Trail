@@ -19,6 +19,7 @@ using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
 using Trail.Domain.Entities;
 using Trail.Domain.Settings;
+using Trail.Infrastructure.Configuration;
 using Trail.Infrastructure.Services;
 using Trail.WebAPI.Middleware;
 
@@ -128,12 +129,12 @@ namespace Trail.WebAPI
         {
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            if (env.IsDevelopment())
-            {
+            //if (env.IsDevelopment())
+           // {
                 //app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1"));
-            }
+            //}
 
             app.UseHangfireDashboard();
 
@@ -155,6 +156,10 @@ namespace Trail.WebAPI
             TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));
 
             taskManger.RunTasks();
+
+            SeedData seedData = (SeedData)ActivatorUtilities.CreateInstance(provider, typeof(SeedData));
+
+            seedData.Run();
         }
     }
 }

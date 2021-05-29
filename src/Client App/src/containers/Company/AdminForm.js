@@ -92,7 +92,7 @@ const AdminForm = ({ isEdit = false, data = {}, onClose, skip }) => {
             {formik => (
                 <div>
                     <Card className="bg-transparent">
-                        <Card.Header className='bg-dark text-light text-center  '>{!isEdit ? "Add Admin" : "Edit Admin"}</Card.Header>
+                        <Card.Header className='bg-dark text-light text-center'>{!isEdit ? "Add Admin" : "Edit Admin"}</Card.Header>
                         <Form>
                             <Card className='mt-1 bg-transparent'>
                                 <Card.Body>

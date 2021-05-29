@@ -13,7 +13,7 @@ using Trail.Domain.Entities;
 
 namespace Trail.WebAPI.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class SiteController : ApiControllerBase
     {
         private readonly ICrudService<Site> _siteCrudService;
@@ -37,6 +37,17 @@ namespace Trail.WebAPI.Controllers
             var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
+        }
+
+        [HttpGet("id/{id}")]
+        public IActionResult GetById(string id)
+        {
+
+            var record = _siteCrudService.FindById(id);
+
+            var response = new Response<Site>(record, "Site fetched successfully");
+
+            return Ok(response);
         }
 
         [HttpGet("{companyId}")]
@@ -76,12 +87,32 @@ namespace Trail.WebAPI.Controllers
                 return NotFound(new Response<Site>("Site does not exist"));
             }
 
-            item.Name = site.Name;           
+            item.Name = site.Name;
+            item.Address = site.Address;
             item.BuisnessHours = site.BuisnessHours;
+            item.LastSeen = DateTime.Now;
 
             var response = await _siteCrudService.ReplaceOneAsync(item);
 
             return Ok(new Response<Site>(response, "Site updated successfully"));
+        }        
+        
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var item = await _siteCrudService.FindByIdAsync(id);
+
+            if (item == null)
+            {
+                return NotFound(new Response<Site>("Site does not exist"));
+            }
+
+            item.IsActive = false;
+
+            var response = await _siteCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<Site>(response, "Site deleted successfully"));
+
         }
     }
 }

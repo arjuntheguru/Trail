@@ -1,11 +1,8 @@
 import React from 'react';
-import { Modal, Button } from 'react-bootstrap';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons'
 import { deleteCompany } from '../../store/company-actions';
 
 import { useDispatch } from "react-redux";
+import DeleteModal from '../../components/DeleteModal/DeleteModal';
 
 const DeleteCompany = ({ show, onClose, data }) => {
 
@@ -17,28 +14,7 @@ const DeleteCompany = ({ show, onClose, data }) => {
     }
 
     return (
-        <Modal show={show} onHide={onClose} centered size="sm" >
-            {/* <Modal.Header closeButton className="bg-danger text-light">
-                <Modal.Title>{data.name}</Modal.Title>
-            </Modal.Header> */}
-            <Modal.Body className="text-center bgGradient">              
-                    <FontAwesomeIcon icon={faExclamationCircle} size='4x' className="text-danger mt-4" />
-                    <br></br>
-                    <h3 className="mt-3">Are you sure ?</h3>                    
-                    <h5>Do you want to delete <span className="font-weight-bold">"{data.name}"</span> ? </h5>
-                    <br></br>
-                    <div className="m-1">
-                        <Button type="button" variant="danger" className="mx-2" onClick={deleteCompanyHandler}>
-                            Delete
-                        </Button>
-                        <Button variant="primary" className="mx-2" onClick={onClose}>
-                            Cancel
-                        </Button>
-                    </div>
-               
-            </Modal.Body>
-
-        </Modal>
+        <DeleteModal show={show} onClose={onClose} data={data} handler={deleteCompanyHandler}/>
     )
 
 }

@@ -5,8 +5,7 @@ import { notifyError, notifySuccess } from '../components/Toast/Toast';
 
 import API from '../utils/api';
 
-
-export const addSite = (item, callback = () => {}) => dispatch => {
+export const addSite = (item, callback = () => { }) => dispatch => {
 
     dispatch(siteActions.start_loading());
 
@@ -14,9 +13,9 @@ export const addSite = (item, callback = () => {}) => dispatch => {
 
     API.post('api/site', item, config)
         .then(res => {
-            dispatch(siteActions.add_site_success(res.data)); 
+            dispatch(siteActions.add_site_success(res.data));
             callback();
-            notifySuccess(res.data.message);           
+            notifySuccess(res.data.message);
         })
         .catch(err => {
             console.log(err.response.data);
@@ -34,13 +33,13 @@ export const updateSite = (item) => dispatch => {
     API.put('api/site', item, config)
         .then(res => {
             console.log(res);
-            dispatch(siteActions.update_site_sucess(res.data));            
-            notifySuccess("Site updated successfully");           
+            dispatch(siteActions.update_site_sucess(res.data));
+            notifySuccess("Site updated successfully");
         })
         .catch(err => {
             console.log(err.response.data);
             dispatch(siteActions.error());
-            notifyError("Error occured while adding Site");
+            notifyError("Error occured while updating Site");
         })
 };
 
@@ -50,11 +49,11 @@ export const deleteSite = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    API.patch(`api/site/${item.id}`, config)
+    API.patch(`api/site/${item.id}`, {}, config)
         .then(res => {
             console.log(res);
-            dispatch(siteActions.update_site_sucess(res.data));            
-            notifySuccess("Site deleted successfully");           
+            dispatch(siteActions.update_site_sucess(res.data));
+            notifySuccess("Site deleted successfully");
         })
         .catch(err => {
             console.log(err.response.data);
@@ -63,15 +62,33 @@ export const deleteSite = (item) => dispatch => {
         })
 };
 
-export const getSite = (item = { pageNumber: 1, pageSize: 10 }) => (dispatch) => {
+export const getSite = (companyId, item = { pageNumber: 1, pageSize: 10 }) => (dispatch) => {
 
     dispatch(siteActions.start_loading());
     console.log(item);
     let config = tokenConfig();
 
-    API.get(`api/site?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
+    API.get(`api/site/${companyId}?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
         .then(res => {
             dispatch(siteActions.load_site_success(res.data));
+        })
+        .catch(err => {
+            console.log(err.response);
+            dispatch(siteActions.error());
+        });
+};
+
+export const getSiteById = (siteId) => (dispatch) => {
+
+    dispatch(siteActions.start_loading());
+
+    let config = tokenConfig();
+
+    API.get(`api/site/id/${siteId}`, config)
+        .then(res => {
+            const result = { ...res.data, totalRecords: 1 };
+            console.log(result);
+            dispatch(siteActions.load_site_success(result));
         })
         .catch(err => {
             console.log(err.response);

@@ -1,7 +1,7 @@
 import { createSlice, current } from '@reduxjs/toolkit';
 
 const initialState = {
-    isLoading: false,
+    isLoading: false,    
     taskInfo: {}
 }
 
@@ -21,10 +21,16 @@ const taskSlice = createSlice({
             return {
                 ...state,
                 isLoading: false,
-                taskInfo: { data: action.payload.data, count: action.payload.totalRecords }
+                taskInfo: { data: action.payload.data, count: action.payload.totalRecords }                
             }
         },
         add_task_success: (state) => {
+            return {
+                ...state,
+                isLoading: false                
+            }
+        },
+        allocate_task_success: (state) => {
             return {
                 ...state,
                 isLoading: false                

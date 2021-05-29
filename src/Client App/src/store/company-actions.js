@@ -16,11 +16,11 @@ export const addCompany = (item, userInfo, callback) => dispatch => {
     API.post('api/company', item, config)
         .then(res => {
             dispatch(companyActions.add_company_success(res.data));
-            
+
             userInfo.companyId = res.data.data;
             dispatch(registerUser(userInfo));
             callback();
-            notifySuccess(res.data.message);           
+            notifySuccess(res.data.message);
         })
         .catch(err => {
             console.log(err.response.data);
@@ -35,11 +35,11 @@ export const updateCompany = (item) => dispatch => {
 
     let config = tokenConfig();
     console.log(item);
-    API.put('https://localhost:44305/api/company', item, config)
+    API.put('api/company', item, config)
         .then(res => {
             console.log(res);
-            dispatch(companyActions.update_company_sucess(res.data));            
-            notifySuccess("Company updated successfully");           
+            dispatch(companyActions.update_company_sucess(res.data));
+            notifySuccess("Company updated successfully");
         })
         .catch(err => {
             console.log(err.response.data);
@@ -53,17 +53,17 @@ export const deleteCompany = (item) => dispatch => {
     dispatch(companyActions.start_loading());
 
     let config = tokenConfig();
-    console.log(item);
-    API.patch(`https://localhost:44305/api/company/${item.id}`, config)
+    console.log(config);
+    API.patch(`api/company/${item.id}`, {}, config)
         .then(res => {
             console.log(res);
-            dispatch(companyActions.update_company_sucess(res.data));            
-            notifySuccess("Company deleted successfully");           
+            dispatch(companyActions.update_company_sucess(res.data));
+            notifySuccess("Company deleted successfully");
         })
         .catch(err => {
             console.log(err.response.data);
             dispatch(companyActions.error());
-            notifyError("Error occured while adding Company");
+            notifyError("Error occured while deleting Company");
         })
 };
 

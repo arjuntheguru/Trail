@@ -17,10 +17,18 @@ body {
   background: linear-gradient(214deg, rgba(222,238,230,1) 3%, rgba(250,248,248,1) 47%);
 }
 
-.spinner{
+.spinner {
   position: absolute;
   height: 100px;
   width: 100px;
+  top: 50%;
+  left: 50%;
+  margin-left: -50px;
+  margin-top: -50px;
+}
+
+.center {
+  position: absolute;
   top: 50%;
   left: 50%;
   margin-left: -50px;
@@ -32,5 +40,4 @@ body {
   color: #DC3545;
   font-size: .7rem;
 }
-
 

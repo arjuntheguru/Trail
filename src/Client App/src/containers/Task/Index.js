@@ -6,12 +6,14 @@ import { getTask } from '../../store/task-actions';
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTimes, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
 
 import '../../App.css';
 import EditTask from './EditTask';
 // import DeleteTask from './DeleteTask';
 import AddTask from './AddTask';
+
+import _ from 'lodash';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
@@ -99,7 +101,7 @@ const Task = () => {
             <Row>
                 {
                     !isLoading ?
-                        Object.keys(taskInfo).length !== 0 && taskInfo.constructor === Object
+                        !_.isEmpty(taskInfo)
                             ? <ReactDataGrid
                                 idProperty="id"
                                 style={gridStyle}

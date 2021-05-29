@@ -6,7 +6,7 @@ import { InputField } from '../../components/InputField/InputField';
 import { TextArea } from '../../components/TextArea/TextArea';
 import * as Yup from 'yup';
 
-import { Card, Button, Row, Col, Popover, Overlay, OverlayTrigger } from 'react-bootstrap';
+import { Card, Button, Row, Col, Popover, OverlayTrigger } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 

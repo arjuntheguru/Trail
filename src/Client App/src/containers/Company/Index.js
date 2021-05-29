@@ -14,6 +14,8 @@ import DeleteCompany from './DeleteCompany';
 import AddCompany from './AddCompany';
 import ManageAdmin from './ManageAdmin';
 
+import _ from 'lodash';
+
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
 const Company = () => {
@@ -28,10 +30,10 @@ const Company = () => {
             render: ({ value }) => `${value.streetAddress}, ${value.addressLine2}, ${value.city}, ${value.country}`
         },
         {
-            name: 'isActive', defaultFlex: 0.5, header: 'Active', className:"text-center",
-            render: ({ value }) =>  <div className="text-center"> {value ?            
-                <FontAwesomeIcon icon={faCheck} className="text-success"/>
-             :  <FontAwesomeIcon icon={faTimes} className="text-danger"/>} </div>
+            name: 'isActive', defaultFlex: 0.5, header: 'Active', className: "text-center",
+            render: ({ value }) => <div className="text-center"> {value ?
+                <FontAwesomeIcon icon={faCheck} className="text-success" />
+                : <FontAwesomeIcon icon={faTimes} className="text-danger" />} </div>
         },
         {
             header: 'Edit',
@@ -42,7 +44,7 @@ const Company = () => {
                 return (
                     <div className="text-center">
                         <Button variant="dark" size="sm" block onClick={() => editHandler(data)}>
-                            <FontAwesomeIcon icon={faEdit} className="text-light"/>
+                            <FontAwesomeIcon icon={faEdit} className="text-light" />
                         </Button>
                     </div>
                 )
@@ -50,14 +52,14 @@ const Company = () => {
         },
         {
 
-            header: 'Admin',            
+            header: 'Admin',
             defaultFlex: 0.5,
             className: "text-center",
             render: ({ data }) => {
                 return (
                     <div className="text-center">
-                        <Button variant="dark" size="sm" block onClick={() => {adminHandler(data)}}>
-                            <FontAwesomeIcon icon={faUserShield} className="text-light"/>
+                        <Button variant="dark" size="sm" block onClick={() => { adminHandler(data) }}>
+                            <FontAwesomeIcon icon={faUserShield} className="text-light" />
                         </Button>
                     </div>
                 )
@@ -66,14 +68,14 @@ const Company = () => {
         },
         {
 
-            header: 'Delete',            
+            header: 'Delete',
             defaultFlex: 0.5,
             className: "text-center",
             render: ({ data }) => {
                 return (
                     <div className="text-center">
-                        <Button variant="dark" size="sm" block onClick={() => {deleteHandler(data)}}>
-                            <FontAwesomeIcon icon={faTrash} className="text-light"/>
+                        <Button variant="dark" size="sm" block onClick={() => { deleteHandler(data) }}>
+                            <FontAwesomeIcon icon={faTrash} className="text-light" />
                         </Button>
                     </div>
                 )
@@ -96,12 +98,12 @@ const Company = () => {
     const [adminData, setAdminData] = useState({});
 
 
-    const addHandler = () => {        
-        
+    const addHandler = () => {
+
         setShowAddModal(true);
     }
 
-    const editHandler = (data) => {        
+    const editHandler = (data) => {
         setEditData(data);
         setShowEditModal(true);
     }
@@ -113,7 +115,7 @@ const Company = () => {
     }
 
     const adminHandler = (data) => {
-        
+
         setAdminData(data.id);
         setShowAdminModal(true);
     }
@@ -142,7 +144,7 @@ const Company = () => {
     }
 
     useEffect(() => {
-        
+
         dispatch(getCompany())
 
     }, [dispatch])
@@ -155,18 +157,18 @@ const Company = () => {
                     <h1 className="display-4"> Company </h1>
                 </Col>
                 <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4 float-right'  onClick={() => {addHandler()}}>Add Company</Button>
+                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Company</Button>
                 </Col>
             </Row>
             <hr />
-            <AddCompany show={showAddModal} onClose={addModalCloseHandler} skip={skip}/>
+            <AddCompany show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
             {showEditModal ? <EditCompany show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
-            <DeleteCompany show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} />
-            {showAdminModal ? <ManageAdmin show={showAdminModal} onClose={adminModalCloseHandler} data={adminData}/> : ''}
+            {showDeleteModal ? <DeleteCompany show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
+            {showAdminModal ? <ManageAdmin show={showAdminModal} onClose={adminModalCloseHandler} data={adminData} /> : ''}
             <Row>
                 {
                     !isLoading ?
-                        Object.keys(companyInfo).length !== 0 && companyInfo.constructor === Object
+                        !_.isEmpty(companyInfo)
                             ? <ReactDataGrid
                                 idProperty="id"
                                 style={gridStyle}

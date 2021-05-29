@@ -5,15 +5,15 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { login } from "../../store/auth-actions";
 import * as Yup from 'yup';
-import { Container } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { InputField } from '../../components/InputField/InputField';
 import { useHistory } from 'react-router';
 
-const Login = () => {   
+const Login = () => {
 
-    const dispatch = useDispatch();  
-    const history = useHistory();  
-    const auth = useSelector((state) => state.auth);   
+    const dispatch = useDispatch();
+    const history = useHistory();
+    const auth = useSelector((state) => state.auth);
 
     const validate = Yup.object({
         userName: Yup.string()
@@ -21,7 +21,7 @@ const Login = () => {
         password: Yup.string()
             .min(6, 'Must be 6 characters or more')
             .required('Password is required')
-    });    
+    });
 
     return (
         <Formik
@@ -39,33 +39,41 @@ const Login = () => {
 
                 };
 
-                dispatch(login(userInfo, history));                
+                dispatch(login(userInfo, history));
             }}
         >
             {formik => (
                 <Container>
                     <div className="row justify-content-center">
                         <div className="col-6">
+
                             <div
                                 className="card border-secondary mb-3 bgGradient"
                                 style={{ marginTop: "10rem" }}
                             >
-                                <div className="card-header bg-dark text-light text-center lead">Member Login</div>
-                                <Form>
-                                    <div className="card-body">
-                                        <div className="form">                                            
-                                            <InputField label="Username" name="userName" type="text" /> 
-                                            <InputField label="Password" name="password" type="password" />                                                                                      
-                                            <button
-                                                type="submit"
-                                                className="btn btn-outline-success btn-block">                                                
-                                                Login
-                                            </button>
+                                {!auth.isLoading ? <>
+                                    <div className="card-header bg-dark text-light text-center lead">Member Login</div>
+
+                                    <Form>
+                                        <div className="card-body">
+
+                                            <div className="form">
+                                                <InputField label="Username" name="userName" type="text" />
+                                                <InputField label="Password" name="password" type="password" />
+                                                <button
+                                                    type="submit"
+                                                    className="btn btn-outline-success btn-block">
+                                                    Login
+                                        </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </Form>
+                                    </Form>
+                                </>
+                                    : <Spinner animation="border spinner" />}
                             </div>
+
                         </div>
+
                     </div>
                 </Container>
             )}

@@ -4,6 +4,7 @@ import companyRedcuer from './company-slice';
 import userReducer from './user-slice';
 import siteReducer from './site-slice';
 import taskReducer from './task-slice';
+import calendarReducer from './calendar-slice';
 
 const store = configureStore({
     reducer : {
@@ -11,7 +12,8 @@ const store = configureStore({
         company : companyRedcuer,
         user : userReducer,
         site : siteReducer,
-        task : taskReducer
+        task : taskReducer,
+        calendar : calendarReducer
     }
 });
 

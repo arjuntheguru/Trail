@@ -2,11 +2,17 @@ import { authActions } from "./auth-slice";
 import { tokenConfig } from "../utils/tokenUtility";
 import { companyActions } from "./company-slice";
 import { userActions } from "./user-slice";
+import { siteActions } from "./site-slice";
+import { taskActions } from "./task-slice";
+import { calendarActions } from "./calendar-slice";
 
 import { notifyError, notifySuccess } from '../components/Toast/Toast';
 import API from '../utils/api';
 
+
 export const login = (userInfo, history) => dispatch => {
+
+    dispatch(authActions.user_loading());
 
     const config = {
         headers: {
@@ -43,6 +49,9 @@ export const logout = () => (dispatch, getState) => {
             dispatch(authActions.logout_success());
             dispatch(companyActions.reset());
             dispatch(userActions.reset());
+            dispatch(siteActions.reset());
+            dispatch(taskActions.reset());
+            dispatch(calendarActions.reset());
         })
         .catch((err) => {
             console.log(err);
