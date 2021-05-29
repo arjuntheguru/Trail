@@ -19,6 +19,7 @@ using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
 using Trail.Domain.Entities;
 using Trail.Domain.Settings;
+using Trail.Infrastructure.Configuration;
 using Trail.Infrastructure.Services;
 using Trail.WebAPI.Middleware;
 
@@ -155,6 +156,10 @@ namespace Trail.WebAPI
             TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));
 
             taskManger.RunTasks();
+
+            SeedData seedData = (SeedData)ActivatorUtilities.CreateInstance(provider, typeof(SeedData));
+
+            seedData.Run();
         }
     }
 }
