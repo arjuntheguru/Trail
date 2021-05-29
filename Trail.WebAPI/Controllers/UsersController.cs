@@ -88,6 +88,7 @@ namespace Trail.WebAPI.Controllers
 
         }
 
+        [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> Update(User user)
         {
@@ -95,7 +96,7 @@ namespace Trail.WebAPI.Controllers
 
             if (item == null)
             {
-                return NotFound(new Response<Company>("Company does not exist"));
+                return NotFound(new Response<User>("User does not exist"));
             }
 
             item.FirstName = user.FirstName;

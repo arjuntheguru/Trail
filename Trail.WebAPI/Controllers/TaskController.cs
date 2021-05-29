@@ -33,9 +33,11 @@ namespace Trail.WebAPI.Controllers
         [HttpGet]
         public IActionResult GetAll([FromQuery] PaginationFilter filter)
         {
-            var records = _taskListInfoCrudService.AsQueryable(filter);
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), filter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
+            var records = _taskListInfoCrudService.AsQueryable(validFilter);
+
+            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
@@ -50,18 +52,18 @@ namespace Trail.WebAPI.Controllers
                 return NotFound(new Response<TaskListInfo>("Site does not exist"));
             }
 
-            var response = new Response<TaskListInfo>(record, "Tasklist fetched successfully");
+            var response = new Response<TaskListInfo>(record, "Task List fetched successfully");
 
             return Ok(response);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(TaskListInfo taskList)
-        {           
+        {
 
             var id = await _taskListInfoCrudService.InsertOneAsync(taskList);
 
-            var response = new Response<string>(id, "TaskListInfo created successfully");
+            var response = new Response<string>(id, "Task List created successfully");
 
             return Ok(response);
         }
@@ -73,7 +75,7 @@ namespace Trail.WebAPI.Controllers
 
             if (item == null)
             {
-                return NotFound(new Response<TaskListInfo>("TaskListInfo does not exist"));
+                return NotFound(new Response<TaskListInfo>("Task List does not exist"));
             }
 
             item.Name = task.Name;
@@ -82,7 +84,28 @@ namespace Trail.WebAPI.Controllers
 
             var response = await _taskListInfoCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<TaskListInfo>(response, "TaskListInfo updated successfully"));
+            return Ok(new Response<TaskListInfo>(response, "Task List updated successfully"));
+        }
+
+        [HttpGet("unallocated/{siteId}")]
+        public IActionResult GetUnallocatedTask([FromQuery] PaginationFilter filter, string siteId)
+        {
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+
+            var tasks = _taskListInfoCrudService.FilterBy(p => p.Id != null);
+
+            var allocatedTasks = _taskAllocationCrudService.FilterBy(p => p.SiteId == siteId);
+
+            var unallocatedTasksCount = tasks.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id)).ToList().Count;
+
+            var unallocatedTasks = tasks.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id))
+                 .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize);
+
+            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(unallocatedTasks.ToList(), validFilter, unallocatedTasksCount, _uriService, this.Route, Array.Empty<RequestParameter>());
+
+            return Ok(pagedReponse);
+
         }
 
         [HttpGet("allocation/{id}")]
@@ -90,12 +113,12 @@ namespace Trail.WebAPI.Controllers
         {
             var record = _taskAllocationCrudService.FindById(id);
 
-            if(record == null)
+            if (record == null)
             {
-                return NotFound(new Response<TaskAllocation>($"Invalid Id {id}" ));
+                return NotFound(new Response<TaskAllocation>($"Invalid Id {id}"));
             }
 
-            var response = new Response<TaskAllocation>(record, "TaskAllocation fetched successfully");
+            var response = new Response<TaskAllocation>(record, "Task Allocation fetched successfully");
 
             return Ok(response);
         }
@@ -105,7 +128,7 @@ namespace Trail.WebAPI.Controllers
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _taskAllocationCrudService.FilterBy(validFilter, p => p.SiteId == siteId);           
+            var records = _taskAllocationCrudService.FilterBy(validFilter, p => p.SiteId == siteId);
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<TaskAllocation>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
@@ -117,7 +140,7 @@ namespace Trail.WebAPI.Controllers
         {
             var id = await _taskAllocationCrudService.InsertOneAsync(taskAllocation);
 
-            var response = new Response<string>(id, "TaskAllocation created successfully");
+            var response = new Response<string>(id, "Task Allocation created successfully");
 
             return Ok(response);
         }
@@ -129,15 +152,15 @@ namespace Trail.WebAPI.Controllers
 
             if (item == null)
             {
-                return NotFound(new Response<TaskAllocation>("TaskAllocation does not exist"));
+                return NotFound(new Response<TaskAllocation>("Task Allocation does not exist"));
             }
 
             item.TaskFrequency = taskAllocation.TaskFrequency;
-            item.WeeklyRepetition = taskAllocation.WeeklyRepetition;            
+            item.WeeklyRepetition = taskAllocation.WeeklyRepetition;
 
             var response = await _taskAllocationCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<TaskAllocation>(response, "TaskAllocation updated successfully"));
+            return Ok(new Response<TaskAllocation>(response, "Task Allocation updated successfully"));
         }
 
         [HttpDelete("allocation/{id}")]
@@ -145,7 +168,7 @@ namespace Trail.WebAPI.Controllers
         {
             await _taskAllocationCrudService.DeleteOneAsync(p => p.Id == id);
 
-            var response = new Response<string>(id, "TaskAllocation deleted successfully");
+            var response = new Response<string>(id, "Task Allocation deleted successfully");
 
             return Ok(response);
         }

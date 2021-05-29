@@ -12,7 +12,7 @@ using Trail.Domain.Entities;
 
 namespace Trail.WebAPI.Controllers
 {
-    //[Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin")]
     public class CompanyController : ApiControllerBase
     {
         private readonly ICrudService<Company> _companyCrudService;
