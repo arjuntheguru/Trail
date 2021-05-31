@@ -9,6 +9,6 @@ namespace Trail.Domain.Common
         public static string SuperAdmin = "SuperAdmin";
         public static string Admin = "Admin";
         public static string Manager = "Manager";
-        public static string User = "User";
+        public static string Team = "Team";
     }
 }
