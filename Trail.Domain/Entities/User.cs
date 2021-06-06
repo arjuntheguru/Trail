@@ -11,9 +11,11 @@ namespace Trail.Domain.Entities
         public string LastName { get; set; }
         public string Email { get; set; }
         public string UserName { get; set; }
+        public bool IsActive { get; set; } = true;
         public string Password { get; set; }
         public string Salt { get; set; }
         public string Role { get; set; } = Common.Role.Team;
         public string CompanyId { get; set; }
+        public IEnumerable<string> SiteId { get; set; }
     }
 }
