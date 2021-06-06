@@ -13,7 +13,7 @@ using Trail.Domain.Entities;
 
 namespace Trail.WebAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class SiteController : ApiControllerBase
     {
         private readonly ICrudService<Site> _siteCrudService;
@@ -27,6 +27,7 @@ namespace Trail.WebAPI.Controllers
             _uriService = uriService;
         }
 
+        [Authorize(Roles="Admin")]
         [HttpGet]
         public IActionResult GetAll([FromQuery] PaginationFilter filter)
         {
@@ -39,6 +40,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(pagedReponse);
         }
 
+        [Authorize]
         [HttpGet("id/{id}")]
         public IActionResult GetById(string id)
         {
@@ -50,6 +52,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles ="Admin")]
         [HttpGet("{companyId}")]
         public IActionResult GetSitesFromCompanyId([FromQuery] PaginationFilter filter, string companyId)
         {
@@ -67,6 +70,17 @@ namespace Trail.WebAPI.Controllers
             return Ok(pagedReponse);
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpGet("all/{companyId}")]
+        public IActionResult GetSitesFromCompanyIdWithoutPagination(string companyId) 
+        {           
+
+            var records = _siteCrudService.FilterBy(p => p.CompanyId == companyId);            
+
+            return Ok(records.ToList());
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Create(Site site)
         {
@@ -77,6 +91,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles ="Admin,Manager")]
         [HttpPut]
         public async Task<IActionResult> Update(Site site)
         {
@@ -95,8 +110,9 @@ namespace Trail.WebAPI.Controllers
             var response = await _siteCrudService.ReplaceOneAsync(item);
 
             return Ok(new Response<Site>(response, "Site updated successfully"));
-        }        
-        
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{id}")]
         public async Task<IActionResult> Delete(string id)
         {

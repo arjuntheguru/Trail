@@ -13,22 +13,21 @@ using Trail.Infrastructure.Services;
 using Trail.Domain.Enums;
 using Trail.Domain.Common;
 using Trail.Application.Common.Wrappers;
+using Trail.Application.Common.Models.DTO;
 
 namespace Trail.WebAPI.Controllers
 {
     public class UsersController : ApiControllerBase
     {
         private readonly IUserService _userService;
-        private readonly ICrudService<User> _userCrudService;
-        private readonly AppSettings _settings;
+        private readonly ICrudService<User> _userCrudService;        
         public UsersController(
             IUserService userService, 
             ICrudService<User> userCrudService, 
             IOptions<AppSettings> settings)
         {
             _userService = userService;
-            _userCrudService = userCrudService;
-            _settings = settings.Value;
+            _userCrudService = userCrudService;           
         }
 
         
@@ -39,7 +38,10 @@ namespace Trail.WebAPI.Controllers
             var user = _userService.Authenticate(model.UserName, model.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                return BadRequest(new { message = "Username or password is incorrect." });
+
+            if(user.IsActive == false)
+                return BadRequest(new { message = "Your account is locked. Please contact your admin." });
 
             return Ok(user);
         }
@@ -64,14 +66,24 @@ namespace Trail.WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet("admin/{companyId}")]
-        public IActionResult GetAdmin(string companyId)
+        [HttpGet]
+        public IActionResult GetUser([FromQuery] string companyId, string role)
         {
-            var admins = _userCrudService.FilterBy(p => p.CompanyId == companyId && p.Role == Role.Admin);
+            var users = new List<User>();
 
-            return Ok(admins);
+            if (String.IsNullOrWhiteSpace(role))
+            {
+                users = _userCrudService.FilterBy(p => p.CompanyId == companyId).ToList();
+            }
+            else
+            {
+                users = _userCrudService.FilterBy(p => p.CompanyId == companyId && p.Role == role).ToList();
+            }
+
+            return Ok(users);
         }
 
+        [Authorize]
         [HttpPost("changePassword")]
         public async Task<IActionResult> ChangePassword(AuthenticateModel model)
         {
@@ -103,11 +115,32 @@ namespace Trail.WebAPI.Controllers
             item.LastName = user.LastName;
             item.UserName = user.UserName;
             item.Email = user.Email;
+            item.Role = user.Role;
+            item.SiteId = user.SiteId;
 
             var response = await _userCrudService.ReplaceOneAsync(item);
 
             return Ok(new Response<User>(response, "User updated successfully"));
         }
-        
+
+        [Authorize]
+        [HttpPatch]
+        public async Task<IActionResult> ToogleDelete(ToggleDeleteDTO toggleDelete)
+        {
+            var item = await _userCrudService.FindByIdAsync(toggleDelete.Id);
+
+            if (item == null)
+            {
+                return NotFound(new Response<User>("User does not exist"));
+            }
+
+            item.IsActive = toggleDelete.IsActive;
+
+            var response = await _userCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<User>(response, "Operation successfull"));
+
+        }
+
     }
 }
