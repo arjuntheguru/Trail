@@ -134,9 +134,11 @@ namespace Trail.Infrastructure.Services
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 UserName = user.UserName,
+                IsActive = user.IsActive,
                 Role = user.Role,
                 Email = user.Email,
                 CompanyId = user.CompanyId,
+                SiteId = user.SiteId,
                 Token = tokenHandler.WriteToken(token)
             };
 
