@@ -23,26 +23,28 @@ export const registerUser = (userInfo, callback = () => {}) => (dispatch) => {
         })
         .catch((err) => {
             console.log(err);
+            dispatch(userActions.error());
             notifyError("User creation failed");
         });
 };
 
-export const getAdmin = (companyId) => (dispatch) => {
+export const getUser = (companyId, role= '') => (dispatch) => {
 
     dispatch(userActions.start_loading());
 
-    let config = tokenConfig();
+    let config = tokenConfig();    
 
-    const URL = `api/users/admin/${companyId}`;
+    const URL = `api/users?companyId=${companyId}&role=${role}`;
 
     API.get(URL, config)
         .then((res) => {
            dispatch(userActions.load_user_success(res.data))
-           notifySuccess("Admin loaded successfully");
+           notifySuccess("User loaded successfully");
         })
         .catch((err) => {
             console.log(err);
-            notifyError("Failed to load admin");
+            dispatch(userActions.error());
+            notifyError("Failed to load users");
         });
 };
 
@@ -61,6 +63,7 @@ export const updateUser = (user) => (dispatch) => {
         })
         .catch((err) => {   
             console.log(err);
+            dispatch(userActions.error());
             notifyError("Failed to update user");
         });
 };
@@ -80,8 +83,33 @@ export const changePassword = (authenticateModal) => (dispatch) => {
     })
     .catch((err) => {   
         console.log(err);
+        dispatch(userActions.error());
         notifyError("Failed to update password");
     });    
 
+};
+
+export const deleteUser = (item, isActive) => dispatch => {
+
+    dispatch(userActions.start_loading());
+
+    let config = tokenConfig();
+    let toggleDelete = {
+
+        Id : item.id,
+        isActive : isActive
+    }
+    console.log(isActive);
+    API.patch(`api/users`, toggleDelete, config)
+        .then(res => {
+            console.log(res);
+            dispatch(userActions.update_user_success(res.data));
+            notifySuccess(`User ${isActive ? "restored" : "archived"}  successfully`);
+        })
+        .catch(err => {
+            console.log(err.response.data);
+            dispatch(userActions.error());
+            notifyError("Error occured while archiving User");
+        })
 };
 

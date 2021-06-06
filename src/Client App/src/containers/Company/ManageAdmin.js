@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Modal } from 'react-bootstrap';
 
-import { getAdmin } from '../../store/user-actions';
+import { getUser } from '../../store/user-actions';
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 import { Spinner, Button } from 'react-bootstrap';
 
@@ -13,6 +13,9 @@ import '../../App.css';
 import EditAdmin from './EditAdmin';
 import AddAdmin from './AddAdmin';
 import ChangeAdminPassword from './ChangeAdminPassword';
+import { succeeded } from '../../utils/stateStatus';
+
+import _ from 'lodash';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
@@ -39,14 +42,14 @@ const ManageAdmin = ({ show, onClose, data }) => {
             }
         },
         {
-            header: 'Pass',           
+            header: 'Pass',
             defaultFlex: 0.5,
             className: "text-center",
             render: ({ data }) => {
                 return (
                     <div className="text-center">
                         <Button variant="dark" size="sm" block onClick={() => changePasswordHandler(data)} >
-                            <FontAwesomeIcon icon={faKey} className="text-light"  />
+                            <FontAwesomeIcon icon={faKey} className="text-light" />
                         </Button>
                     </div>
                 )
@@ -57,8 +60,8 @@ const ManageAdmin = ({ show, onClose, data }) => {
 
     const dispatch = useDispatch();
 
-    const { isLoading, userInfo } = useSelector(state => state.user)
-    
+    const { status, userInfo } = useSelector(state => state.user)
+
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
@@ -67,7 +70,7 @@ const ManageAdmin = ({ show, onClose, data }) => {
     const [userName, setUserName] = useState('');
 
     const addHandler = () => {
-        
+
         setShowAddModal(true);
     }
 
@@ -77,10 +80,10 @@ const ManageAdmin = ({ show, onClose, data }) => {
         setShowEditModal(true);
     }
 
-    const changePasswordHandler = (data) => {      
-        
+    const changePasswordHandler = (data) => {
+
         setUserName(data.userName);
-        setShowChangePasswordModal(true);        
+        setShowChangePasswordModal(true);
     }
 
     const editModalCloseHandler = () => {
@@ -94,12 +97,12 @@ const ManageAdmin = ({ show, onClose, data }) => {
 
     const changePasswordModalCloseHandler = () => {
         setShowChangePasswordModal(false);
-    }   
+    }
 
 
     useEffect(() => {
 
-        dispatch(getAdmin(data))
+        dispatch(getUser(data, "Admin"))
 
     }, [dispatch, data]);
 
@@ -113,13 +116,13 @@ const ManageAdmin = ({ show, onClose, data }) => {
                 <Modal.Header closeButton={false} className="bg-dark">
                     <Modal.Title className="text-light w-100">
                         Admin
-                    <Button type="button" variant="outline-light" className="float-right" onClick={() => {addHandler()}}>Add Admin</Button>
+                    <Button type="button" variant="outline-light" className="float-right" onClick={() => { addHandler() }}>Add Admin</Button>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="bgGradient" style={{ minHeight: "550px" }}>
                     {
-                        !isLoading ?
-                            userInfo.length > 0
+                        status === succeeded ?
+                            !_.isEmpty(userInfo)
                                 ? <ReactDataGrid
                                     idProperty="id"
                                     style={gridStyle}
@@ -133,7 +136,7 @@ const ManageAdmin = ({ show, onClose, data }) => {
                                     defaultLimit={10}
                                 />
 
-                                : <Spinner animation="border spinner" />
+                                : <h4 className="text-muted center">No Data</h4>
                             : <Spinner animation="border spinner" />
                     }
                 </Modal.Body>

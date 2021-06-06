@@ -15,6 +15,7 @@ import AddSite from './AddSite';
 import DeleteSite from './DeleteSite';
 
 import _ from 'lodash';
+import { idle, succeeded } from '../../utils/stateStatus';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
@@ -81,8 +82,8 @@ const Site = () => {
 
     ];
 
-    const { isLoading, siteInfo } = useSelector(state => state.site);
-    const { user } = useSelector(state => state.auth);
+    const { status, siteInfo, recentGETMethod } = useSelector(state => state.site);
+    const { companyId } = useSelector(state => state.auth.user);
     const [skip, setSkip] = useState(0);
 
     const [showEditModal, setShowEditModal] = useState(false);
@@ -126,15 +127,17 @@ const Site = () => {
     const skipChangeHandler = (skipValue) => {
 
         const pageNumberValue = (skipValue / 10) + 1;
-        dispatch(getSite({ pageNumber: pageNumberValue, pageSize: 10 }))
+        dispatch(getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 }))
         setSkip(skipValue);
     }
 
     useEffect(() => {
-
-        dispatch(getSite(user.companyId))
-
-    }, [dispatch, user])
+        
+        if(status === idle || (status === succeeded && recentGETMethod !== "getSite")) {
+            dispatch(getSite(companyId));     
+        }       
+       
+    }, [dispatch, companyId, status, recentGETMethod])
 
     return (
         <div>
@@ -152,7 +155,7 @@ const Site = () => {
             {showDeleteModal ? <DeleteSite show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
             <Row>
                 {
-                    !isLoading ?
+                    status === succeeded ?
                         !_.isEmpty(siteInfo)
                             ? <ReactDataGrid
                                 idProperty="id"
@@ -171,7 +174,7 @@ const Site = () => {
                                 defaultLimit={10}
                             />
 
-                            : <Spinner animation="border spinner" />
+                            : <h4 className="text-muted center">No Data</h4>
                         : <Spinner animation="border spinner" />
                 }
             </Row>

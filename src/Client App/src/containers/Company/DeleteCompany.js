@@ -14,7 +14,7 @@ const DeleteCompany = ({ show, onClose, data }) => {
     }
 
     return (
-        <DeleteModal show={show} onClose={onClose} data={data} handler={deleteCompanyHandler}/>
+        <DeleteModal show={show} onClose={onClose} data={data.name} handler={deleteCompanyHandler}/>
     )
 
 }

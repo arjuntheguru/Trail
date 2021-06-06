@@ -1,8 +1,12 @@
 import { createSlice, current } from '@reduxjs/toolkit';
+import {idle, loading, succeeded, failed} from '../utils/stateStatus';
 
 const initialState = {
-    isLoading: false,
-    siteInfo: {}
+    
+    status: idle,
+    siteInfo: {},
+    siteById: {},
+    recentGETMethod : null
 }
 
 const siteSlice = createSlice({
@@ -13,21 +17,29 @@ const siteSlice = createSlice({
         start_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status: loading
             }
         },
         load_site_success: (state, action) => {
 
             return {
                 ...state,
-                isLoading: false,
-                siteInfo: { data: action.payload.data, count: action.payload.totalRecords }
+                status: succeeded,
+                siteInfo: { data: action.payload.data, count: action.payload.totalRecords },
+                recentGETMethod : action.payload.method
+            }
+        },
+        load_siteById_success: (state, action) => {
+
+            return {
+                ...state,                
+                siteById : action.payload.data
             }
         },
         add_site_success: (state) => {
             return {
                 ...state,
-                isLoading: false                
+                status: succeeded                
             }
         },
         update_site_sucess: (state, action) => {
@@ -49,7 +61,7 @@ const siteSlice = createSlice({
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 siteInfo: updatedState
 
             }
@@ -57,7 +69,7 @@ const siteSlice = createSlice({
         error: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status: failed
             }
         },
         reset: () => initialState

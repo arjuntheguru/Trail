@@ -5,9 +5,9 @@ import { } from "../../store/user-actions";
 import { InputField } from '../../components/InputField/InputField';
 import * as Yup from 'yup';
 import { Card, Button } from 'react-bootstrap';
-import { registerUser, getAdmin, updateUser } from "../../store/user-actions";
+import { registerUser, getUser, updateUser } from "../../store/user-actions";
 
-const AdminForm = ({ isEdit = false, data = {}, onClose, skip }) => {    
+const AdminForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
     const userInfoValidate = Yup.object({
         firstName: Yup.string()
@@ -71,12 +71,12 @@ const AdminForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
                 if (!isEdit) {
 
-                    const callback =  () => {
-                                          
-                        dispatch(getAdmin(data));
+                    const callback = () => {
+
+                        dispatch(getUser(data, "Admin"));
                     };
-                    
-                    dispatch(registerUser(userInfo, callback))                    
+
+                    dispatch(registerUser(userInfo, callback))
                     console.log(values);
                     onClose();
                 }

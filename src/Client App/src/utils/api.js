@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 export default axios.create({
-  // baseURL: `https://ba911bc7445a.ngrok.io/`
-  baseURL: `https://localhost:44305/`
+  //baseURL: `https://54644e8bab43.ngrok.io`
+  //baseURL: `https://localhost:44305/`
+  baseURL: 'https://localhost:8080'
 });

@@ -28,7 +28,7 @@ const AdminRoute = ({ component: Component, ...rest }) => {
                 checkAuth() === true ? (
                     <Component {...props} />
                 ) : (
-                    <Redirect to="/" />
+                    <Redirect to="/NotFound" />
                 )
             }
         />

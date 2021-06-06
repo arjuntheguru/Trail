@@ -17,7 +17,7 @@ using MongoDB.Driver;
 
 namespace Trail.WebAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CalendarController : ApiControllerBase
     {
         private readonly ICrudService<Calendar> _calendarCrudService;

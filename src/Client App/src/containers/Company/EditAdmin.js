@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 import AdminForm from './AdminForm';
 
-const EditCompany = ({ show, onClose, data }) => {
+const EditAdmin = ({ show, onClose, data }) => {
 
     return (
         <Modal show={show} onHide={onClose} centered size="lg" className="bg-transparent">
@@ -12,4 +12,4 @@ const EditCompany = ({ show, onClose, data }) => {
 
 }
 
-export default EditCompany;
+export default EditAdmin;

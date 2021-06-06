@@ -1,10 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
+import {idle, loading, succeeded, failed} from '../utils/stateStatus';
 
 const initialState = {
-    isLoading: false,
+    status : idle,
     calendarInfo: {
-        data: {},
-        isLoaded: false
+        data: {}       
     }
 }
 
@@ -16,18 +16,17 @@ const calendarSlice = createSlice({
         start_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status: loading
             }
         },
         update_calendar_success: (state, action) => {
 
             return {
                 ...state,
-                isLoading: false,
+                status : succeeded,
                 calendarInfo: {
                     ...state.calendarInfo,
-                    data: action.payload.data,
-                    isLoaded: true
+                    data: action.payload.data               
                 }
             }
         },
@@ -35,18 +34,17 @@ const calendarSlice = createSlice({
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 calendarInfo: {
                     ...state.calendarInfo,
-                    data: action.payload.data,
-                    isLoaded: true
+                    data: action.payload.data                   
                 }
             }
         },        
         error: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status: failed
             }
         },
         reset: () => initialState

@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import {idle, loading, succeeded} from '../utils/stateStatus';
 
 const authSlice = createSlice({
     name: 'auth',
@@ -6,21 +7,22 @@ const authSlice = createSlice({
         token: localStorage.getItem('token'),
         isAuthenticated: false,
         user: JSON.parse(localStorage.getItem("user")),
-        isLoading: false
+        status: idle,
+        error:''
     },
     reducers: {
         user_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status : loading
             }
         },
         user_loaded: (state, action) => {
             return {
                 ...state,
                 isAuthenticated: true,
-                isLoading: false,
-                user: action.payload,
+                status : succeeded,
+                user: action.payload
             };
         },
         login_success: (state, action) => {
@@ -33,10 +35,11 @@ const authSlice = createSlice({
                 token: action.payload.token,
                 user: action.payload,
                 isAuthenticated: true,
-                isLoading: false
+                status: succeeded,
+                error: ''
             }
         },
-        login_fail: (state) => {
+        login_fail: (state, action) => {
 
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -46,7 +49,8 @@ const authSlice = createSlice({
                 token: null,
                 user: null,
                 isAuthenticated: false,
-                isLoading: false
+                status : idle,
+                error: action.payload
             }
         },
         logout_success: (state) => {
@@ -59,7 +63,7 @@ const authSlice = createSlice({
                 token: null,
                 user: null,
                 isAuthenticated: false,
-                isLoading: false
+                status: idle
             }
         }
 

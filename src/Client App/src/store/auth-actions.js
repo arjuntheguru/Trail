@@ -32,9 +32,9 @@ export const login = (userInfo, history) => dispatch => {
             }
         })
         .catch((err) => {
-            console.log(err);
-            dispatch(authActions.login_fail());
-            notifyError("Login failed");
+            console.log(err.response);
+            dispatch(authActions.login_fail(err.response.data.message));
+            notifyError(err.response.data.message);
         });
 
 }
@@ -46,6 +46,7 @@ export const logout = () => (dispatch, getState) => {
     const URL = "api/users/logout";
     API.post(URL, null, config)
         .then((res) => {
+            
             dispatch(authActions.logout_success());
             dispatch(companyActions.reset());
             dispatch(userActions.reset());
@@ -68,7 +69,7 @@ export const loadUser = () => (dispatch, getState) => {
         const userInfo = JSON.parse(localStorage.getItem("user"));
         dispatch(authActions.user_loaded(userInfo));
     } else {
-        dispatch(authActions.login_fail());
+        dispatch(authActions.login_fail("No user is logged in"));
     }
 };
 

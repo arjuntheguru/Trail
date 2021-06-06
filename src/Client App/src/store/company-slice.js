@@ -1,7 +1,8 @@
 import { createSlice, current } from '@reduxjs/toolkit';
+import {idle, loading, succeeded, failed} from '../utils/stateStatus';
 
 const initialState = {
-    isLoading: false,
+    status : idle,
     companyInfo: {}
 }
 
@@ -13,21 +14,21 @@ const companySlice = createSlice({
         start_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status : loading
             }
         },
         load_company_success: (state, action) => {
 
             return {
                 ...state,
-                isLoading: false,
+                status : succeeded,
                 companyInfo: { data: action.payload.data, count: action.payload.totalRecords }
             }
         },
         add_company_success: (state) => {
             return {
                 ...state,
-                isLoading: false                
+                status : succeeded                
             }
         },
         update_company_sucess: (state, action) => {
@@ -49,14 +50,14 @@ const companySlice = createSlice({
 
             return {
                 ...state,
-                isLoading: false,
+                status : succeeded,
                 companyInfo: updatedState
             }
         },
         error: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status : failed 
             }
         },
         reset: () => initialState

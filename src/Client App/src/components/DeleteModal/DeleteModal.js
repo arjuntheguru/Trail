@@ -15,11 +15,11 @@ const DeleteModal = ({show, onClose, data, handler}) => {
                     <FontAwesomeIcon icon={faExclamationCircle} size='4x' className="text-danger mt-4" />
                     <br></br>
                     <h3 className="mt-3">Are you sure ?</h3>                    
-                    <h5>Do you want to delete <span className="font-weight-bold">"{data.name}"</span> ? </h5>
+                    <h5>Do you want to archive <span className="font-weight-bold">"{data}"</span> ? </h5>
                     <br></br>
                     <div className="m-1">
                         <Button type="button" variant="danger" className="mx-2" onClick={handler}>
-                            Delete
+                            Archive
                         </Button>
                         <Button variant="primary" className="mx-2" onClick={onClose}>
                             Cancel

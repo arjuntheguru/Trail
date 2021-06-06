@@ -16,6 +16,8 @@ import ManageAdmin from './ManageAdmin';
 
 import _ from 'lodash';
 
+import { idle, succeeded } from '../../utils/stateStatus';
+
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
 const Company = () => {
@@ -86,7 +88,7 @@ const Company = () => {
 
     const dispatch = useDispatch();
 
-    const { isLoading, companyInfo } = useSelector(state => state.company);
+    const { status, companyInfo } = useSelector(state => state.company);
     const [skip, setSkip] = useState(0);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -145,9 +147,13 @@ const Company = () => {
 
     useEffect(() => {
 
-        dispatch(getCompany())
+        if(status === idle)
+        {
+            dispatch(getCompany())
+        }
+        
 
-    }, [dispatch])
+    }, [dispatch, status])
 
 
     return (
@@ -167,7 +173,7 @@ const Company = () => {
             {showAdminModal ? <ManageAdmin show={showAdminModal} onClose={adminModalCloseHandler} data={adminData} /> : ''}
             <Row>
                 {
-                    !isLoading ?
+                    status === succeeded ?
                         !_.isEmpty(companyInfo)
                             ? <ReactDataGrid
                                 idProperty="id"
@@ -186,7 +192,7 @@ const Company = () => {
                                 defaultLimit={10}
                             />
 
-                            : <Spinner animation="border spinner" />
+                            : <h4 className="blockquote center">No Data</h4>
                         : <Spinner animation="border spinner" />
                 }
             </Row>

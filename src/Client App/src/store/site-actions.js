@@ -64,13 +64,12 @@ export const deleteSite = (item) => dispatch => {
 
 export const getSite = (companyId, item = { pageNumber: 1, pageSize: 10 }) => (dispatch) => {
 
-    dispatch(siteActions.start_loading());
-    console.log(item);
-    let config = tokenConfig();
-
+    dispatch(siteActions.start_loading());    
+    let config = tokenConfig();    
     API.get(`api/site/${companyId}?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
         .then(res => {
-            dispatch(siteActions.load_site_success(res.data));
+            dispatch(siteActions.load_site_success({...res.data, method : "getSite"}));
+            notifySuccess("Site loaded successfully")
         })
         .catch(err => {
             console.log(err.response);
@@ -78,17 +77,28 @@ export const getSite = (companyId, item = { pageNumber: 1, pageSize: 10 }) => (d
         });
 };
 
-export const getSiteById = (siteId) => (dispatch) => {
+export const getSiteWithoutPagination = (companyId) => (dispatch) => {
 
-    dispatch(siteActions.start_loading());
+    dispatch(siteActions.start_loading());    
+    let config = tokenConfig();    
+    API.get(`api/site/all/${companyId}`, config)
+        .then(res => {
+            dispatch(siteActions.load_site_success({data: res.data, totalRecords:0, method: "getSiteWithoutPagination" }));
+            notifySuccess("Site loaded successfully")
+        })
+        .catch(err => {
+            console.log(err.response);
+            dispatch(siteActions.error());
+        });
+};
+
+export const getSiteById = (siteId) => (dispatch) => {    
 
     let config = tokenConfig();
 
     API.get(`api/site/id/${siteId}`, config)
-        .then(res => {
-            const result = { ...res.data, totalRecords: 1 };
-            console.log(result);
-            dispatch(siteActions.load_site_success(result));
+        .then(res => {            
+            dispatch(siteActions.load_siteById_success(res.data));
         })
         .catch(err => {
             console.log(err.response);

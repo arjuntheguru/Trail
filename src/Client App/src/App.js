@@ -14,7 +14,8 @@ import AdminRoute from './components/Common/AdminRoute';
 import Company from './containers/Company/Index';
 import Task from './containers/Task/Index';
 import Site from './containers/Site/Index';
-import SiteDashboard from './containers/Site/SiteDashboard';
+import ManageTask from './containers/Site/ManageTask';
+import ManageUser from './containers/Users/ManageUser';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -26,38 +27,40 @@ import "react-datepicker/dist/react-datepicker.css";
 
 
 import { Welcome } from './containers/Common/Welcome';
+import CustomTaskRoute from './components/Common/CustomTaskRoute';
 
 const App = () => {
 
-  const dispatch = useDispatch(); 
+  const dispatch = useDispatch();
 
   useEffect(() => {
 
     dispatch(loadUser())
 
-  }, [dispatch]) 
+  }, [dispatch])
 
   return (
     <Router>
       <Fragment>
         <Header />
-        <ToastContainer/> 
+        <ToastContainer />
         <main role="main" className="container pb-3">
           <Switch>
             <Route exact strict path="/" component={Login} />
-            <SuperAdminRoute exact strict path ='/company' component={Company}/>
-            <SuperAdminRoute exact strict path ='/task' component={Task}/>
-            <AdminRoute exact strict path ='/site' component={Site}/>
-            <AdminRoute strict path ='/site/:id' component={SiteDashboard}/>
+            <SuperAdminRoute exact strict path='/company' component={Company} />
+            <SuperAdminRoute exact strict path='/task' component={Task} />
+            <AdminRoute exact strict path='/site' component={Site} />
+            <CustomTaskRoute strict path='/site/:id' component={ManageTask} />
+            <AdminRoute strict path='/users' component={ManageUser} />
             <Route exact strict path="/welcome" component={Welcome} />
             <Route path="*" component={NotFound} />
-          </Switch>          
+          </Switch>
         </main>
         <footer className="border-top fixed-bottom bg-dark text-center text-light p-2">
-        <div className="container">
+          <div className="container">
             &copy; 2021 - Dailo Technologies
         </div>
-    </footer>
+        </footer>
       </Fragment>
     </Router>
   );

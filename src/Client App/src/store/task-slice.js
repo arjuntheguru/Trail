@@ -1,7 +1,8 @@
 import { createSlice, current } from '@reduxjs/toolkit';
+import {idle, loading, succeeded, failed} from '../utils/stateStatus';
 
 const initialState = {
-    isLoading: false,    
+    status: idle,    
     taskInfo: {}
 }
 
@@ -13,27 +14,27 @@ const taskSlice = createSlice({
         start_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status: loading
             }
         },
         load_task_success: (state, action) => {
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 taskInfo: { data: action.payload.data, count: action.payload.totalRecords }                
             }
         },
         add_task_success: (state) => {
             return {
                 ...state,
-                isLoading: false                
+                status: succeeded                
             }
         },
         allocate_task_success: (state) => {
             return {
                 ...state,
-                isLoading: false                
+                status: succeeded                
             }
         },
         update_task_sucess: (state, action) => {
@@ -55,15 +56,16 @@ const taskSlice = createSlice({
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 taskInfo: updatedState
 
             }
         },
         error: (state) => {
+            
             return {
                 ...state,
-                isLoading: false
+                status: failed
             }
         },
         reset: () => initialState

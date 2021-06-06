@@ -1,7 +1,8 @@
 import { createSlice, current } from '@reduxjs/toolkit';
+import {idle, loading, succeeded, failed} from '../utils/stateStatus';
 
 const initialState = {
-    isLoading: true,
+    status: idle,
     userInfo: {}
 }
 
@@ -13,21 +14,21 @@ const userSlice = createSlice({
         start_loading: (state) => {
             return {
                 ...state,
-                isLoading: true
+                status: loading
             }
         },
         load_user_success: (state, action) => {
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 userInfo: action.payload
             }
         },
         register_user_success: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status: succeeded
             }
         },
         update_user_success: (state, action) => {
@@ -43,7 +44,7 @@ const userSlice = createSlice({
 
             return {
                 ...state,
-                isLoading: false,
+                status: succeeded,
                 userInfo: temp
 
             }
@@ -51,13 +52,13 @@ const userSlice = createSlice({
         update_user_password_success: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status: succeeded
             }
         },
         error: (state) => {
             return {
                 ...state,
-                isLoading: false
+                status: failed
             }
         },
         reset: () => initialState
