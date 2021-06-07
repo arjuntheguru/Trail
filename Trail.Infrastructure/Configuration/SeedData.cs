@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Trail.Application.Common.Interfaces;
 using Trail.Domain.Common;
@@ -24,7 +25,7 @@ namespace Trail.Infrastructure.Configuration
 
         private void AddSuperAdmin()
         {
-            var user = _userCrudService.FilterBy(p => p.Role == Role.SuperAdmin);
+            var user = _userCrudService.FilterBy(p => p.Role == Role.SuperAdmin).SingleOrDefault();
 
             if (user == null)
             {
