@@ -10,6 +10,7 @@ namespace Trail.Domain.Entities
     {
         public string Name { get; set; }
         public string Description { get; set; }
+        public string CompanyId { get; set; }
         public IEnumerable<TaskItemInfo> TaskItemInfo { get; set; }
     }
 
