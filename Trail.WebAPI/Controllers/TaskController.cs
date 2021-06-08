@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Trail.Application.Common.Filters;
 using Trail.Application.Common.Helpers;
@@ -17,45 +18,62 @@ namespace Trail.WebAPI.Controllers
     public class TaskController : ApiControllerBase
     {
         private readonly ICrudService<TaskListInfo> _taskListInfoCrudService;
+        private readonly ICrudService<User> _userCrudService;
         private readonly ICrudService<TaskAllocation> _taskAllocationCrudService;
         private readonly IUriService _uriService;
 
         public TaskController(
             ICrudService<TaskListInfo> taskListCrudService,
             ICrudService<TaskAllocation> taskAllocationCrudService,
+            ICrudService<User> userCrudService,
             IUriService uriService)
         {
             _taskListInfoCrudService = taskListCrudService;
             _taskAllocationCrudService = taskAllocationCrudService;
+            _userCrudService = userCrudService;
             _uriService = uriService;
         }
-
+        
+        [Authorize(Roles ="SuperAdmin")]
         [HttpGet]
         public IActionResult GetAll([FromQuery] PaginationFilter filter)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _taskListInfoCrudService.AsQueryable(validFilter);
+            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == null);
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(string id)
+        [Authorize(Roles = "Admin")]
+        [HttpGet("{companyId}")]
+        public IActionResult GetTaskFromCompanyId([FromQuery] PaginationFilter filter, string companyId)
         {
-            var record = _taskListInfoCrudService.FindById(id);
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            if (record == null)
-            {
-                return NotFound(new Response<TaskListInfo>("Site does not exist"));
-            }
+            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == companyId);
 
-            var response = new Response<TaskListInfo>(record, "Task List fetched successfully");
+            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
-            return Ok(response);
+            return Ok(pagedReponse);
         }
+
+        //[HttpGet("{id}")]
+        //public IActionResult GetById(string id)
+        //{
+        //    var record = _taskListInfoCrudService.FindById(id);
+
+        //    if (record == null)
+        //    {
+        //        return NotFound(new Response<TaskListInfo>("Site does not exist"));
+        //    }
+
+        //    var response = new Response<TaskListInfo>(record, "Task List fetched successfully");
+
+        //    return Ok(response);
+        //}
 
         [HttpPost]
         public async Task<IActionResult> Create(TaskListInfo taskList)
@@ -88,17 +106,22 @@ namespace Trail.WebAPI.Controllers
         }
 
         [HttpGet("unallocated/{siteId}")]
-        public IActionResult GetUnallocatedTask([FromQuery] PaginationFilter filter, string siteId)
+        public async Task<IActionResult> GetUnallocatedTask([FromQuery] PaginationFilter filter, string siteId)
         {
+            var userId = User.FindFirstValue("UserName");
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var tasks = _taskListInfoCrudService.FilterBy(p => p.Id != null);
+            var defaultTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == null);
+            var customTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == user.CompanyId);
+            var finalTaskList = defaultTasks.Concat(customTasks);
 
             var allocatedTasks = _taskAllocationCrudService.FilterBy(p => p.SiteId == siteId);
 
-            var unallocatedTasksCount = tasks.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id)).ToList().Count;
+            var unallocatedTasksCount = finalTaskList.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id)).ToList().Count;
 
-            var unallocatedTasks = tasks.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id))
+            var unallocatedTasks = finalTaskList.Where(p => !allocatedTasks.Select(s => s.TaskId).Contains(p.Id))
                  .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                 .Take(validFilter.PageSize);
 
