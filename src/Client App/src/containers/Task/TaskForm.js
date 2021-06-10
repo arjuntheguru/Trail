@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Formik, Form, FieldArray } from 'formik';
+import { Formik, Form, FieldArray, Field } from 'formik';
 import { useDispatch } from "react-redux";
-import { addTask, getTask, updateTask } from "../../store/task-actions";
+import { addTask, getTask, updateTask, getTaskFromCompanyId } from "../../store/task-actions";
 import { InputField } from '../../components/InputField/InputField';
 import { TextArea } from '../../components/TextArea/TextArea';
 import * as Yup from 'yup';
@@ -10,13 +10,17 @@ import { Card, Button, Row, Col, Popover, OverlayTrigger } from 'react-bootstrap
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 
+import { returnLoggedInUser } from '../../store/auth-actions';
+
 
 const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
     const initialValues = {
         id: '',
         name: '',
+        companyId: null,
         description: '',
+        taskType: 'checkList',
         taskItemInfo: [
             { name: '' }
         ]
@@ -26,13 +30,25 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
         id: data.id,
         name: data.name,
         description: data.description,
+        companyId: data.companyId,
         taskItemInfo: data.taskItemInfo
     }
 
     const [showPopover, setShowPopover] = useState(false)
+    const [isCheckList, setisCheckList] = useState(true);
+
+    const radioValueChangeHandler = (e) => {
+        console.log(e)
+        if (e.target.defaultValue === "checkList") {
+            setisCheckList(true)
+        }
+        else {
+            setisCheckList(false)
+        }
+    }
 
     const popover = (
-        <Popover id="popover-basic">            
+        <Popover id="popover-basic">
             <Popover.Content>
                 Atleast <strong>one</strong> item is required.
           </Popover.Content>
@@ -42,7 +58,7 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
     const taskInfoValidate = Yup.object().shape({
         name: Yup.string()
-            .max(15, 'Must be 15 characters or less')
+            .max(50, 'Must be 15 characters or less')
             .required('Name is required'),
         description: Yup.string()
             .required('Description is required'),
@@ -55,7 +71,9 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
     const dispatch = useDispatch();
 
-    const addTaskItemHandler = (values, setValues, setTouched) => {        
+    const user = dispatch(returnLoggedInUser());
+
+    const addTaskItemHandler = (values, setValues, setTouched) => {
         const taskItemInfo = [...values.taskItemInfo]
         setTouched({})
         taskItemInfo.push({ name: '' });
@@ -66,11 +84,11 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
     const deleteTaskHandler = (e, values, setValues, setTouched, name) => {
 
         const taskItemInfo = [...values.taskItemInfo]
-        const index = parseInt(e.currentTarget.dataset.index)           
+        const index = parseInt(e.currentTarget.dataset.index)
 
         if (taskItemInfo.length > 1) {
             taskItemInfo.splice(index, 1)
-            setValues({ ...values, taskItemInfo });                
+            setValues({ ...values, taskItemInfo });
             setShowPopover(false)
             setTouched({})
         }
@@ -91,7 +109,8 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
                     Id: values.id,
                     Name: values.name,
                     Description: values.description,
-                    TaskItemInfo : values.taskItemInfo
+                    CompanyId: user.role === "Admin" ? user.companyId : null,
+                    TaskItemInfo: values.taskItemInfo
 
                 };
 
@@ -99,7 +118,10 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
 
                     const callback = () => {
                         const pageNumberValue = (skip / 10) + 1;
-                        dispatch(getTask({ pageNumber: pageNumberValue, pageSize: 10 }));
+                        user.role === "SuperAdmin" ?
+                            dispatch(getTask({ pageNumber: pageNumberValue, pageSize: 10 })) :
+                            dispatch(getTaskFromCompanyId(user.companyId, { pageNumber: pageNumberValue, pageSize: 10 }))
+
                     };
                     console.log(values);
                     dispatch(addTask(taskInfo, callback));
@@ -121,8 +143,17 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
                             <Card.Body className='card-body'>
                                 <InputField label="Name" name="name" type="text" />
                                 <TextArea label="Description" name="description" />
+                                {/* <div role="group" onChange={e => radioValueChangeHandler(e)}>
+                                    <label className="mr-3">Task Type : </label>
+                                    <label className="mr-3">
+                                        <Field type="radio" name="taskType" value="checkList" /> Checklist
+                                    </label>
+                                    <label className="mr-3">
+                                        <Field type="radio" name="taskType" value="recordLog" /> Record Log
+                                    </label>
+                                </div> */}
                             </Card.Body>
-                            <Card className='mt-1 bg-transparent'>
+                            { isCheckList && <Card className='mt-1 bg-transparent'>
                                 <Card.Header className='bg-dark text-light text-center'>Task Item </Card.Header>
                                 <Card.Body>
                                     <FieldArray name="taskItemInfo">
@@ -152,9 +183,8 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, skip }) => {
                                             Add Item
                                     </Button>
                                     </div>
-
                                 </Card.Body>
-                            </Card>
+                            </Card> }                           
                             <Card.Footer className='text-right'>
                                 <Button variant="success" type="submit" size="sm">Submit</Button>
                                 <Button variant="danger" className="ml-3" type="reset" size="sm">Reset</Button>

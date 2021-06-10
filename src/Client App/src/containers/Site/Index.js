@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Col, Row, Spinner, Button } from 'react-bootstrap';
-import { getSite } from '../../store/site-actions';
+import { getSite, getSiteManager } from '../../store/site-actions';
 
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
@@ -16,11 +16,16 @@ import DeleteSite from './DeleteSite';
 
 import _ from 'lodash';
 import { idle, succeeded } from '../../utils/stateStatus';
+import { returnLoggedInUser } from '../../store/auth-actions';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
 
 const Site = () => {
+
+    const dispatch = useDispatch();
+
+    const user  = dispatch(returnLoggedInUser());
 
     const columns = [
 
@@ -62,25 +67,26 @@ const Site = () => {
                     </div>
                 )
             }
-        },
-        {
-
-            header: 'Delete',
-            defaultFlex: 0.5,
-            className: "text-center",
-            render: ({ data }) => {
-                return (
-                    <div className="text-center">
-                        <Button variant="dark" size="sm" block onClick={() => { deleteHandler(data) }}>
-                            <FontAwesomeIcon icon={faTrash} className="text-light" />
-                        </Button>
-                    </div>
-                )
-            }
-
-        }
+        }       
 
     ];
+
+    user.role === "Admin" && columns.push({
+
+        header: 'Delete',
+        defaultFlex: 0.5,
+        className: "text-center",
+        render: ({ data }) => {
+            return (
+                <div className="text-center">
+                    <Button variant="dark" size="sm" block onClick={() => { deleteHandler(data) }}>
+                        <FontAwesomeIcon icon={faTrash} className="text-light" />
+                    </Button>
+                </div>
+            )
+        }
+
+    })
 
     const { status, siteInfo, recentGETMethod } = useSelector(state => state.site);
     const { companyId } = useSelector(state => state.auth.user);
@@ -93,7 +99,7 @@ const Site = () => {
     const [editData, setEditData] = useState({});
     const [deleteData, setDeleteData] = useState({});
 
-    const dispatch = useDispatch();
+    
 
     const addHandler = () => {
 
@@ -127,17 +133,24 @@ const Site = () => {
     const skipChangeHandler = (skipValue) => {
 
         const pageNumberValue = (skipValue / 10) + 1;
-        dispatch(getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 }))
+        user.role === "Admin" ? 
+         dispatch(getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 })) : 
+         dispatch(getSiteManager({ pageNumber: pageNumberValue, pageSize: 10 }))
         setSkip(skipValue);
     }
 
     useEffect(() => {
-        
+       
         if(status === idle || (status === succeeded && recentGETMethod !== "getSite")) {
-            dispatch(getSite(companyId));     
+            if(user.role === "Admin"){
+                dispatch(getSite(companyId)); 
+            }
+            else{
+                dispatch(getSiteManager())
+            }
         }       
        
-    }, [dispatch, companyId, status, recentGETMethod])
+    }, [dispatch, companyId, status, recentGETMethod, user.role])
 
     return (
         <div>
@@ -145,9 +158,12 @@ const Site = () => {
                 <Col md={10}>
                     <h1 className="display-4"> Site </h1>
                 </Col>
-                <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
-                </Col>
+                {
+                user.role === 'Admin' && 
+                    <Col md={2}>
+                        <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
+                    </Col>
+                }
             </Row>
             <hr />
             <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip} />

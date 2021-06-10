@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Col, Row, Spinner, Button } from 'react-bootstrap';
-import { getTask } from '../../store/task-actions';
+import { getTask, getTaskFromCompanyId } from '../../store/task-actions';
 
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
@@ -14,6 +14,7 @@ import EditTask from './EditTask';
 import AddTask from './AddTask';
 
 import _ from 'lodash';
+import { returnLoggedInUser } from '../../store/auth-actions';
 
 const gridStyle = { minHeight: 485, marginTop: 10 };
 
@@ -22,8 +23,8 @@ const Task = () => {
 
     const columns = [
 
-        { name: 'name', defaultFlex: 1, header: 'Name' },  
-        { name: 'description', defaultFlex: 2, header: 'Description' },      
+        { name: 'name', defaultFlex: 1, header: 'Name' },
+        { name: 'description', defaultFlex: 2, header: 'Description' },
         {
             header: 'Edit',
             name: 'id',
@@ -33,36 +34,38 @@ const Task = () => {
                 return (
                     <div className="text-center">
                         <Button variant="dark" size="sm" block onClick={() => editHandler(data)}>
-                            <FontAwesomeIcon icon={faEdit} className="text-light"/>
+                            <FontAwesomeIcon icon={faEdit} className="text-light" />
                         </Button>
                     </div>
                 )
             }
-        } 
-        
+        }
+
     ];
 
     const { isLoading, taskInfo } = useSelector(state => state.task);
     const [skip, setSkip] = useState(0);
 
-    const [showEditModal, setShowEditModal] = useState(false);    
+    const [showEditModal, setShowEditModal] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
 
-    const [editData, setEditData] = useState({});    
+    const [editData, setEditData] = useState({});
 
     const dispatch = useDispatch();
 
-    const addHandler = () => {        
-        
+    const user = dispatch(returnLoggedInUser())
+
+    const addHandler = () => {
+
         setShowAddModal(true);
     }
 
     const editHandler = (data) => {
-        console.log(data)        
+        console.log(data)
         setEditData(data);
         setShowEditModal(true);
     }
-    
+
 
     const addModalCloseHandler = () => {
         setShowAddModal(false);
@@ -70,7 +73,7 @@ const Task = () => {
 
     const editModalCloseHandler = () => {
         setShowEditModal(false);
-    }   
+    }
 
     const skipChangeHandler = (skipValue) => {
 
@@ -80,10 +83,15 @@ const Task = () => {
     }
 
     useEffect(() => {
-        
-        dispatch(getTask())
 
-    }, [dispatch])
+        if (user.role === "SuperAdmin") {
+            dispatch(getTask())
+        }
+        else {
+            dispatch(getTaskFromCompanyId(user.companyId))
+        }
+
+    }, [dispatch, user.role, user.companyId])
 
     return (
         <div>
@@ -92,12 +100,12 @@ const Task = () => {
                     <h1 className="display-4"> Task </h1>
                 </Col>
                 <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4 float-right'  onClick={() => {addHandler()}}>Add Task</Button>
+                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Task</Button>
                 </Col>
             </Row>
             <hr />
-            <AddTask show={showAddModal} onClose={addModalCloseHandler} skip={skip}/>
-            {showEditModal ? <EditTask show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}            
+            <AddTask show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
+            {showEditModal ? <EditTask show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
             <Row>
                 {
                     !isLoading ?
@@ -126,7 +134,7 @@ const Task = () => {
         </div>
     )
 
-   
+
 
 };
 

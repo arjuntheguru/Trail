@@ -79,6 +79,22 @@ export const getTask = (item = { pageNumber: 1, pageSize: 10 }) => (dispatch) =>
         });
 };
 
+export const getTaskFromCompanyId = (companyId, item = { pageNumber: 1, pageSize: 10 }) => (dispatch) => {
+
+    dispatch(taskActions.start_loading());
+    console.log(item);
+    let config = tokenConfig();
+
+    API.get(`api/task/${companyId}?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`, config)
+        .then(res => {
+            dispatch(taskActions.load_task_success(res.data));
+        })
+        .catch(err => {
+            console.log(err.response);
+            dispatch(taskActions.error());
+        });
+};
+
 export const getUnallocatedTask = (siteId, item = { pageNumber: 1, pageSize: 10 }) => (dispatch) => {
 
     dispatch(taskActions.start_loading());

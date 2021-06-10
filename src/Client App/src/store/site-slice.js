@@ -32,7 +32,8 @@ const siteSlice = createSlice({
         load_siteById_success: (state, action) => {
 
             return {
-                ...state,                
+                ...state,    
+                status: succeeded,            
                 siteById : action.payload.data
             }
         },

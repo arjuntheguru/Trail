@@ -26,7 +26,7 @@ export const login = (userInfo, history) => dispatch => {
     API.post(URL, body, config)
         .then((res) => {
             dispatch(authActions.login_success(res.data));
-            if(res.status === 200) {                         
+            if (res.status === 200) {
                 history.push('/welcome');
                 notifySuccess("Login successful");
             }
@@ -39,24 +39,14 @@ export const login = (userInfo, history) => dispatch => {
 
 }
 
-export const logout = () => (dispatch, getState) => {
-    // headers
-    let config = tokenConfig();
-    
-    const URL = "api/users/logout";
-    API.post(URL, null, config)
-        .then((res) => {
-            
-            dispatch(authActions.logout_success());
-            dispatch(companyActions.reset());
-            dispatch(userActions.reset());
-            dispatch(siteActions.reset());
-            dispatch(taskActions.reset());
-            dispatch(calendarActions.reset());
-        })
-        .catch((err) => {
-            console.log(err);
-        });
+export const logout = () => (dispatch) => {
+   
+    dispatch(authActions.logout_success());
+    dispatch(companyActions.reset());
+    dispatch(userActions.reset());
+    dispatch(siteActions.reset());
+    dispatch(taskActions.reset());
+    dispatch(calendarActions.reset());    
 };
 
 export const loadUser = () => (dispatch, getState) => {
@@ -86,4 +76,4 @@ export const returnLoggedInUser = () => (dispatch, getState) => {
 };
 
 
-    
+

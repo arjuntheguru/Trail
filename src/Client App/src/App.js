@@ -11,6 +11,8 @@ import Login from './containers/Account/Login';
 import NotFound from './containers/Common/NotFound';
 import SuperAdminRoute from './components/Common/SuperAdminRoute';
 import AdminRoute from './components/Common/AdminRoute';
+import CustomCalendarRoute from './components/Common/CustomCalendarRoute';
+import CustomAdminRoute from './components/Common/CustomAdminRoute';
 import Company from './containers/Company/Index';
 import Task from './containers/Task/Index';
 import Site from './containers/Site/Index';
@@ -25,9 +27,10 @@ import '@inovua/reactdatagrid-community/theme/default-light.css';
 
 import "react-datepicker/dist/react-datepicker.css";
 
-
 import { Welcome } from './containers/Common/Welcome';
-import CustomTaskRoute from './components/Common/CustomTaskRoute';
+import CustomSuperAdminRoute from './components/Common/CustomSuperAdminRoute';
+
+
 
 const App = () => {
 
@@ -48,9 +51,9 @@ const App = () => {
           <Switch>
             <Route exact strict path="/" component={Login} />
             <SuperAdminRoute exact strict path='/company' component={Company} />
-            <SuperAdminRoute exact strict path='/task' component={Task} />
-            <AdminRoute exact strict path='/site' component={Site} />
-            <CustomTaskRoute strict path='/site/:id' component={ManageTask} />
+            <CustomSuperAdminRoute exact strict path='/task' component={Task} />
+            <CustomAdminRoute exact strict path='/site' component={Site} />
+            <CustomCalendarRoute strict path='/site/:id' component={ManageTask} />
             <AdminRoute strict path='/users' component={ManageUser} />
             <Route exact strict path="/welcome" component={Welcome} />
             <Route path="*" component={NotFound} />

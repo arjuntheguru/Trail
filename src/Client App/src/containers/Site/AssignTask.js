@@ -93,7 +93,7 @@ const AssignTask = ({ data, show, onClose }) => {
     return (
         <Modal show={show} onHide={onClose} centered size="lg" >
             <Modal.Body className="">
-                <Card className="bgGradient">
+                <Card className="bgGradient" style={{minHeight:'150px'}}>
                     {
                         status === succeeded ?
                             !_.isEmpty(taskInfo.data) ?

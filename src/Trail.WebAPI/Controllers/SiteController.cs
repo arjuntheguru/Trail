@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Trail.Application.Common.Filters;
 using Trail.Application.Common.Helpers;
@@ -17,14 +18,17 @@ namespace Trail.WebAPI.Controllers
     public class SiteController : ApiControllerBase
     {
         private readonly ICrudService<Site> _siteCrudService;
+        private readonly ICrudService<User> _userCrudService;
         private readonly IUriService _uriService;
 
         public SiteController(
             ICrudService<Site> siteCrudService,
+            ICrudService<User> userCrudService,
             IUriService uriService)
         {
             _siteCrudService = siteCrudService;
             _uriService = uriService;
+            _userCrudService = userCrudService;
         }
 
         [Authorize(Roles="Admin")]
@@ -79,6 +83,25 @@ namespace Trail.WebAPI.Controllers
 
             return Ok(records.ToList());
         }
+
+        [Authorize(Roles = "Manager")]
+        [HttpGet("manager")]
+        public async Task<IActionResult> GetSitesFromCompanyIdManager([FromQuery] PaginationFilter filter)
+        {
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+
+            var userId = User.FindFirstValue("UserName");
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+
+            var records = _siteCrudService.FilterBy(validFilter, p => user.SiteId.Contains(p.Id));
+
+            var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
+
+            return Ok(pagedReponse);
+        }
+
+
+
 
         [Authorize(Roles = "Admin")]
         [HttpPost]
