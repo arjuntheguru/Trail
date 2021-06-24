@@ -8,7 +8,7 @@ import ReactDataGrid from '@inovua/reactdatagrid-community';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit } from '@fortawesome/free-solid-svg-icons'
 
-import '../../App.css';
+import '../../App.scss';
 import EditTask from './EditTask';
 // import DeleteTask from './DeleteTask';
 import AddTask from './AddTask';

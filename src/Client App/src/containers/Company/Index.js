@@ -8,7 +8,7 @@ import ReactDataGrid from '@inovua/reactdatagrid-community';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faTimes, faEdit, faTrash, faUserShield } from '@fortawesome/free-solid-svg-icons'
 
-import '../../App.css';
+import '../../App.scss';
 import EditCompany from './EditCompany';
 import DeleteCompany from './DeleteCompany';
 import AddCompany from './AddCompany';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ErrorMessage, useField } from 'formik';
 import { FormGroup } from 'react-bootstrap'
-import '../../App.css'
+import '../../App.scss'
 
 export const TextArea = ({ label, ...props }) => {
 

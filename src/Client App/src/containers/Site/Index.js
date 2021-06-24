@@ -9,7 +9,7 @@ import ReactDataGrid from '@inovua/reactdatagrid-community';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck, faTimes, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
 
-import '../../App.css';
+import '../../App.scss';
 import EditSite from './EditSite';
 import AddSite from './AddSite';
 import DeleteSite from './DeleteSite';
@@ -161,7 +161,7 @@ const Site = () => {
                 {
                 user.role === 'Admin' && 
                     <Col md={2}>
-                        <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
+                        <Button type="button" variant="primary" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
                     </Col>
                 }
             </Row>

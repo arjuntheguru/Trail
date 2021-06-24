@@ -1,7 +1,7 @@
 import React from 'react';
 import { ErrorMessage, useField } from 'formik';
 import { Col, FormGroup } from 'react-bootstrap'
-import '../../App.css'
+import '../../App.scss'
 
 export const InputField = ({ label, isLabel = true, ...props }) => {
 
@@ -14,7 +14,7 @@ export const InputField = ({ label, isLabel = true, ...props }) => {
                     <FormGroup>
                         <label htmlFor={field.name}>{label}</label>
                         <input
-                            className={`form-control form-control-sm shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
+                            className={`form-control shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
                             {...field} {...props}
                             autoComplete="off"
                         />
@@ -31,7 +31,7 @@ export const InputField = ({ label, isLabel = true, ...props }) => {
                         <FormGroup>
                             {isLabel && <label htmlFor={field.name}>{label}</label>}
                             <input
-                                className={`form-control form-control-sm shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
+                                className={`form-control shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
                                 {...field} {...props}
                                 autoComplete="off"
                             />

@@ -1,0 +1,14 @@
+
+.form{
+    &-group{
+        margin-bottom: 10px;
+        label{
+            font-size: $input-label-font-size;
+            margin-bottom: 5px;
+            @extend .text-black-50;
+        }
+    }
+    &-control{
+        font-size: .875rem;
+    }
+}

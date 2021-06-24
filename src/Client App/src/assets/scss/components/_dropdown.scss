@@ -1,0 +1,12 @@
+.dropdown{
+    &-toggle{
+        &.caret-clear{
+            &::after{
+                content:none;
+            }
+        }
+    }
+    &-item{
+        font-size: .875rem;
+    }
+}

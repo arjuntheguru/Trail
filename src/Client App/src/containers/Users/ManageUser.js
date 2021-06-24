@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Col, Row, Spinner, Button, Table, Badge } from 'react-bootstrap';
+import { Container, Col, Row, Spinner, Button, Table, Badge, Breadcrumb, Dropdown } from 'react-bootstrap';
+
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
 
 import { getUser, deleteUser } from '../../store/user-actions';
 import { getSiteWithoutPagination } from '../../store/site-actions';
 import { failed, idle, succeeded } from '../../utils/stateStatus';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrash, faTrashRestore } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faPencilAlt, faEllipsisV, faTrash, faTrashRestore, faSearch, faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 
 import AddUser from './AddUser';
 import EditUser from './EditUser';
@@ -88,22 +91,48 @@ const ManageUser = () => {
             {
                 status === succeeded ? (
                     <>
-                        <Row className="mt-2">
-                            <Col md={10}>
-                                <h1 className="display-4">Manage User</h1>
+                    <section className="site-breadcrumb bg-light">
+                        <Container className="text-center">
+                        <Row>
+                            <Col>
+                            <h5>Manager User</h5>
+                            <Breadcrumb className="justify-content-center">
+                            <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
+                            <Breadcrumb.Item href="https://getbootstrap.com/docs/4.0/components/breadcrumb/">
+                                Library
+                            </Breadcrumb.Item>
+                            <Breadcrumb.Item active>Data</Breadcrumb.Item>
+                        </Breadcrumb>
                             </Col>
-                            <Col md={2}>
-                                <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add User</Button>
-                            </Col>
+                            
+                    
                         </Row>
-                        <hr />
-                        {siteStatus === succeeded && (<> 
+                        </Container>
+                    </section>
+                    
+                    <section>
+                    <Container>
+                        <Row>
+                            <Col>
+                                <div className="table-container bg-white">
+                                    <header className="table-cta p-2 clearfix">
+                                    <InputGroup className="w-25 float-left">
+                                        <InputGroup.Text id="basic-addon1"><FontAwesomeIcon icon={faSearch}/> </InputGroup.Text>
+                                        <Form.Control
+                                        placeholder="Search"
+                                        aria-label="Search"
+                                        aria-describedby="basic-addon1"
+                                        />
+                                    </InputGroup>
+                                        <Button type="button" variant="primary" className="float-right" onClick={() => { addHandler() }}><FontAwesomeIcon icon={faPlusCircle}/>  Add User</Button>
+                                    </header>
+                                    {siteStatus === succeeded && (<> 
                         {showAddModal ? <AddUser show={showAddModal} onClose={addModalCloseHandler} siteInfo={siteInfo} data={companyId} /> : ''}
                         {showEditModal ? <EditUser show={showEditModal} onClose={editModalCloseHandler} siteInfo={siteInfo} data={editData} /> : ''}
                         {showDeleteModal ? <DeleteUser show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
-                        <Row>
-                            <Table bordered striped size="" >
-                                <thead className="bg-dark text-light">
+                      
+                            <Table striped bordered size="" >
+                                <thead variant="dark" className="bg-dark text-light">
                                     <tr>
                                         <th>Name</th>
                                         <th>Email</th>
@@ -111,7 +140,6 @@ const ManageUser = () => {
                                         <th>Status</th>
                                         <th>Role</th>
                                         <th>Access</th>
-                                        <th></th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -149,29 +177,45 @@ const ManageUser = () => {
                                                             }
                                                         }
                                                     })} </td>
-                                                <td className="text-center"><Button type="button" variant="dark" onClick={() => {editHandler(user)}}><FontAwesomeIcon icon={faEdit} className="text-light"/></Button></td>
-                                                <td className="text-center">
-                                                    {
-                                                        user.isActive ? 
-                                                        <Button type="button" 
-                                                            variant="danger" 
-                                                            onClick={() => {deleteHandler(user)}}>
-                                                                <FontAwesomeIcon icon={faTrash} className="text-light"/>
-                                                        </Button> :
-                                                         <Button type="button" 
-                                                         variant="success" 
-                                                         onClick={() => {restoreHandler(user)}}>
-                                                             <FontAwesomeIcon icon={faTrashRestore} className="text-light"/>
-                                                     </Button> 
-                                                    }
-                                                </td>
+
+                                                    <td>
+                                                    <Dropdown alignRight >
+                                                    <Dropdown.Toggle variant="link" size="sm" id="dropdown-basic" className="caret-clear btn-circle">
+                                                        <FontAwesomeIcon icon={faEllipsisV}/>
+                                                    </Dropdown.Toggle>
+
+                                                    <Dropdown.Menu className="border-0 shadow-sm">
+                                                        <Dropdown.Item onClick={() => {editHandler(user)}}>
+                                                            <FontAwesomeIcon icon={faPencilAlt} className="mr-2"/> edit
+                                                        </Dropdown.Item>
+                                                            {
+                                                                user.isActive ? 
+                                                                <Dropdown.Item onClick={() => {deleteHandler(user)}}>
+                                                                        <FontAwesomeIcon icon={faTrash} className="mr-2"/> delete
+                                                                </Dropdown.Item> :
+                                                                <Dropdown.Item onClick={() => {restoreHandler(user)}}>
+                                                                    <FontAwesomeIcon icon={faTrashRestore} className="mr-2"/> delete
+                                                                </Dropdown.Item> 
+                                                            }
+                                                    </Dropdown.Menu>
+                                                    </Dropdown>
+                                                    </td>
                                             </tr>
                                         )
                                     })}
                                 </tbody>
                             </Table>
-                        </Row>
+                        
                         </>)}
+                                </div>
+                               
+                        </Col>
+                        </Row>
+                        
+                       
+                        </Container>
+                    </section>
+                        
                     </>
                 ) : <Spinner animation="border spinner" />
             }

@@ -3,10 +3,11 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loadUser } from './store/auth-actions';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+
+// import 'bootstrap/dist/css/bootstrap.min.css';
 import Header from './components/Header/Header'
 
-import './App.css';
+import './App.scss';
 import Login from './containers/Account/Login';
 import NotFound from './containers/Common/NotFound';
 import SuperAdminRoute from './components/Common/SuperAdminRoute';
@@ -47,7 +48,7 @@ const App = () => {
       <Fragment>
         <Header />
         <ToastContainer />
-        <main role="main" className="container pb-3">
+        <main role="main" className="container-fluid pl-0 pr-0">
           <Switch>
             <Route exact strict path="/" component={Login} />
             <SuperAdminRoute exact strict path='/company' component={Company} />
@@ -60,7 +61,7 @@ const App = () => {
           </Switch>
         </main>
         <footer className="border-top fixed-bottom bg-dark text-center text-light p-2">
-          <div className="container">
+          <div className="container-fluid">
             &copy; 2021 - Dailo Technologies
         </div>
         </footer>

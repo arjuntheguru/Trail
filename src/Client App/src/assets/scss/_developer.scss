@@ -1,0 +1,42 @@
+[role="main"] {
+    padding-top: 48px; /* Space for fixed navbar */
+    padding-bottom: 48px !important;
+  }
+  
+//   body {
+//     padding-top: 1rem;
+//     margin-bottom: 0.5rem;  
+//     background: rgb(222,238,230);
+//     background: linear-gradient(214deg, rgba(222,238,230,1) 1%, rgba(250,248,248,1) 20%);
+//     min-height: 700px;
+    
+//   }
+  
+//   .bgGradient {
+//     background: rgb(222,238,230);
+//     background: linear-gradient(214deg, rgba(222,238,230,1) 1%, rgba(250,248,248,1) 20%);
+//   }
+  
+  .spinner {
+    position: absolute;
+    height: 100px;
+    width: 100px;
+    top: 50%;
+    left: 50%;
+    margin-left: -50px;
+    margin-top: -50px;
+  }
+  
+  .center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -50px;
+    margin-top: -50px;
+  }
+  
+  .error{
+    position: absolute;
+    color: #DC3545;
+    font-size: .7rem;
+  }

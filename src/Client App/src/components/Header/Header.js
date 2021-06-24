@@ -41,7 +41,7 @@ const Header = () => {
     };
 
     return (
-        <Navbar fixed='top' bg="dark" variant="dark">
+        <Navbar fixed='top' bg="primary" variant="dark">
             <Container>
                 {showEditModal ? <EditUser show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
                 <Link to="/" className='navbar-brand mt-1'><FontAwesomeIcon size="lg" icon={faJedi} className="" /></Link>

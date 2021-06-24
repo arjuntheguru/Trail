@@ -9,7 +9,7 @@ import { Spinner, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faKey, faEdit } from '@fortawesome/free-solid-svg-icons'
 
-import '../../App.css';
+import '../../App.scss';
 import EditAdmin from './EditAdmin';
 import AddAdmin from './AddAdmin';
 import ChangeAdminPassword from './ChangeAdminPassword';

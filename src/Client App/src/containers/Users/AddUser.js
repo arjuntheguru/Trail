@@ -6,7 +6,7 @@ const AddUser = ({ show, onClose, siteInfo, data }) => {
     
     return (
         <Modal show={show} onHide={onClose} centered size="lg" >          
-            <Modal.Body className="bgGradient">{<UserForm onClose={onClose} siteInfo={siteInfo} data={data}/>}</Modal.Body>
+            {<UserForm onClose={onClose} siteInfo={siteInfo} data={data}/>}
         </Modal>
     )
 };
