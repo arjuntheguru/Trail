@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Col, Row, Spinner, Button } from 'react-bootstrap';
+import { Container, Col, Row, Spinner, Button, Breadcrumb, InputGroup, Form } from 'react-bootstrap';
 import { getSite, getSiteManager } from '../../store/site-actions';
 
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTimes, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faTimes, faEdit, faTrash, faSearch } from '@fortawesome/free-solid-svg-icons'
 
 import '../../App.scss';
 import EditSite from './EditSite';
@@ -153,23 +153,47 @@ const Site = () => {
     }, [dispatch, companyId, status, recentGETMethod, user.role])
 
     return (
-        <div>
-            <Row className="mt-2">
-                <Col md={10}>
-                    <h1 className="display-4"> Site </h1>
-                </Col>
-                {
-                user.role === 'Admin' && 
-                    <Col md={2}>
-                        <Button type="button" variant="primary" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
-                    </Col>
-                }
-            </Row>
-            <hr />
-            <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
+        <>
+        <section className="site-breadcrumb bg-light">
+                        <Container className="text-center">
+                        <Row>
+                            <Col>
+                            <h5>Site</h5>
+                            <Breadcrumb className="justify-content-center">
+                            <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
+                            <Breadcrumb.Item active>Site</Breadcrumb.Item>
+                        </Breadcrumb>
+                            </Col>
+                            
+                    
+                        </Row>
+                        </Container>
+                    </section>
+                    <section>
+                    <Container>
+                        <Row>
+                            <Col>
+                            <div className="table-container bg-white">
+                                    <header className="table-cta p-2 clearfix">
+                                    <InputGroup className="w-25 float-left">
+                                        <InputGroup.Text id="basic-addon1"><FontAwesomeIcon icon={faSearch}/> </InputGroup.Text>
+                                        <Form.Control
+                                        placeholder="Search"
+                                        aria-label="Search"
+                                        aria-describedby="basic-addon1"
+                                        />
+                                    </InputGroup>
+                                       
+                                    {
+                                    user.role === 'Admin' && 
+                                            <Button type="button" variant="primary" className='float-right' onClick={() => { addHandler() }}>Add Site</Button>
+                                       
+                                    }
+                                    </header>
+                                    <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
             {showEditModal ? <EditSite show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
             {showDeleteModal ? <DeleteSite show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
-            <Row>
+         
                 {
                     status === succeeded ?
                         !_.isEmpty(siteInfo)
@@ -193,8 +217,15 @@ const Site = () => {
                             : <h4 className="text-muted center">No Data</h4>
                         : <Spinner animation="border spinner" />
                 }
-            </Row>
-        </div>
+                            </div>
+
+                            </Col>
+                        </Row>
+                    </Container>
+                    </section>
+            
+           
+        </>
     )
 
 
