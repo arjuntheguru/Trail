@@ -1,115 +1,115 @@
 import { tokenConfig } from "../utils/tokenUtility";
 
-import { notifyError, notifySuccess } from '../components/Toast/Toast';
+import { notifyError, notifySuccess } from "../components/Toast/Toast";
 import { userActions } from "./user-slice";
 
-import API from '../utils/api';
+import API from "../utils/api";
 
-export const registerUser = (userInfo, callback = () => {}) => (dispatch) => {
+export const registerUser =
+	(userInfo, callback = () => {}) =>
+	(dispatch) => {
+		dispatch(userActions.start_loading());
 
-    dispatch(userActions.start_loading());
+		let config = tokenConfig();
 
-    let config = tokenConfig();
+		const body = JSON.stringify(userInfo);
+		const URL = "api/users/register";
 
-    const body = JSON.stringify(userInfo);
-    const URL = 'api/users/register';
+		API.post(URL, body, config)
+			.then((res) => {
+				dispatch(userActions.register_user_success());
+				notifySuccess("User created successfully");
+				callback();
+			})
+			.catch((err) => {
+				console.log(err);
+				dispatch(userActions.error());
+				notifyError("User creation failed");
+			});
+	};
 
-    API.post(URL, body, config)
-        .then((res) => {
+export const getUser =
+	(companyId, role = "") =>
+	(dispatch) => {
+		dispatch(userActions.start_loading());
 
-            dispatch(userActions.register_user_success());
-            notifySuccess("User created successfully");
-            callback();
-        })
-        .catch((err) => {
-            console.log(err);
-            dispatch(userActions.error());
-            notifyError("User creation failed");
-        });
-};
+		let config = tokenConfig();
 
-export const getUser = (companyId, role= '') => (dispatch) => {
+		const URL = `api/users?companyId=${companyId}&role=${role}`;
 
-    dispatch(userActions.start_loading());
-
-    let config = tokenConfig();    
-
-    const URL = `api/users?companyId=${companyId}&role=${role}`;
-
-    API.get(URL, config)
-        .then((res) => {
-           dispatch(userActions.load_user_success(res.data))
-           notifySuccess("User loaded successfully");
-        })
-        .catch((err) => {
-            console.log(err);
-            dispatch(userActions.error());
-            notifyError("Failed to load users");
-        });
-};
+		API.get(URL, config)
+			.then((res) => {
+				dispatch(userActions.load_user_success(res.data));
+				notifySuccess("User loaded successfully");
+			})
+			.catch((err) => {
+				console.log(err);
+				dispatch(userActions.error());
+				notifyError("Failed to load users");
+			});
+	};
 
 export const updateUser = (user) => (dispatch) => {
+	dispatch(userActions.start_loading());
 
-    dispatch(userActions.start_loading());
+	let config = tokenConfig();
 
-    let config = tokenConfig();
+	const URL = `api/users/update`;
 
-    const URL = `api/users/update`;
-
-    API.put(URL, user, config)
-        .then((res) => {
-           dispatch(userActions.update_user_success(res.data))
-           notifySuccess("User updated successfully");
-        })
-        .catch((err) => {   
-            console.log(err);
-            dispatch(userActions.error());
-            notifyError("Failed to update user");
-        });
+	API.put(URL, user, config)
+		.then((res) => {
+			dispatch(userActions.update_user_success(res.data));
+			notifySuccess("User updated successfully");
+		})
+		.catch((err) => {
+			console.log(err);
+			dispatch(userActions.error());
+			notifyError("Failed to update user");
+		});
 };
 
 export const changePassword = (authenticateModal) => (dispatch) => {
+	dispatch(userActions.start_loading());
+	console.log(authenticateModal);
+	let config = tokenConfig();
 
-    dispatch(userActions.start_loading());
-    console.log(authenticateModal)
-    let config = tokenConfig();
+	const URL = `api/users/changePassword`;
 
-    const URL = `api/users/changePassword`;
-
-    API.post(URL, authenticateModal, config)
-    .then((res) => {
-       dispatch(userActions.update_user_password_success(res.data))
-       notifySuccess("Password updated successfully");
-    })
-    .catch((err) => {   
-        console.log(err);
-        dispatch(userActions.error());
-        notifyError("Failed to update password");
-    });    
-
+	API.post(URL, authenticateModal, config)
+		.then((res) => {
+			dispatch(userActions.update_user_password_success(res.data));
+			notifySuccess("Password updated successfully");
+		})
+		.catch((err) => {
+			console.log(err);
+			dispatch(userActions.error());
+			notifyError("Failed to update password");
+		});
 };
 
-export const deleteUser = (item, isActive) => dispatch => {
+export const deleteUser = (item, isActive) => (dispatch) => {
+	dispatch(userActions.start_loading());
 
-    dispatch(userActions.start_loading());
-
-    let config = tokenConfig();
-    let toggleDelete = {
-
-        Id : item.id,
-        isActive : isActive
-    }
-    console.log(isActive);
-    API.patch(`api/users`, toggleDelete, config)
-        .then(res => {
-            console.log(res);
-            dispatch(userActions.update_user_success(res.data));
-            notifySuccess(`User ${isActive ? "restored" : "archived"}  successfully`);
-        })
-        .catch(err => {
-            console.log(err.response.data);
-            dispatch(userActions.error());
-            notifyError("Error occured while archiving User");
-        })
+	let config = tokenConfig();
+	let toggleDelete = {
+		Id: item.id,
+		isActive: isActive,
+	};
+	console.log(isActive);
+	API.patch(`api/users`, toggleDelete, config)
+		.then((res) => {
+			console.log(res);
+			dispatch(userActions.update_user_success(res.data));
+			notifySuccess(`User ${isActive ? "restored" : "archived"}  successfully`);
+		})
+		.catch((err) => {
+			console.log(err.response.data);
+			dispatch(userActions.error());
+			notifyError("Error occured while archiving User");
+		});
 };
 
+export const filter = (value) => (dispatch) => {
+	dispatch(userActions.start_loading());
+	dispatch(userActions.filter_user_success(value));
+};

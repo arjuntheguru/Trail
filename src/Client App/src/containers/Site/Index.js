@@ -1,204 +1,293 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Col, Row, Spinner, Button } from 'react-bootstrap';
-import { getSite, getSiteManager } from '../../store/site-actions';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+	Container,
+	Col,
+	Row,
+	Spinner,
+	Button,
+	Table,
+	Badge,
+	Breadcrumb,
+	Dropdown,
+	InputGroup,
+	FormControl,
+} from "react-bootstrap";
 
-import ReactDataGrid from '@inovua/reactdatagrid-community';
+import { getSite, getSiteManager } from "../../store/site-actions";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faTimes, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+	faPencilAlt,
+	faEllipsisV,
+	faTrash,
+	faTrashRestore,
+	faSearch,
+	faPlusCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
-import '../../App.scss';
-import EditSite from './EditSite';
-import AddSite from './AddSite';
-import DeleteSite from './DeleteSite';
+import "../../App.scss";
+import EditSite from "./EditSite";
+import AddSite from "./AddSite";
+import DeleteSite from "./DeleteSite";
 
-import _ from 'lodash';
-import { idle, succeeded } from '../../utils/stateStatus';
-import { returnLoggedInUser } from '../../store/auth-actions';
-
-const gridStyle = { minHeight: 485, marginTop: 10 };
-
+import _ from "lodash";
+import { idle, succeeded } from "../../utils/stateStatus";
+import { returnLoggedInUser } from "../../store/auth-actions";
 
 const Site = () => {
+	const dispatch = useDispatch();
 
-    const dispatch = useDispatch();
+	const user = dispatch(returnLoggedInUser());
 
-    const user  = dispatch(returnLoggedInUser());
+	const { status, siteInfo, recentGETMethod } = useSelector(
+		(state) => state.site
+	);
+	const { companyId } = useSelector((state) => state.auth.user);
+	const [skip, setSkip] = useState(0);
 
-    const columns = [
+	const [showEditModal, setShowEditModal] = useState(false);
+	const [showAddModal, setShowAddModal] = useState(false);
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-        {
-            name: 'name', defaultFlex: 1, header: 'Name',
-            render: ({ data }) => <Link to={`/site/${data.id}`}>{data.name}</Link>
+	const [editData, setEditData] = useState({});
+	const [deleteData, setDeleteData] = useState({});
 
-        },
-        { name: 'scoreValue', defaultFlex: 1, header: 'Average Score' },
-        {
-            name: 'lastSeen', defaultFlex: 1, header: 'Last Seen',
-            render: ({ value }) => {
-                let date, time;
-                [date, time] = value.split('T')
-                return (
-                    <>
-                        <span>{date}</span>
-                    </>
-                )
-            }
-        },
-        {
-            name: 'isActive', defaultFlex: 0.5, header: 'Active', className: "text-center",
-            render: ({ value }) => <div className="text-center"> {value ?
-                <FontAwesomeIcon icon={faCheck} className="text-success" />
-                : <FontAwesomeIcon icon={faTimes} className="text-danger" />} </div>
-        },
-        {
-            header: 'Edit',
-            name: 'id',
-            defaultFlex: 0.5,
-            className: "text-center",
-            render: ({ data }) => {
-                return (
-                    <div className="text-center">
-                        <Button variant="dark" size="sm" block onClick={() => editHandler(data)}>
-                            <FontAwesomeIcon icon={faEdit} className="text-light" />
-                        </Button>
-                    </div>
-                )
-            }
-        }       
+	const addHandler = () => {
+		setShowAddModal(true);
+	};
 
-    ];
+	const editHandler = (data) => {
+		console.log(data);
+		setEditData(data);
+		setShowEditModal(true);
+	};
 
-    user.role === "Admin" && columns.push({
+	const deleteHandler = (data) => {
+		setDeleteData(data);
+		setShowDeleteModal(true);
+	};
 
-        header: 'Delete',
-        defaultFlex: 0.5,
-        className: "text-center",
-        render: ({ data }) => {
-            return (
-                <div className="text-center">
-                    <Button variant="dark" size="sm" block onClick={() => { deleteHandler(data) }}>
-                        <FontAwesomeIcon icon={faTrash} className="text-light" />
-                    </Button>
-                </div>
-            )
-        }
+	const addModalCloseHandler = () => {
+		setShowAddModal(false);
+	};
 
-    })
+	const editModalCloseHandler = () => {
+		setShowEditModal(false);
+	};
 
-    const { status, siteInfo, recentGETMethod } = useSelector(state => state.site);
-    const { companyId } = useSelector(state => state.auth.user);
-    const [skip, setSkip] = useState(0);
+	const deleteModalCloseHandler = () => {
+		setShowDeleteModal(false);
+	};
 
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const skipChangeHandler = (skipValue) => {
+		const pageNumberValue = skipValue / 10 + 1;
+		user.role === "Admin"
+			? dispatch(
+					getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 })
+			  )
+			: dispatch(getSiteManager({ pageNumber: pageNumberValue, pageSize: 10 }));
+		setSkip(skipValue);
+	};
 
-    const [editData, setEditData] = useState({});
-    const [deleteData, setDeleteData] = useState({});
+	useEffect(() => {
+		if (
+			status === idle ||
+			(status === succeeded && recentGETMethod !== "getSite")
+		) {
+			if (user.role === "Admin") {
+				dispatch(getSite(companyId));
+			} else {
+				dispatch(getSiteManager());
+			}
+		}
+	}, [dispatch, companyId, status, recentGETMethod, user.role]);
 
-    
+	return (
+		<div>
+			{status === succeeded ? (
+				<>
+					<section className="site-breadcrumb bg-light">
+						<Container className="text-center">
+							<Row>
+								<Col>
+									<h5>Manage Site</h5>
+									<Breadcrumb className="justify-content-center">
+										<Breadcrumb.Item>
+											<Link to="/">Home</Link>
+										</Breadcrumb.Item>
+										<Breadcrumb.Item active>Site</Breadcrumb.Item>
+									</Breadcrumb>
+								</Col>
+							</Row>
+						</Container>
+					</section>
+					<section>
+						<Container>
+							<Row>
+								<Col>
+									<div className="table-container bg-white">
+										<header className="table-cta p-2 clearfix">
+											<InputGroup className="w-25 float-left">
+												<InputGroup.Text id="basic-addon1">
+													<FontAwesomeIcon icon={faSearch} />{" "}
+												</InputGroup.Text>
+												<FormControl
+													placeholder="Search"
+													aria-label="Search"
+													aria-describedby="basic-addon1"
+												/>
+											</InputGroup>
+											<Button
+												type="button"
+												variant="primary"
+												className="float-right"
+												onClick={() => {
+													addHandler();
+												}}
+											>
+												<FontAwesomeIcon icon={faPlusCircle} /> Add Site
+											</Button>
+										</header>
+										<>
+											{showAddModal ? (
+												<AddSite
+													show={showAddModal}
+													onClose={addModalCloseHandler}
+													siteInfo={siteInfo}
+													data={companyId}
+												/>
+											) : (
+												""
+											)}
+											{showEditModal ? (
+												<EditSite
+													show={showEditModal}
+													onClose={editModalCloseHandler}
+													siteInfo={siteInfo}
+													data={editData}
+												/>
+											) : (
+												""
+											)}
+											{showDeleteModal ? (
+												<DeleteSite
+													show={showDeleteModal}
+													onClose={deleteModalCloseHandler}
+													data={deleteData}
+												/>
+											) : (
+												""
+											)}
 
-    const addHandler = () => {
+											<Table striped bordered size="">
+												<thead variant="dark" className="bg-dark text-light">
+													<tr>
+														<th>Name</th>
+														<th>Score Value</th>
+														<th>Last Seen</th>
+														<th>Status</th>
+														<th></th>
+													</tr>
+												</thead>
+												<tbody>
+													{siteInfo.data.length > 0 ? (
+														siteInfo.data.map((site) => {
+															return (
+																<tr
+																	className=""
+																	style={{
+																		fontSize: "14px",
+																	}}
+																>
+																	<td>{site.name}</td>
+																	<td>{site.scoreValue}</td>
+																	<td>{site.lastSeen.split("T")[0]}</td>
+																	<td>
+																		{site.isActive ? (
+																			<Badge
+																				pill
+																				variant="success"
+																				className="px-3 py-2 mx-1"
+																			>
+																				Active
+																			</Badge>
+																		) : (
+																			<Badge
+																				pill
+																				variant="danger"
+																				className="px-3 py-2 mx-1"
+																			>
+																				Inactive
+																			</Badge>
+																		)}
+																	</td>
+																	<td>
+																		<Dropdown alignRight>
+																			<Dropdown.Toggle
+																				variant="link"
+																				size="sm"
+																				id="dropdown-basic"
+																				className="caret-clear btn-circle"
+																			>
+																				<FontAwesomeIcon icon={faEllipsisV} />
+																			</Dropdown.Toggle>
 
-        setShowAddModal(true);
-    }
-
-    const editHandler = (data) => {
-        console.log(data)
-        setEditData(data);
-        setShowEditModal(true);
-    }
-
-    const deleteHandler = (data) => {
-
-        setDeleteData(data);
-        setShowDeleteModal(true);
-    }
-
-    const addModalCloseHandler = () => {
-        setShowAddModal(false);
-    }
-
-    const editModalCloseHandler = () => {
-        setShowEditModal(false);
-    }
-
-    const deleteModalCloseHandler = () => {
-        setShowDeleteModal(false);
-    }
-
-    const skipChangeHandler = (skipValue) => {
-
-        const pageNumberValue = (skipValue / 10) + 1;
-        user.role === "Admin" ? 
-         dispatch(getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 })) : 
-         dispatch(getSiteManager({ pageNumber: pageNumberValue, pageSize: 10 }))
-        setSkip(skipValue);
-    }
-
-    useEffect(() => {
-       
-        if(status === idle || (status === succeeded && recentGETMethod !== "getSite")) {
-            if(user.role === "Admin"){
-                dispatch(getSite(companyId)); 
-            }
-            else{
-                dispatch(getSiteManager())
-            }
-        }       
-       
-    }, [dispatch, companyId, status, recentGETMethod, user.role])
-
-    return (
-        <div>
-            <Row className="mt-2">
-                <Col md={10}>
-                    <h1 className="display-4"> Site </h1>
-                </Col>
-                {
-                user.role === 'Admin' && 
-                    <Col md={2}>
-                        <Button type="button" variant="primary" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Site</Button>
-                    </Col>
-                }
-            </Row>
-            <hr />
-            <AddSite show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
-            {showEditModal ? <EditSite show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
-            {showDeleteModal ? <DeleteSite show={showDeleteModal} onClose={deleteModalCloseHandler} data={deleteData} /> : ''}
-            <Row>
-                {
-                    status === succeeded ?
-                        !_.isEmpty(siteInfo)
-                            ? <ReactDataGrid
-                                idProperty="id"
-                                style={gridStyle}
-                                columns={columns}
-                                pagination
-                                skip={skip}
-                                sortable={false}
-                                showColumnMenuTool={false}
-                                onSkipChange={skipChangeHandler}
-                                pageSizes={false}
-                                theme="default-light"
-                                dataSource={new Promise(function (resolve, reject) {
-                                    resolve(siteInfo)
-                                })}
-                                defaultLimit={10}
-                            />
-
-                            : <h4 className="text-muted center">No Data</h4>
-                        : <Spinner animation="border spinner" />
-                }
-            </Row>
-        </div>
-    )
-
-
-
+																			<Dropdown.Menu className="border-0 shadow-sm">
+																				<Dropdown.Item
+																					onClick={() => {
+																						editHandler(site);
+																					}}
+																				>
+																					<FontAwesomeIcon
+																						icon={faPencilAlt}
+																						className="mr-2"
+																					/>{" "}
+																					Edit
+																				</Dropdown.Item>
+																				{site.isActive ? (
+																					<Dropdown.Item
+																						onClick={() => {
+																							deleteHandler(site);
+																						}}
+																					>
+																						<FontAwesomeIcon
+																							icon={faTrash}
+																							className="mr-2"
+																						/>{" "}
+																						Delete
+																					</Dropdown.Item>
+																				) : (
+																					""
+																				)}
+																			</Dropdown.Menu>
+																		</Dropdown>
+																	</td>
+																</tr>
+															);
+														})
+													) : (
+														<tr>
+															<td colSpan={7} className="text-center">
+																No Data
+															</td>
+														</tr>
+													)}
+												</tbody>
+											</Table>
+										</>
+									</div>
+								</Col>
+							</Row>
+						</Container>
+					</section>
+				</>
+			) : (
+				<Spinner animation="border spinner" />
+			)}
+		</div>
+	);
 };
 
 export default Site;
