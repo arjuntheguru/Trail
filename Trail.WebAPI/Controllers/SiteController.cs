@@ -57,19 +57,18 @@ namespace Trail.WebAPI.Controllers
         }
 
         [Authorize(Roles ="Admin")]
-        [HttpGet("{companyId}")]
-        public IActionResult GetSitesFromCompanyId([FromQuery] PaginationFilter filter, string companyId)
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetSitesFromCompanyId([FromQuery] PaginationFilter filter)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _siteCrudService.FilterBy(validFilter, p => p.CompanyId == companyId);
+            var userId = User.FindFirstValue("UserName");
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
 
-            var requestParameters = new ArrayList
-            {
-                new RequestParameter { ParameterName = "companyId", ParameterValue = companyId }
-            };            
+            var records = _siteCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
+                      
 
-            var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, requestParameters.ToArray(typeof(RequestParameter)) as RequestParameter[]);
+            var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
@@ -126,6 +125,7 @@ namespace Trail.WebAPI.Controllers
             }
 
             item.Name = site.Name;
+            item.AreaId = site.AreaId;
             item.Address = site.Address;
             item.BuisnessHours = site.BuisnessHours;
             item.LastSeen = DateTime.Now;

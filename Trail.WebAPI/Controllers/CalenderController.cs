@@ -21,13 +21,16 @@ namespace Trail.WebAPI.Controllers
     public class CalendarController : ApiControllerBase
     {
         private readonly ICrudService<Calendar> _calendarCrudService;
+        private readonly ICrudService<Site> _siteCrudService;
         private readonly IUriService _uriService;
 
         public CalendarController(
             ICrudService<Calendar> calendarCrudService,
+            ICrudService<Site> siteCrudService,
             IUriService uriService)
         {
             _calendarCrudService = calendarCrudService;
+            _siteCrudService = siteCrudService;
             _uriService = uriService;
         }
 
@@ -189,6 +192,8 @@ namespace Trail.WebAPI.Controllers
         public async Task<IActionResult> UpdateTaskListStatus(TaskListUpdateDTO taskListUpdate)
         {
             var item = await _calendarCrudService.FindByIdAsync(taskListUpdate.CalendarId);
+            var site = await _siteCrudService.FindByIdAsync(item.SiteId);
+
             if (item == null)
             {
                 return NotFound(new Response<Calendar>("Calendar does not exist"));
@@ -206,7 +211,7 @@ namespace Trail.WebAPI.Controllers
             if (DateTime.Now > taskListInfo.DueBy.ToLocalTime())
             {
                 taskListInfo.Status = Domain.Enums.TaskStatus.LateCompleted;
-                taskListInfo.Score = 5;
+                taskListInfo.Score = 5;                
             }
             else
             {
@@ -214,10 +219,17 @@ namespace Trail.WebAPI.Controllers
                 taskListInfo.Score = 10;
             }
 
+            item.ScoreValue += taskListInfo.Score;
+            item.ScoreCount++;
+
+            site.ScoreValue += taskListInfo.Score;
+            site.ScoreCount++;
+
             taskList[taskList.FindIndex(p => p.Id == taskListUpdate.TaskListId)] = taskListInfo;
 
             item.TaskList = taskList;
 
+            await _siteCrudService.ReplaceOneAsync(site);
             var response = await _calendarCrudService.ReplaceOneAsync(item);
 
             return Ok(new Response<Calendar>(response, "Task List updated successfully"));

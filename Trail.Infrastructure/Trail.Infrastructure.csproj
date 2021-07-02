@@ -9,8 +9,10 @@
   </ItemGroup>
 
   <ItemGroup>    
+    <PackageReference Include="MailKit" Version="2.13.0" />    
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />    
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />    
+    <PackageReference Include="MimeKit" Version="2.13.0" />    
     <PackageReference Include="MongoDB.Driver" Version="2.12.1" />    
     <PackageReference Include="PluralizeService.Core" Version="1.2.21070.12" />    
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />

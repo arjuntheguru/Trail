@@ -14,7 +14,7 @@ using Trail.Domain.Entities;
 
 namespace Trail.WebAPI.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     public class AreaController : ApiControllerBase
     {
 

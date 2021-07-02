@@ -11,6 +11,7 @@ namespace Trail.Domain.Entities
     {        
         public string Name { get; set; }
         public string CompanyId { get; set; }
+        public string AreaId { get; set; }
         public bool IsActive { get; set; } = true;
         public int ScoreCount { get; set; } = 0;
         public int ScoreValue { get; set; } = 0;
