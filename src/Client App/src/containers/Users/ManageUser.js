@@ -18,7 +18,7 @@ import {
 import { getUser, deleteUser, filter } from "../../store/user-actions";
 import { getSiteWithoutPagination } from "../../store/site-actions";
 import { failed, idle, succeeded } from "../../utils/stateStatus";
-
+import TablePagination from "../../components/Pagination/Pagination";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
 	faPencilAlt,
@@ -50,6 +50,8 @@ const ManageUser = () => {
 
 	const [editData, setEditData] = useState({});
 	const [deleteData, setDeleteData] = useState({});
+
+	const [currentPageNumber, setCurrentPageNumber] = useState(1);
 
 	const addHandler = () => {
 		setShowAddModal(true);
@@ -320,6 +322,11 @@ const ManageUser = () => {
 														</tr>
 													)}
 												</tbody>
+												<TablePagination
+													currentPageNumber={currentPageNumber}
+													pageNumberChange={setCurrentPageNumber}
+													totalRecords={200}
+												/>
 											</Table>
 										</>
 									</div>

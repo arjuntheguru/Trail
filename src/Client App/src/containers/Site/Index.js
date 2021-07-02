@@ -15,7 +15,7 @@ import {
 	FormControl,
 } from "react-bootstrap";
 
-import { getSite, getSiteManager } from "../../store/site-actions";
+import { getSiteAdmin, getSiteManager } from "../../store/site-actions";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,6 +36,8 @@ import _ from "lodash";
 import { idle, succeeded } from "../../utils/stateStatus";
 import { returnLoggedInUser } from "../../store/auth-actions";
 
+import TablePagination from "../../components/Pagination/Pagination";
+
 const Site = () => {
 	const dispatch = useDispatch();
 
@@ -45,7 +47,6 @@ const Site = () => {
 		(state) => state.site
 	);
 	const { companyId } = useSelector((state) => state.auth.user);
-	const [skip, setSkip] = useState(0);
 
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [showAddModal, setShowAddModal] = useState(false);
@@ -53,6 +54,8 @@ const Site = () => {
 
 	const [editData, setEditData] = useState({});
 	const [deleteData, setDeleteData] = useState({});
+
+	const [currentPageNumber, setCurrentPageNumber] = useState(1);
 
 	const addHandler = () => {
 		setShowAddModal(true);
@@ -81,23 +84,13 @@ const Site = () => {
 		setShowDeleteModal(false);
 	};
 
-	const skipChangeHandler = (skipValue) => {
-		const pageNumberValue = skipValue / 10 + 1;
-		user.role === "Admin"
-			? dispatch(
-					getSite(companyId, { pageNumber: pageNumberValue, pageSize: 10 })
-			  )
-			: dispatch(getSiteManager({ pageNumber: pageNumberValue, pageSize: 10 }));
-		setSkip(skipValue);
-	};
-
 	useEffect(() => {
 		if (
 			status === idle ||
 			(status === succeeded && recentGETMethod !== "getSite")
 		) {
 			if (user.role === "Admin") {
-				dispatch(getSite(companyId));
+				dispatch(getSiteAdmin());
 			} else {
 				dispatch(getSiteManager());
 			}
@@ -157,6 +150,7 @@ const Site = () => {
 													onClose={addModalCloseHandler}
 													siteInfo={siteInfo}
 													data={companyId}
+													pageNumber={currentPageNumber}
 												/>
 											) : (
 												""
@@ -201,7 +195,11 @@ const Site = () => {
 																		fontSize: "14px",
 																	}}
 																>
-																	<td>{site.name}</td>
+																	<td>
+																		<Link to={`/site/${site.id}`}>
+																			{site.name}
+																		</Link>
+																	</td>
 																	<td>{site.scoreValue}</td>
 																	<td>{site.lastSeen.split("T")[0]}</td>
 																	<td>
@@ -269,12 +267,24 @@ const Site = () => {
 														})
 													) : (
 														<tr>
-															<td colSpan={7} className="text-center">
+															<td colSpan={5} className="text-center">
 																No Data
 															</td>
 														</tr>
 													)}
 												</tbody>
+												<tfoot>
+													<tr>
+														<td>
+															<TablePagination
+																currentPageNumber={currentPageNumber}
+																pageNumberChange={setCurrentPageNumber}
+																totalRecords={siteInfo.count}
+																callback={getSiteAdmin}
+															/>
+														</td>
+													</tr>
+												</tfoot>
 											</Table>
 										</>
 									</div>
