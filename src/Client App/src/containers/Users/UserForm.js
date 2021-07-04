@@ -270,13 +270,14 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 								<Button
 									variant="light"
 									type="button"
+									className="m-0"
 									onClick={() => {
 										onClose(true);
 									}}
 								>
 									<FontAwesomeIcon icon={faTimes} /> Cancel
 								</Button>
-								<Button variant="primary" type="submit">
+								<Button variant="primary" type="submit" className="m-0">
 									<FontAwesomeIcon icon={faSave} /> Save
 								</Button>
 							</Modal.Footer>

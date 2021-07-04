@@ -1,10 +1,10 @@
 .table {
 	&-container {
 		@extend .shadow;
-		margin-top: -103.5px;
+		margin-top: -97.5px;
+		min-height: 31.25rem;
 	}
-	td {
-		padding-top: 5px !important;
-		padding-bottom: 5px !important;
+	th,td {
+		font-size: .875rem;
 	}
 }

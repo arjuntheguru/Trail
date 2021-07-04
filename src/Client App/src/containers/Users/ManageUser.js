@@ -116,7 +116,7 @@ const ManageUser = () => {
 						<Container className="text-center">
 							<Row>
 								<Col>
-									<h5>Manage User</h5>
+									<h5 className="mb-0">Manage User</h5>
 									<Breadcrumb className="justify-content-center">
 										<Breadcrumb.Item>
 											<Link to="/">Home</Link>
@@ -135,9 +135,6 @@ const ManageUser = () => {
 									<div className="table-container bg-white">
 										<header className="table-cta p-2 clearfix">
 											<InputGroup className="w-25 float-left">
-												<InputGroup.Text id="basic-addon1">
-													<FontAwesomeIcon icon={faSearch} />{" "}
-												</InputGroup.Text>
 												<FormControl
 													placeholder="Search"
 													aria-label="Search"
@@ -146,6 +143,9 @@ const ManageUser = () => {
 														searchHandler(e.target.value);
 													}}
 												/>
+                                                <InputGroup.Append>
+                                                    <Button variant="primary"><FontAwesomeIcon icon={faSearch} />{" "}</Button>
+                                                </InputGroup.Append>
 											</InputGroup>
 											<Button
 												type="button"
@@ -190,8 +190,8 @@ const ManageUser = () => {
 												""
 											)}
 
-											<Table striped bordered size="">
-												<thead variant="dark" className="bg-dark text-light">
+											<Table striped size="">
+												<thead className="bg-light text-dark">
 													<tr>
 														<th>Name</th>
 														<th>Email</th>
@@ -202,16 +202,12 @@ const ManageUser = () => {
 														<th></th>
 													</tr>
 												</thead>
-												<tbody>
+                                                <tbody>
 													{userInfo.length > 0 ? (
 														userInfo.map((user) => {
 															return (
-																<tr
-																	className=""
-																	style={{
-																		fontSize: "14px",
-																	}}
-																>
+                                                              
+																<tr>
 																	<td>{`${user.firstName} ${user.lastName}`}</td>
 																	<td>{user.email}</td>
 																	<td>{user.userName}</td>
@@ -312,21 +308,35 @@ const ManageUser = () => {
 																		</Dropdown>
 																	</td>
 																</tr>
+                                                                
 															);
 														})
 													) : (
-														<tr>
-															<td colSpan={7} className="text-center">
-																No Data
-															</td>
-														</tr>
+															<tr className="bg-transparent">
+																<td colSpan="100%">
+																	<div className="text-center h-100 p-5">
+																		<FontAwesomeIcon icon={faSearch} size="3x" />
+																		<h6>Result Not Found</h6>
+																		<p className="text-muted">Please change keyword or modify filters</p>
+																	</div>
+																</td>
+															</tr>
+																
 													)}
 												</tbody>
-												<TablePagination
-													currentPageNumber={currentPageNumber}
-													pageNumberChange={setCurrentPageNumber}
-													totalRecords={200}
-												/>
+                                                                <tfoot>
+                                                                    <tr>
+                                                                        <td colSpan="100%" className="p-3">
+                                                                        <TablePagination
+                                                                    currentPageNumber={currentPageNumber}
+                                                                    pageNumberChange={setCurrentPageNumber}
+                                                                    totalRecords={200}
+                                                                />
+                                                                        </td>
+                                                                    </tr>
+                                                                
+                                                                </tfoot>
+												
 											</Table>
 										</>
 									</div>

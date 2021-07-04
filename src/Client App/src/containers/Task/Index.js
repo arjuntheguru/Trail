@@ -1,12 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Col, Row, Spinner, Button } from 'react-bootstrap';
+import {
+	Container,
+	Col,
+	Row,
+	Spinner,
+	Button,
+	Table,
+	Badge,
+	Breadcrumb,
+	Dropdown,
+	InputGroup,
+	FormControl,
+} from "react-bootstrap";
 import { getTask, getTaskFromCompanyId } from '../../store/task-actions';
 
 import ReactDataGrid from '@inovua/reactdatagrid-community';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit } from '@fortawesome/free-solid-svg-icons'
+import {
+	faPencilAlt,
+	faEllipsisV,
+	faTrash,
+	faTrashRestore,
+	faSearch,
+    faEdit,
+	faPlusCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 import '../../App.scss';
 import EditTask from './EditTask';
@@ -94,44 +114,77 @@ const Task = () => {
     }, [dispatch, user.role, user.companyId])
 
     return (
-        <div>
-            <Row className="mt-2">
-                <Col md={10}>
-                    <h1 className="display-4"> Task </h1>
-                </Col>
-                <Col md={2}>
-                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={() => { addHandler() }}>Add Task</Button>
-                </Col>
-            </Row>
-            <hr />
+        <>
+                    <section className="site-breadcrumb bg-light">
+						<Container className="text-center">
+							<Row>
+								<Col>
+									<h5 className="mb-0">Manage Task</h5>
+									<Breadcrumb className="justify-content-center">
+										<Breadcrumb.Item>Home</Breadcrumb.Item>
+										<Breadcrumb.Item active>Task</Breadcrumb.Item>
+									</Breadcrumb>
+								</Col>
+							</Row>
+						</Container>
+					</section>
+                    <section>
+						<Container>
+							<Row>
+								<Col>
+									<div className="table-container bg-white">
+										<header className="table-cta p-2 clearfix">
+											<InputGroup className="w-25 float-left">
+												<FormControl
+													placeholder="Search"
+													aria-label="Search"
+													aria-describedby="basic-addon1"
+												/>
+                                                <InputGroup.Append>
+                                                    <Button variant="primary"><FontAwesomeIcon icon={faSearch} />{" "}</Button>
+                                                </InputGroup.Append>
+											</InputGroup>
+											<Button
+												type="button"
+												variant="primary"
+												className="float-right"
+												onClick={() => { addHandler() }}
+											>
+												<FontAwesomeIcon icon={faPlusCircle} /> Add User
+											</Button>
+										</header>
+                                        {
+                                            !isLoading ?
+                                                !_.isEmpty(taskInfo)
+                                                    ? <ReactDataGrid
+                                                        idProperty="id"
+                                                        style={gridStyle}
+                                                        columns={columns}
+                                                        pagination
+                                                        skip={skip}
+                                                        sortable={false}
+                                                        showColumnMenuTool={false}
+                                                        onSkipChange={skipChangeHandler}
+                                                        pageSizes={false}
+                                                        theme="default-light"
+                                                        dataSource={new Promise(function (resolve, reject) {
+                                                            resolve(taskInfo)
+                                                        })}
+                                                        defaultLimit={10}
+                                                    />
+
+                                                    : <Spinner animation="border spinner" />
+                                                : <Spinner animation="border spinner" />
+                                        }
+                                    </div>
+                                </Col>
+                            </Row>
+                        </Container>
+                    </section>
             <AddTask show={showAddModal} onClose={addModalCloseHandler} skip={skip} />
             {showEditModal ? <EditTask show={showEditModal} onClose={editModalCloseHandler} data={editData} /> : ''}
-            <Row>
-                {
-                    !isLoading ?
-                        !_.isEmpty(taskInfo)
-                            ? <ReactDataGrid
-                                idProperty="id"
-                                style={gridStyle}
-                                columns={columns}
-                                pagination
-                                skip={skip}
-                                sortable={false}
-                                showColumnMenuTool={false}
-                                onSkipChange={skipChangeHandler}
-                                pageSizes={false}
-                                theme="default-light"
-                                dataSource={new Promise(function (resolve, reject) {
-                                    resolve(taskInfo)
-                                })}
-                                defaultLimit={10}
-                            />
-
-                            : <Spinner animation="border spinner" />
-                        : <Spinner animation="border spinner" />
-                }
-            </Row>
-        </div>
+           
+        </>
     )
 
 
