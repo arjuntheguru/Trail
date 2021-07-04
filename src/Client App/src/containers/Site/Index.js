@@ -154,7 +154,7 @@ const Site = () => {
 
     return (
         <>
-        <section className="site-breadcrumb bg-light">
+        <section className="site-breadcrumb">
                         <Container className="text-center">
                         <Row>
                             <Col>
