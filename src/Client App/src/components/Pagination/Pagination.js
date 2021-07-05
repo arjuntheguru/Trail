@@ -10,7 +10,7 @@ const TablePagination = ({
 	pageNumberChange,
 }) => {
 	const dispatch = useDispatch();
-
+	console.log(currentPageNumber);
 	const lastPage = Math.ceil(totalRecords / 10);
 	console.log(totalRecords);
 	const firstPageHandler = () => {
@@ -47,7 +47,9 @@ const TablePagination = ({
 				Page {totalRecords <= 0 ? 0 : currentPageNumber} of {lastPage}
 			</Pagination.Item>
 			<Pagination.Next
-				disabled={currentPageNumber <= 1 ? false : true}
+				disabled={
+					totalRecords <= 10 || currentPageNumber === lastPage ? true : false
+				}
 				onClick={nextPageHandler}
 			/>
 			<Pagination.Last
