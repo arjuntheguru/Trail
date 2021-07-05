@@ -14,6 +14,8 @@ using Trail.Domain.Enums;
 using Trail.Domain.Common;
 using Trail.Application.Common.Wrappers;
 using Trail.Application.Common.Models.DTO;
+using System.Security.Claims;
+using Trail.Application.Common.Filters;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -67,20 +69,24 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize]
         [HttpGet]
-        public IActionResult GetUser([FromQuery] string companyId, string role)
+        public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string role)
         {
-            var users = new List<User>();
+            var userId = User.FindFirstValue("UserName");
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+
+            var records = new RecordCount<User>();
 
             if (String.IsNullOrWhiteSpace(role))
             {
-                users = _userCrudService.FilterBy(p => p.CompanyId == companyId).ToList();
+                 records = _userCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
             }
             else
-            {
-                users = _userCrudService.FilterBy(p => p.CompanyId == companyId && p.Role == role).ToList();
+            { 
+                records = _userCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId  && p.Role == role);
             }
-
-            return Ok(users);
+            return Ok(records);
         }
 
         [Authorize]
