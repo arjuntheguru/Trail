@@ -12,7 +12,7 @@ const TablePagination = ({
 	const dispatch = useDispatch();
 
 	const lastPage = Math.ceil(totalRecords / 10);
-
+	console.log(totalRecords);
 	const firstPageHandler = () => {
 		pageNumberChange(1);
 		dispatch(callback({ pageNumber: 1, pageSize: 10 }));
@@ -35,19 +35,25 @@ const TablePagination = ({
 
 	return (
 		<Pagination>
-			<Pagination.First onClick={firstPageHandler} />
+			<Pagination.First
+				disabled={totalRecords <= 0 ? true : false}
+				onClick={firstPageHandler}
+			/>
 			<Pagination.Prev
-				disabled={currentPageNumber === 1 ? true : false}
+				disabled={currentPageNumber <= 1 ? true : false}
 				onClick={previousPageHandler}
 			/>
 			<Pagination.Item>
-				Page {currentPageNumber} of {lastPage}
+				Page {totalRecords <= 0 ? 0 : currentPageNumber} of {lastPage}
 			</Pagination.Item>
 			<Pagination.Next
-				disabled={currentPageNumber === lastPage ? true : false}
+				disabled={currentPageNumber <= 1 ? false : true}
 				onClick={nextPageHandler}
 			/>
-			<Pagination.Last onClick={lastPageHandler} />
+			<Pagination.Last
+				disabled={totalRecords <= 0 ? true : false}
+				onClick={lastPageHandler}
+			/>
 		</Pagination>
 	);
 };

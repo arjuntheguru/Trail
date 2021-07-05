@@ -106,6 +106,7 @@ export const getSiteWithoutPagination = (companyId) => (dispatch) => {
 	let config = tokenConfig();
 	API.get(`api/site/all/${companyId}`, config)
 		.then((res) => {
+			console.log(res.data);
 			dispatch(
 				siteActions.load_site_success({
 					data: res.data,

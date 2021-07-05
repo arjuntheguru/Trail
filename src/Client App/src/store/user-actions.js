@@ -29,13 +29,13 @@ export const registerUser =
 	};
 
 export const getUser =
-	(companyId, role = "") =>
+	(item = { pageNumber: 1, pageSize: 10 }, role = "") =>
 	(dispatch) => {
 		dispatch(userActions.start_loading());
-
+		console.log(item);
 		let config = tokenConfig();
 
-		const URL = `api/users?companyId=${companyId}&role=${role}`;
+		const URL = `api/users?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}&role=${role}`;
 
 		API.get(URL, config)
 			.then((res) => {

@@ -10,6 +10,8 @@ namespace Trail.Domain.Entities
     {
         public string SiteId { get; set; }
         public DateTime Date { get; set; }
+        public int ScoreCount { get; set; } = 0;
+        public int ScoreValue { get; set; } = 0;
         public IEnumerable<TaskList> TaskList { get; set; }
     }
 

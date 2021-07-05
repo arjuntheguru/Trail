@@ -3,7 +3,6 @@ import { idle, loading, succeeded, failed } from "../utils/stateStatus";
 
 const initialState = {
 	status: idle,
-	rootData: {},
 	userInfo: {},
 };
 
@@ -21,8 +20,10 @@ const userSlice = createSlice({
 			return {
 				...state,
 				status: succeeded,
-				rootData: action.payload,
-				userInfo: action.payload,
+				userInfo: {
+					data: action.payload.records,
+					count: action.payload.count,
+				},
 			};
 		},
 		register_user_success: (state) => {
@@ -32,21 +33,25 @@ const userSlice = createSlice({
 			};
 		},
 		update_user_success: (state, action) => {
-			var user = current(state.rootData).find(
+			var user = current(state.userInfo.data).find(
 				(item) => item.id === action.payload.data.id
 			);
-			const index = current(state.rootData).indexOf(user);
+			const index = current(state.userInfo.data).indexOf(user);
 
-			var temp = [...current(state.rootData)];
+			var temp = [...current(state.userInfo.data)];
 			console.log(action.payload.data);
 			console.log(temp);
 			temp.splice(index, 1, action.payload.data);
 
+			var updatedState = {
+				...state.userInfo,
+				data: temp,
+			};
+
 			return {
 				...state,
 				status: succeeded,
-				rootData: temp,
-				userInfo: temp,
+				userInfo: updatedState,
 			};
 		},
 		update_user_password_success: (state) => {

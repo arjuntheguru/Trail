@@ -104,9 +104,9 @@ const ManageUser = () => {
 
 	useEffect(() => {
 		if (status === idle || status === failed) {
-			dispatch(getUser(companyId));
+			dispatch(getUser());
 		}
-	}, [dispatch, companyId, status]);
+	}, [dispatch, status]);
 
 	return (
 		<div>
@@ -139,13 +139,15 @@ const ManageUser = () => {
 													placeholder="Search"
 													aria-label="Search"
 													aria-describedby="basic-addon1"
-													onChange={(e) => {
-														searchHandler(e.target.value);
-													}}
+													// onChange={(e) => {
+													// 	searchHandler(e.target.value);
+													// }}
 												/>
-                                                <InputGroup.Append>
-                                                    <Button variant="primary"><FontAwesomeIcon icon={faSearch} />{" "}</Button>
-                                                </InputGroup.Append>
+												<InputGroup.Append>
+													<Button variant="primary">
+														<FontAwesomeIcon icon={faSearch} />{" "}
+													</Button>
+												</InputGroup.Append>
 											</InputGroup>
 											<Button
 												type="button"
@@ -202,11 +204,10 @@ const ManageUser = () => {
 														<th></th>
 													</tr>
 												</thead>
-                                                <tbody>
-													{userInfo.length > 0 ? (
-														userInfo.map((user) => {
+												<tbody>
+													{userInfo.data.length > 0 ? (
+														userInfo.data.map((user) => {
 															return (
-                                                              
 																<tr>
 																	<td>{`${user.firstName} ${user.lastName}`}</td>
 																	<td>{user.email}</td>
@@ -308,35 +309,34 @@ const ManageUser = () => {
 																		</Dropdown>
 																	</td>
 																</tr>
-                                                                
 															);
 														})
 													) : (
-															<tr className="bg-transparent">
-																<td colSpan="100%">
-																	<div className="text-center h-100 p-5">
-																		<FontAwesomeIcon icon={faSearch} size="3x" />
-																		<h6>Result Not Found</h6>
-																		<p className="text-muted">Please change keyword or modify filters</p>
-																	</div>
-																</td>
-															</tr>
-																
+														<tr className="bg-transparent">
+															<td colSpan="100%">
+																<div className="text-center h-100 p-5">
+																	<FontAwesomeIcon icon={faSearch} size="3x" />
+																	<h6>Result Not Found</h6>
+																	<p className="text-muted">
+																		Please change keyword or modify filters
+																	</p>
+																</div>
+															</td>
+														</tr>
 													)}
 												</tbody>
-                                                                <tfoot>
-                                                                    <tr>
-                                                                        <td colSpan="100%" className="p-3">
-                                                                        <TablePagination
-                                                                    currentPageNumber={currentPageNumber}
-                                                                    pageNumberChange={setCurrentPageNumber}
-                                                                    totalRecords={200}
-                                                                />
-                                                                        </td>
-                                                                    </tr>
-                                                                
-                                                                </tfoot>
-												
+												<tfoot>
+													<tr>
+														<td colSpan="100%" className="p-3">
+															<TablePagination
+																currentPageNumber={currentPageNumber}
+																pageNumberChange={setCurrentPageNumber}
+																totalRecords={userInfo.count}
+																callback={getUser}
+															/>
+														</td>
+													</tr>
+												</tfoot>
 											</Table>
 										</>
 									</div>
