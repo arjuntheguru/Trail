@@ -123,15 +123,16 @@ const Site = () => {
 									<div className="table-container bg-white">
 										<header className="table-cta p-2 clearfix">
 											<InputGroup className="w-25 float-left">
-												
 												<FormControl
 													placeholder="Search"
 													aria-label="Search"
 													aria-describedby="basic-addon1"
 												/>
 												<InputGroup.Append>
-                                                    <Button variant="primary"><FontAwesomeIcon icon={faSearch} />{" "}</Button>
-                                                </InputGroup.Append>
+													<Button variant="primary">
+														<FontAwesomeIcon icon={faSearch} />{" "}
+													</Button>
+												</InputGroup.Append>
 											</InputGroup>
 											<Button
 												type="button"
@@ -150,7 +151,6 @@ const Site = () => {
 													show={showAddModal}
 													onClose={addModalCloseHandler}
 													siteInfo={siteInfo}
-													data={companyId}
 													pageNumber={currentPageNumber}
 												/>
 											) : (
@@ -190,8 +190,6 @@ const Site = () => {
 													{siteInfo.data.length > 0 ? (
 														siteInfo.data.map((site) => {
 															return (
-																
-																
 																<tr>
 																	<td>
 																		<Link to={`/site/${site.id}`}>
@@ -261,34 +259,34 @@ const Site = () => {
 																		</Dropdown>
 																	</td>
 																</tr>
-																
 															);
 														})
 													) : (
-														
-															<tr className="bg-transparent">
-																<td colSpan="100%">
-																	<div className="text-center h-100 p-5">
-																		<FontAwesomeIcon icon={faSearch} size="3x" />
-																		<h6>Result Not Found</h6>
-																		<p className="text-muted">Please change keyword or modify filters</p>
-																	</div>
-																</td>
-															</tr>	
-													)}
-													</tbody>
-													<tfoot>
-														<tr>
-															<td colSpan="100%" className="p-3">
-																<TablePagination
-																	currentPageNumber={currentPageNumber}
-																	pageNumberChange={setCurrentPageNumber}
-																	totalRecords={siteInfo.count}
-																	callback={getSiteAdmin}
-																/>
+														<tr className="bg-transparent">
+															<td colSpan="100%">
+																<div className="text-center h-100 p-5">
+																	<FontAwesomeIcon icon={faSearch} size="3x" />
+																	<h6>Result Not Found</h6>
+																	<p className="text-muted">
+																		Please change keyword or modify filters
+																	</p>
+																</div>
 															</td>
 														</tr>
-													</tfoot>
+													)}
+												</tbody>
+												<tfoot>
+													<tr>
+														<td colSpan="100%" className="p-3">
+															<TablePagination
+																currentPageNumber={currentPageNumber}
+																pageNumberChange={setCurrentPageNumber}
+																totalRecords={siteInfo.count}
+																callback={getSiteAdmin}
+															/>
+														</td>
+													</tr>
+												</tfoot>
 											</Table>
 										</>
 									</div>

@@ -14,9 +14,8 @@ import ChangeUserPassword from "./ChangeUserPassword";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSave, faTimes } from "@fortawesome/free-solid-svg-icons";
 
-const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
-	const [showChangePasswordModal, setShowChangePasswordModal] =
-		useState(false);
+const UserForm = ({ isEdit = false, siteInfo, data, onClose, pageNumber }) => {
+	const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 	const [userName, setUserName] = useState("");
 
 	const changePasswordHandler = (params) => {
@@ -73,7 +72,6 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 								userEmail: "",
 								password: "",
 								confirmPassword: "",
-								companyId: data,
 								role: "Team User",
 								site: siteInfo.data[0].id,
 						  }
@@ -89,9 +87,7 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 						  }
 				}
 				validationSchema={
-					!isEdit
-						? userInfoValidate.concat(passwordValidate)
-						: userInfoValidate
+					!isEdit ? userInfoValidate.concat(passwordValidate) : userInfoValidate
 				}
 				onSubmit={(values) => {
 					const userInfo = {
@@ -101,7 +97,6 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 						UserName: values.userName,
 						Email: values.userEmail,
 						Password: values.password,
-						companyId: values.companyId,
 						Role: values.role,
 						SiteId:
 							values.role === "Admin"
@@ -115,7 +110,7 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 
 					if (!isEdit) {
 						const callback = () => {
-							dispatch(getUser(data));
+							dispatch(getUser({ pageNumber: pageNumber, pageSize: 10 }));
 						};
 
 						dispatch(registerUser(userInfo, callback));
@@ -182,69 +177,42 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 										<>
 											<Col md={6}>
 												<div className="form-group">
-													<label htmlFor="role">
-														Role
-													</label>
+													<label htmlFor="role">Role</label>
 													<Field
 														as="select"
 														className="form-control shadow-none"
 														name="role"
 														disabled={
-															user.userName ===
-															data.userName
-																? true
-																: false
+															user.userName === data.userName ? true : false
 														}
 													>
-														<option value="Team User">
-															Team User
-														</option>
-														<option value="Manager">
-															Manager
-														</option>
-														<option value="Admin">
-															Admin
-														</option>
+														<option value="Team User">Team User</option>
+														<option value="Manager">Manager</option>
+														<option value="Admin">Admin</option>
 													</Field>
 												</div>
 											</Col>
 											<Col md={6}>
 												<div className="form-group">
-													<label htmlFor="site">
-														Sites
-													</label>
+													<label htmlFor="site">Sites</label>
 													{values.role !== "Admin" ? (
 														<Field
 															as="select"
 															className="form-control shadow-none"
 															name="site"
 															multiple={
-																values.role ===
-																"Manager"
-																	? true
-																	: false
+																values.role === "Manager" ? true : false
 															}
 														>
-															{siteInfo.data.map(
-																(site) => {
-																	return (
-																		<option
-																			value={
-																				site.id
-																			}
-																		>
-																			{
-																				site.name
-																			}
-																		</option>
-																	);
-																}
-															)}
+															{siteInfo.data.map((site) => {
+																return (
+																	<option value={site.id}>{site.name}</option>
+																);
+															})}
 														</Field>
 													) : (
 														<p className="text-muted form-control form-control">
-															Admin has acess to
-															all sites
+															Admin has acess to all sites
 														</p>
 													)}
 												</div>
@@ -255,11 +223,7 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose }) => {
 										<Button
 											block
 											variant="outline-dark"
-											onClick={() =>
-												changePasswordHandler(
-													data.userName
-												)
-											}
+											onClick={() => changePasswordHandler(data.userName)}
 										>
 											Change Password
 										</Button>

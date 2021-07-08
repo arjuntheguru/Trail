@@ -167,7 +167,7 @@ const ManageUser = () => {
 													show={showAddModal}
 													onClose={addModalCloseHandler}
 													siteInfo={siteInfo}
-													data={companyId}
+													pageNumber={currentPageNumber}
 												/>
 											) : (
 												""
