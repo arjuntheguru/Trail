@@ -50,8 +50,11 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize]
         [HttpPost("register")]
-        public IActionResult Create(User user)
+        public async Task<IActionResult> Create(User user)
         {
+            var userId = User.FindFirstValue("UserName");
+            var loggedInUser = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+            user.CompanyId = loggedInUser.CompanyId;
             var createdUser = _userService.Create(user);
 
             if (user == null)

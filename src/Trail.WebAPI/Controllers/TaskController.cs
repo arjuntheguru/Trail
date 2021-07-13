@@ -36,7 +36,7 @@ namespace Trail.WebAPI.Controllers
         
         [Authorize(Roles ="SuperAdmin")]
         [HttpGet]
-        public IActionResult GetAll([FromQuery] PaginationFilter filter)
+        public IActionResult GetTaskSuperAdmin([FromQuery] PaginationFilter filter)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
@@ -48,12 +48,15 @@ namespace Trail.WebAPI.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("{companyId}")]
-        public IActionResult GetTaskFromCompanyId([FromQuery] PaginationFilter filter, string companyId)
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetTaskAdmin([FromQuery] PaginationFilter filter)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == companyId);
+            var userId = User.FindFirstValue("UserName");
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+
+            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
