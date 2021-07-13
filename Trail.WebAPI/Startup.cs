@@ -142,6 +142,14 @@ namespace Trail.WebAPI
 
             app.UseHttpsRedirection();
 
+            app.UseStaticFiles();
+
+            if (!env.IsDevelopment())
+            {
+                app.UseSpaStaticFiles();
+            }
+
+
             app.UseRouting();
 
             app.UseAuthentication();
@@ -152,6 +160,12 @@ namespace Trail.WebAPI
             {
                 endpoints.MapControllers();
             });
+
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "ClientApp";                
+            });
+
 
             TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));
 
