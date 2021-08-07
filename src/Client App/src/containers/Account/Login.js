@@ -1,11 +1,11 @@
 /* eslint-disable no-unused-vars */
-import { Formik, Form } from 'formik';
+import { Formik, Form , Field} from 'formik';
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { login } from "../../store/auth-actions";
 import * as Yup from 'yup';
-import { Container, Spinner, Button } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { InputField } from '../../components/InputField/InputField';
 import { useHistory } from 'react-router';
 import { loading } from '../../utils/stateStatus';
@@ -47,23 +47,33 @@ const Login = () => {
                 <Container>
                     {status !== loading ?
                         <div className="row justify-content-center">
-                            <div className="col-6">
+                            <div className="col-5">
                                 <div
-                                    className="card border-secondary mb-3 bgGradient"
+                                    className="card mb-3 shadow border-0"
                                     style={{ marginTop: "10rem" }}
                                 >
                                     <>
-                                        <div className="card-header bg-dark text-light text-center lead">Member Login</div>
+                                        <div className="card-header text-center lead">Member Login</div>
                                         <Form>
                                             <div className="card-body">
 
-                                                <div className="form">
-                                                    <InputField label="Username" name="userName" type="text" />
-                                                    <InputField label="Password" name="password" type="password" />
-                                                    <Button variant="secondary" size="lg" type="submit">
-                                                        Login
-                                                    </Button>
+                                                <div className="row no-gutters">
+                                                    <InputField size="lg" label="Username" name="userName" type="text" />
+                                                    <InputField size="lg" label="Password" name="password" type="password" />
+                                                    
                                                 </div>
+                                                <div className="d-flex justify-content-between">
+                                                    <label>
+                                                        <Field type="checkbox" name="checked" value="One" />
+                                                        Remember me
+                                                        </label>
+                                                        <a>Forgot Password?</a>
+                                                    </div>
+                                                    <button
+                                                        type="submit"
+                                                        className="btn btn-primary btn-block btn-lg mt-3">
+                                                        Login
+                                                    </button>
                                             </div>
                                         </Form>
                                     </>

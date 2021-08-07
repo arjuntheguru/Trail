@@ -202,20 +202,20 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose, pageNumber }) => {
 										<h6>Choose Role</h6>
 										<div className="radio-block d-flex" role="group" aria-label="Basic checkbox toggle button group">
 											<label>
-												<Field type="radio" name="role" value="One" />
+												<Field type="radio" name="role" value="teamuser" />
 												<div className="box d-flex justify-content-center align-items-center">
 												<FontAwesomeIcon icon={faUserAlt} className="mr-2"/> Team User
 												</div>
 											</label>
 										<label>
-											<Field type="radio" name="role" value="One" />
+											<Field type="radio" name="role" value="manager" />
 											<div className="box d-flex justify-content-center align-items-center">
 											<FontAwesomeIcon icon={faUserTie} className="mr-2"/> Manager
 											</div>
 											
 										</label>
 										<label>
-										<Field type="radio" name="role" value="One" />
+										<Field type="radio" name="role" value="admin" />
 										<div className="box d-flex justify-content-center align-items-center">
 										<FontAwesomeIcon icon={faUserCog} className="mr-2"/> Admin
 										</div>

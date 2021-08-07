@@ -26,7 +26,6 @@ import {
 	faSearch,
 	faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
-
 import "../../App.scss";
 import EditSite from "./EditSite";
 import AddSite from "./AddSite";

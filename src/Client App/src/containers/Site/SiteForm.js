@@ -293,33 +293,31 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 												label="City"
 												name="city"
 												type="text"
-												size={50}
+												size={30}
 											/>
 											<InputField
 												label="State"
 												name="state"
 												type="text"
-												size={50}
+												size={30}
 											/>
 											<InputField
 												label="Country"
 												name="country"
 												type="text"
-												size={50}
+												size={30}
 											/>
 											<InputField
 												label="ZIP"
 												name="zip"
 												type="text"
-												size={50}
+												size={30}
 											/>
 										</div>
-						<div className="form-row">
-											
-										</div>
+										<h6>Business Hours</h6>
 										<FieldArray name="buisnessHours">
 											<>
-												<Tabs defaultActiveKey="sun" className="mb-3">
+												<Tabs defaultActiveKey="sun" className="clean-tabs mb-3">
 													{values.buisnessHours.map((buisnessHour, i) => {
 														return (
 															<Tab

@@ -23,7 +23,21 @@ export const InputField = ({ label, isLabel = true, ...props }) => {
                 </Col>
 
             )
-
+            case 30:
+                return (
+                    <Col md={3}>
+                        <FormGroup>
+                            <label htmlFor={field.name}>{label}</label>
+                            <input
+                                className={`form-control shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
+                                {...field} {...props}
+                                autoComplete="off"
+                            />
+                            <ErrorMessage component="div" name={field.name} className="error" />
+                        </FormGroup>
+                    </Col>
+    
+                )
         default:
             return (
                 <div className='form-row'>
@@ -39,6 +53,21 @@ export const InputField = ({ label, isLabel = true, ...props }) => {
                         </FormGroup>
                     </div>
                 </div>
+        )
+        case 'lg':
+            return (
+                <Col md={12}>
+                    <FormGroup>
+                        <label htmlFor={field.name}>{label}</label>
+                        <input
+                            className={`form-control form-control-lg shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
+                            {...field} {...props}
+                            autoComplete="off"
+                        />
+                        <ErrorMessage component="div" name={field.name} className="error" />
+                    </FormGroup>
+                </Col>
+
             )
     }
 
