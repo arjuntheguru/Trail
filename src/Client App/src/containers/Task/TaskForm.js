@@ -18,9 +18,10 @@ import {
 	Col,
 	Popover,
 	OverlayTrigger,
+	Modal
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPlusCircle, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import { returnLoggedInUser } from "../../store/auth-actions";
 
@@ -133,12 +134,12 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 		>
 			{({ values, setValues, setTouched }) => (
 				<div>
-					<Card className="bg-transparent">
-						<Card.Header className="bg-dark text-light text-center">
-							{!isEdit ? "Add Task" : "Edit Task"}
-						</Card.Header>
+					<Modal.Header closeButton>
+						{!isEdit ? "Add Task" : "Edit Task"}
+					</Modal.Header>
+					<Modal.Body>
+						
 						<Form>
-							<Card.Body className="card-body">
 								<InputField label="Name" name="name" type="text" />
 								<TextArea label="Description" name="description" />
 								{/* <div role="group" onChange={e => radioValueChangeHandler(e)}>
@@ -150,29 +151,23 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
                                         <Field type="radio" name="taskType" value="recordLog" /> Record Log
                                     </label>
                                 </div> */}
-							</Card.Body>
 							{isCheckList && (
-								<Card className="mt-1 bg-transparent">
-									<Card.Header className="bg-dark text-light text-center">
-										Task Item{" "}
-									</Card.Header>
-									<Card.Body>
-										<FieldArray name="taskItemInfo">
+								<>
+										<h6>Task Item{" "}</h6>	
+										<div className="list-content-wrapper">
+											<FieldArray name="taskItemInfo">
 											{() =>
 												values.taskItemInfo.map((taskItem, i) => {
 													return (
-														<Row className="my-1">
-															<Col md={1} className="mt-1">
-																<span className="">{i + 1}.</span>
-															</Col>
-															<Col md={10}>
+														<div className="d-flex justify-content-start mb-2">
+															
+																{/* <span className="">{i + 1}.</span> */}
+															
 																<InputField
 																	isLabel={false}
 																	name={`taskItemInfo.${i}.name`}
 																	type="text"
 																/>
-															</Col>
-															<Col md={1}>
 																<OverlayTrigger
 																	overlay={popover}
 																	show={showPopover}
@@ -183,7 +178,7 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 																	rootClose
 																>
 																	<Button
-																		variant="danger"
+																		variant="link"
 																		size="sm"
 																		data-index={i}
 																		onClick={(e) =>
@@ -198,46 +193,35 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 																	>
 																		<FontAwesomeIcon
 																			icon={faTrash}
-																			className="text-light"
 																		/>
 																	</Button>
 																</OverlayTrigger>
-															</Col>
-														</Row>
+															
+														</div>
 													);
 												})
 											}
 										</FieldArray>
-										<div className="text-center">
-											<Button
+										</div>
+										<Button
 												type="button"
-												variant="outline-success"
-												className="w-25 my-2"
+												variant="link"
+												className="my-2"
 												onClick={() => {
 													addTaskItemHandler(values, setValues, setTouched);
 												}}
 											>
-												Add Item
+												<FontAwesomeIcon icon={faPlusCircle}/> Add Item
 											</Button>
-										</div>
-									</Card.Body>
-								</Card>
+								</>
 							)}
-							<Card.Footer className="text-right">
-								<Button variant="success" type="submit" size="sm">
-									Submit
-								</Button>
-								<Button
-									variant="danger"
-									className="ml-3"
-									type="reset"
-									size="sm"
-								>
-									Reset
-								</Button>
-							</Card.Footer>
+							
 						</Form>
-					</Card>
+					</Modal.Body>
+					<Modal.Footer className="justify-content-between">
+						<Button variant="light" type="reset">Reset</Button>
+						<Button variant="primary" type="submit" >Submit</Button>		
+					</Modal.Footer>
 				</div>
 			)}
 		</Formik>

@@ -1,0 +1,13 @@
+.nav-tabs{
+    &.clean-tabs{
+        .nav-item{
+            border: none;
+            border-bottom: 3px solid transparent;
+            &.active{
+                color: $primary;
+                font-weight: 700;
+                border-color: $primary;
+            }
+        }
+    }
+}

@@ -6,11 +6,11 @@ import { TimeField } from '../TimeField/Timefield';
 export const CustomTimeField = ({ label, ...props }) => {
 
     return (
-        <Row className="my-3">
+        <Row className="my-2 form-row">
             <Col md={3} className="m-0">
                 <label htmlFor={props.name}>{label}</label>
             </Col>
-            <Col md={2} className="pl-1">
+            <Col md={2}>
                 <Field as='select' className="form-control form-control-sm shadow-none" name={props.name + 'From.day'} 
                 onChange={(e) => 
                   props.setFieldValue(props.name + 'From.day', parseInt(e.target.value))
@@ -20,13 +20,13 @@ export const CustomTimeField = ({ label, ...props }) => {
                     )}
                 </Field>               
             </Col>
-            <Col md={2} className="p-0">
+            <Col md={2}>
                 <TimeField name={props.name + 'From.time'} />
             </Col>
-            <Col md={1} className="pl-4">
+            <Col md={1}>
                 <span>to</span>
             </Col>
-            <Col md={2} className="pl-1">
+            <Col md={2}>
                 <Field as='select' className="form-control form-control-sm shadow-none" name={props.name + 'To.day'}
                 onChange={(e) => 
                     props.setFieldValue(props.name + 'To.day', parseInt(e.target.value))
@@ -36,7 +36,7 @@ export const CustomTimeField = ({ label, ...props }) => {
                     )}
                 </Field>
             </Col>
-            <Col md={2} className="p-0">
+            <Col md={2}>
                 <TimeField name={props.name + 'To.time'} />
             </Col>
         </Row>

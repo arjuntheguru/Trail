@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { login } from "../../store/auth-actions";
 import * as Yup from 'yup';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container, Spinner, Button } from 'react-bootstrap';
 import { InputField } from '../../components/InputField/InputField';
 import { useHistory } from 'react-router';
 import { loading } from '../../utils/stateStatus';
@@ -60,11 +60,9 @@ const Login = () => {
                                                 <div className="form">
                                                     <InputField label="Username" name="userName" type="text" />
                                                     <InputField label="Password" name="password" type="password" />
-                                                    <button
-                                                        type="submit"
-                                                        className="btn btn-outline-success btn-block">
+                                                    <Button variant="secondary" size="lg" type="submit">
                                                         Login
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </Form>

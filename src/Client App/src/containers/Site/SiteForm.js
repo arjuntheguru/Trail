@@ -6,7 +6,10 @@ import { InputField } from "../../components/InputField/InputField";
 import { CustomTimeField } from "../../components/CustomTimeField/CustomTimeField";
 import * as Yup from "yup";
 
-import { Card, Button, Tabs, Tab } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {faRedoAlt} from "@fortawesome/free-solid-svg-icons";
+
+import { Button, Tabs, Tab, Modal } from "react-bootstrap";
 
 const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 	const auth = useSelector((state) => state.auth);
@@ -261,37 +264,61 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 		>
 			{({ values, setValues, setFieldValue }) => (
 				<div>
-					<Card className="bg-transparent">
-						<Card.Header className="bg-dark text-light text-center">
-							{!isEdit ? "Add Site" : "Edit Site"}
-						</Card.Header>
-						<Form>
-							<Card.Body className="card-body">
-								<InputField
-									label="Name"
-									name="name"
-									readOnly={!isEdit ? false : true}
-								/>
-								<Card className="mt-1 bg-transparent">
-									<Card.Header className="bg-dark text-light text-center">
-										Buisness Hours
-									</Card.Header>
-									<Card.Body>
+					<Modal.Header closeButton>
+					{!isEdit ? "Add Site" : "Edit Site"}
+					</Modal.Header>
+					<Modal.Body>
+						<InputField
+							label="Name"
+							name="name"
+							readOnly={!isEdit ? false : true}
+						/>
+						<h6>Address (Optional)</h6>
+						<div className="form-row">
+											<InputField
+												label="Street Address"
+												name="streetAddress"
+												type="text"
+												size={50}
+											/>
+											<InputField
+												label="Address Line 2"
+												name="addressLine2"
+												type="text"
+												size={50}
+											/>
+										</div>
+						<div className="form-row">
+											<InputField
+												label="City"
+												name="city"
+												type="text"
+												size={50}
+											/>
+											<InputField
+												label="State"
+												name="state"
+												type="text"
+												size={50}
+											/>
+											<InputField
+												label="Country"
+												name="country"
+												type="text"
+												size={50}
+											/>
+											<InputField
+												label="ZIP"
+												name="zip"
+												type="text"
+												size={50}
+											/>
+										</div>
+						<div className="form-row">
+											
+										</div>
 										<FieldArray name="buisnessHours">
 											<>
-												<div className="text-center">
-													<Button
-														type="button"
-														size="sm"
-														variant="outline-dark"
-														className="w-100 mb-3"
-														onClick={() => {
-															setBuisnessHourValues(values, setValues);
-														}}
-													>
-														Set Default Value
-													</Button>
-												</div>
 												<Tabs defaultActiveKey="sun" className="mb-3">
 													{values.buisnessHours.map((buisnessHour, i) => {
 														return (
@@ -357,76 +384,33 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 														);
 													})}
 												</Tabs>
+												<Button
+														type="button"
+														variant="link"
+														className="mb-3"
+														onClick={() => {
+															setBuisnessHourValues(values, setValues);
+														}}
+													>
+														<FontAwesomeIcon icon={faRedoAlt} /> Set Default Value
+													</Button>
 											</>
 										</FieldArray>
-									</Card.Body>
-								</Card>
-								<Card className="mt-1 bg-transparent">
-									<Card.Header className="bg-dark text-light text-center">
-										Address (optional)
-									</Card.Header>
-									<Card.Body>
-										<div className="form-row">
-											<InputField
-												label="Street Address"
-												name="streetAddress"
-												type="text"
-												size={50}
-											/>
-											<InputField
-												label="Address Line 2"
-												name="addressLine2"
-												type="text"
-												size={50}
-											/>
-										</div>
-										<div className="form-row">
-											<InputField
-												label="City"
-												name="city"
-												type="text"
-												size={50}
-											/>
-											<InputField
-												label="State"
-												name="state"
-												type="text"
-												size={50}
-											/>
-										</div>
-										<div className="form-row">
-											<InputField
-												label="Country"
-												name="country"
-												type="text"
-												size={50}
-											/>
-											<InputField
-												label="ZIP"
-												name="zip"
-												type="text"
-												size={50}
-											/>
-										</div>
-									</Card.Body>
-								</Card>
-							</Card.Body>
-							<Card.Footer className="text-right">
-								<Button variant="success" type="submit" size="sm">
-									Submit
-								</Button>
+											
+						</Modal.Body>
+					<Modal.Footer className="justify-content-between">
+					
 								<Button
-									variant="danger"
-									className="ml-3"
+									variant="light"
 									type="reset"
-									size="sm"
 								>
 									Reset
 								</Button>
-							</Card.Footer>
-						</Form>
-					</Card>
-				</div>
+								<Button variant="primary" type="submit">
+									Submit
+								</Button>
+					</Modal.Footer>
+					</div>
 			)}
 		</Formik>
 	);

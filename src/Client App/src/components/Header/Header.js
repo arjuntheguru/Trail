@@ -173,7 +173,7 @@ const Header = () => {
 							title={
 								<FontAwesomeIcon icon={faCog} size="lg" className="mr-2" />
 							}
-							align="end"
+							alignRight
 							className="text-info"
 							show={dropdown2}
 							onToggle={() => {

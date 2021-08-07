@@ -6,7 +6,9 @@ const EditCompany = ({ show, onClose, data }) => {
 
     return (
         <Modal show={show} onHide={onClose} centered size="lg">           
-            <Modal.Body className="bgGradient">{<SiteForm isEdit={true} data={data} onClose={onClose}/>}</Modal.Body>
+         
+                {<SiteForm isEdit={true} data={data} onClose={onClose}/>}
+            
         </Modal>
     )
 
