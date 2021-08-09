@@ -5,7 +5,7 @@ import ChangePasswordForm from '../Account/ChangePasswordForm';
 const ChangeUserPassword = ({ show, onClose, data }) => {
     
     return (
-        <Modal show={show} onHide={onClose} centered size="lg" className="bg-transparent">
+        <Modal show={show} onHide={onClose} centered className="bg-transparent">
             <Modal.Body className="bgGradient">{<ChangePasswordForm data={data} onClose={onClose}/>}</Modal.Body>
         </Modal>
     )

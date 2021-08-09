@@ -13,7 +13,7 @@ export const TextArea = ({ label, ...props }) => {
                 <FormGroup>
                     <label htmlFor={field.name}>{label}</label>
                     <textarea
-                        className={`form-control form-control-sm shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
+                        className={`form-control shadow-none ${meta.touched && meta.error && 'is-invalid'}`}
                         {...field} {...props}                        
                     />
                     <ErrorMessage component="div" name={field.name} className="error" />

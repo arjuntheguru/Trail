@@ -4,7 +4,7 @@ import UserForm from "./UserForm";
 
 const AddUser = ({ show, onClose, siteInfo, data = {}, pageNumber }) => {
 	return (
-		<Modal show={show} onHide={onClose} centered size="lg">
+		<Modal show={show} onHide={onClose} centered>
 			{
 				<UserForm
 					onClose={onClose}
