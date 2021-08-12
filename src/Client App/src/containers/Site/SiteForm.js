@@ -7,7 +7,7 @@ import { CustomTimeField } from "../../components/CustomTimeField/CustomTimeFiel
 import * as Yup from "yup";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {faRedoAlt} from "@fortawesome/free-solid-svg-icons";
+import { faRedoAlt } from "@fortawesome/free-solid-svg-icons";
 
 import { Button, Tabs, Tab, Modal } from "react-bootstrap";
 
@@ -228,6 +228,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 			initialValues={!isEdit ? initialValues : initialValuesEdited}
 			validationSchema={siteInfoValidate}
 			onSubmit={(values) => {
+				console.log(values);
 				let siteInfo = {
 					Id: values.id,
 					Name: values.name,
@@ -265,150 +266,132 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 			{({ values, setValues, setFieldValue }) => (
 				<div>
 					<Modal.Header closeButton>
-					{!isEdit ? "Add Site" : "Edit Site"}
+						{!isEdit ? "Add Site" : "Edit Site"}
 					</Modal.Header>
-					<Modal.Body>
-						<InputField
-							label="Name"
-							name="name"
-							readOnly={!isEdit ? false : true}
-						/>
-						<h6>Address (Optional)</h6>
-						<div className="form-row">
-											<InputField
-												label="Street Address"
-												name="streetAddress"
-												type="text"
-												size={50}
-											/>
-											<InputField
-												label="Address Line 2"
-												name="addressLine2"
-												type="text"
-												size={50}
-											/>
-										</div>
-						<div className="form-row">
-											<InputField
-												label="City"
-												name="city"
-												type="text"
-												size={30}
-											/>
-											<InputField
-												label="State"
-												name="state"
-												type="text"
-												size={30}
-											/>
-											<InputField
-												label="Country"
-												name="country"
-												type="text"
-												size={30}
-											/>
-											<InputField
-												label="ZIP"
-												name="zip"
-												type="text"
-												size={30}
-											/>
-										</div>
-										<h6>Business Hours</h6>
-										<FieldArray name="buisnessHours">
-											<>
-												<Tabs defaultActiveKey="sun" className="clean-tabs mb-3">
-													{values.buisnessHours.map((buisnessHour, i) => {
-														return (
-															<Tab
-																eventKey={WeekDays[i].eventKey}
-																title={WeekDays[i].title}
-															>
-																<>
-																	<input
-																		name={`buisnessHours.${i}.day`}
-																		type="hidden"
-																	/>
-																	<CustomTimeField
-																		label="Before Open"
-																		name={`buisnessHours.${i}.beforeOpen`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Open"
-																		name={`buisnessHours.${i}.open`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Morning"
-																		name={`buisnessHours.${i}.morning`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Lunch"
-																		name={`buisnessHours.${i}.lunch`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Afternoon"
-																		name={`buisnessHours.${i}.afternoon`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Evening"
-																		name={`buisnessHours.${i}.evening`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="Close"
-																		name={`buisnessHours.${i}.close`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																	<CustomTimeField
-																		label="After Close"
-																		name={`buisnessHours.${i}.afterClose`}
-																		options={WeekDays[i].options}
-																		setFieldValue={setFieldValue}
-																	/>
-																</>
-															</Tab>
-														);
-													})}
-												</Tabs>
-												<Button
-														type="button"
-														variant="link"
-														className="mb-3"
-														onClick={() => {
-															setBuisnessHourValues(values, setValues);
-														}}
-													>
-														<FontAwesomeIcon icon={faRedoAlt} /> Set Default Value
-													</Button>
-											</>
-										</FieldArray>
-											
+					<Form>
+						<Modal.Body>
+							<InputField
+								label="Name"
+								name="name"
+								readOnly={!isEdit ? false : true}
+							/>
+							<h6>Address (Optional)</h6>
+							<div className="form-row">
+								<InputField
+									label="Street Address"
+									name="streetAddress"
+									type="text"
+									size={50}
+								/>
+								<InputField
+									label="Address Line 2"
+									name="addressLine2"
+									type="text"
+									size={50}
+								/>
+							</div>
+							<div className="form-row">
+								<InputField label="City" name="city" type="text" size={30} />
+								<InputField label="State" name="state" type="text" size={30} />
+								<InputField
+									label="Country"
+									name="country"
+									type="text"
+									size={30}
+								/>
+								<InputField label="ZIP" name="zip" type="text" size={30} />
+							</div>
+							<h6>Business Hours</h6>
+							<FieldArray name="buisnessHours">
+								<>
+									<Tabs defaultActiveKey="sun" className="clean-tabs mb-3">
+										{values.buisnessHours.map((buisnessHour, i) => {
+											return (
+												<Tab
+													eventKey={WeekDays[i].eventKey}
+													title={WeekDays[i].title}
+												>
+													<>
+														<input
+															name={`buisnessHours.${i}.day`}
+															type="hidden"
+														/>
+														<CustomTimeField
+															label="Before Open"
+															name={`buisnessHours.${i}.beforeOpen`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Open"
+															name={`buisnessHours.${i}.open`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Morning"
+															name={`buisnessHours.${i}.morning`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Lunch"
+															name={`buisnessHours.${i}.lunch`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Afternoon"
+															name={`buisnessHours.${i}.afternoon`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Evening"
+															name={`buisnessHours.${i}.evening`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="Close"
+															name={`buisnessHours.${i}.close`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+														<CustomTimeField
+															label="After Close"
+															name={`buisnessHours.${i}.afterClose`}
+															options={WeekDays[i].options}
+															setFieldValue={setFieldValue}
+														/>
+													</>
+												</Tab>
+											);
+										})}
+									</Tabs>
+									<Button
+										type="button"
+										variant="link"
+										className="mb-3"
+										onClick={() => {
+											setBuisnessHourValues(values, setValues);
+										}}
+									>
+										<FontAwesomeIcon icon={faRedoAlt} /> Set Default Value
+									</Button>
+								</>
+							</FieldArray>
 						</Modal.Body>
-					<Modal.Footer className="justify-content-between">
-					
-								<Button
-									variant="light"
-									type="reset"
-								>
-									Reset
-								</Button>
-								<Button variant="primary" type="submit">
-									Submit
-								</Button>
-					</Modal.Footer>
-					</div>
+						<Modal.Footer className="justify-content-between">
+							<Button variant="light" type="reset">
+								Reset
+							</Button>
+							<Button variant="primary" type="submit">
+								Submit
+							</Button>
+						</Modal.Footer>
+					</Form>
+				</div>
 			)}
 		</Formik>
 	);

@@ -18,7 +18,7 @@ import {
 	Col,
 	Popover,
 	OverlayTrigger,
-	Modal
+	Modal,
 } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -137,12 +137,11 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 					<Modal.Header closeButton>
 						{!isEdit ? "Add Task" : "Edit Task"}
 					</Modal.Header>
-					<Modal.Body>
-						
-						<Form>
-								<InputField label="Name" name="name" type="text" />
-								<TextArea label="Description" name="description" />
-								{/* <div role="group" onChange={e => radioValueChangeHandler(e)}>
+					<Form>
+						<Modal.Body>
+							<InputField label="Name" name="name" type="text" />
+							<TextArea label="Description" name="description" />
+							{/* <div role="group" onChange={e => radioValueChangeHandler(e)}>
                                     <label className="mr-3">Task Type : </label>
                                     <label className="mr-3">
                                         <Field type="radio" name="taskType" value="checkList" /> Checklist
@@ -153,75 +152,74 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
                                 </div> */}
 							{isCheckList && (
 								<>
-										<h6>Task Item{" "}</h6>	
-										<div className="list-content-wrapper">
-											<FieldArray name="taskItemInfo">
+									<h6>Task Item </h6>
+									<div className="list-content-wrapper">
+										<FieldArray name="taskItemInfo">
 											{() =>
 												values.taskItemInfo.map((taskItem, i) => {
 													return (
 														<div className="d-flex justify-content-start mb-2">
-															
-																{/* <span className="">{i + 1}.</span> */}
-															
-																<InputField
-																	isLabel={false}
-																	name={`taskItemInfo.${i}.name`}
-																	type="text"
-																/>
-																<OverlayTrigger
-																	overlay={popover}
-																	show={showPopover}
-																	trigger="click"
-																	onToggle={() => {
-																		setShowPopover(!showPopover);
-																	}}
-																	rootClose
+															{/* <span className="">{i + 1}.</span> */}
+
+															<InputField
+																isLabel={false}
+																name={`taskItemInfo.${i}.name`}
+																type="text"
+															/>
+															<OverlayTrigger
+																overlay={popover}
+																show={showPopover}
+																trigger="click"
+																onToggle={() => {
+																	setShowPopover(!showPopover);
+																}}
+																rootClose
+															>
+																<Button
+																	variant="link"
+																	size="sm"
+																	data-index={i}
+																	onClick={(e) =>
+																		deleteTaskHandler(
+																			e,
+																			values,
+																			setValues,
+																			setTouched
+																		)
+																	}
+																	type="button"
 																>
-																	<Button
-																		variant="link"
-																		size="sm"
-																		data-index={i}
-																		onClick={(e) =>
-																			deleteTaskHandler(
-																				e,
-																				values,
-																				setValues,
-																				setTouched
-																			)
-																		}
-																		type="button"
-																	>
-																		<FontAwesomeIcon
-																			icon={faTrash}
-																		/>
-																	</Button>
-																</OverlayTrigger>
-															
+																	<FontAwesomeIcon icon={faTrash} />
+																</Button>
+															</OverlayTrigger>
 														</div>
 													);
 												})
 											}
 										</FieldArray>
-										</div>
-										<Button
-												type="button"
-												variant="link"
-												className="my-2"
-												onClick={() => {
-													addTaskItemHandler(values, setValues, setTouched);
-												}}
-											>
-												<FontAwesomeIcon icon={faPlusCircle}/> Add Item
-											</Button>
+									</div>
+									<Button
+										type="button"
+										variant="link"
+										className="my-2"
+										onClick={() => {
+											addTaskItemHandler(values, setValues, setTouched);
+										}}
+									>
+										<FontAwesomeIcon icon={faPlusCircle} /> Add Item
+									</Button>
 								</>
 							)}
-							
-						</Form>
-					</Modal.Body>
-					<Modal.Footer className="justify-content-between">
-						<Button variant="light" type="reset">Reset</Button>
-						<Button variant="primary" type="submit" >Submit</Button>		
-					</Modal.Footer>
+						</Modal.Body>
+						<Modal.Footer className="justify-content-between">
+							<Button variant="light" type="reset">
+								Reset
+							</Button>
+							<Button variant="primary" type="submit">
+								Submit
+							</Button>
+						</Modal.Footer>
+					</Form>
 				</div>
 			)}
 		</Formik>
