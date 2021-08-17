@@ -11,6 +11,7 @@ using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Models;
 using Trail.Application.Common.Wrappers;
 using Trail.Domain.Entities;
+using Trail.Infrastructure.Services;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -19,16 +20,19 @@ namespace Trail.WebAPI.Controllers
     {
         private readonly ICrudService<Site> _siteCrudService;
         private readonly ICrudService<User> _userCrudService;
+        private readonly SiteCrudService _siteSearchService;
         private readonly IUriService _uriService;
 
         public SiteController(
             ICrudService<Site> siteCrudService,
             ICrudService<User> userCrudService,
-            IUriService uriService)
+            IUriService uriService,
+            SiteCrudService siteSearchService)
         {
             _siteCrudService = siteCrudService;
             _uriService = uriService;
             _userCrudService = userCrudService;
+            _siteSearchService = siteSearchService;
         }
 
         [Authorize(Roles="Admin")]
@@ -58,14 +62,23 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize(Roles ="Admin")]
         [HttpGet("admin")]
-        public async Task<IActionResult> GetSitesFromCompanyId([FromQuery] PaginationFilter filter)
+        public async Task<IActionResult> GetSitesFromCompanyId([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var userId = User.FindFirstValue("UserName");
             var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
 
-            var records = _siteCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
+            var records = new RecordCount<Site>();
+
+            if (String.IsNullOrWhiteSpace(searchQuery))
+            {
+                records = _siteCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
+            }
+            else
+            {
+                records = _siteSearchService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId, searchQuery.ToLower());
+            }           
                       
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
@@ -85,14 +98,23 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize(Roles = "Manager")]
         [HttpGet("manager")]
-        public async Task<IActionResult> GetSitesFromCompanyIdManager([FromQuery] PaginationFilter filter)
+        public async Task<IActionResult> GetSitesFromCompanyIdManager([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var userId = User.FindFirstValue("UserName");
-            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);            
 
-            var records = _siteCrudService.FilterBy(validFilter, p => user.SiteId.Contains(p.Id));
+            var records = new RecordCount<Site>();
+
+            if (String.IsNullOrWhiteSpace(searchQuery))
+            {
+                records = _siteCrudService.FilterBy(validFilter, p => user.SiteId.Contains(p.Id));
+            }
+            else
+            {
+                records = _siteSearchService.FilterBy(validFilter, p => user.SiteId.Contains(p.Id), searchQuery.ToLower());
+            }
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 

@@ -20,17 +20,18 @@ namespace Trail.Infrastructure.Services
     public class CrudService<TDocument> : ICrudService<TDocument> where TDocument : IBaseEntity
     {
         private readonly IMongoCollection<TDocument> _collection;
+        private readonly IMongoDatabase _database;
 
         public CrudService(IDatabaseSettings settings)
         {
-            var database = new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);
-            _collection = database.GetCollection<TDocument>(GetCollectionName(typeof(TDocument)));
+            _database = new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);
+            _collection = _database.GetCollection<TDocument>(GetCollectionName(typeof(TDocument)));
 
-            CompanyConfig.Config(database);
+            CompanyConfig.Config(_database);
 
         }
 
-        private protected string GetCollectionName(Type documentType)
+        public string GetCollectionName(Type documentType)
         {
             return PluralizationProvider.Pluralize(documentType.Name);
         }
@@ -40,6 +41,11 @@ namespace Trail.Infrastructure.Services
             var result = _collection.AsQueryable();
 
             return result;
+        }
+
+        public IMongoDatabase Database()
+        {
+            return _database;
         }
 
         public virtual RecordCount<TDocument> AsQueryable(PaginationFilter filter)

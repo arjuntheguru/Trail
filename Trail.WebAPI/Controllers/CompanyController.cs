@@ -9,6 +9,7 @@ using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Models;
 using Trail.Application.Common.Wrappers;
 using Trail.Domain.Entities;
+using Trail.Infrastructure.Services;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -16,22 +17,35 @@ namespace Trail.WebAPI.Controllers
     public class CompanyController : ApiControllerBase
     {
         private readonly ICrudService<Company> _companyCrudService;
+        private readonly CompanyCrudService _companySearchService;
         private readonly IUriService _uriService;
 
         public CompanyController(
             ICrudService<Company> companyCrudService,
-            IUriService uriService)
+            IUriService uriService,
+            CompanyCrudService companySearchService)
         {
             _companyCrudService = companyCrudService;
             _uriService = uriService;
+            _companySearchService = companySearchService;
         }
 
         [HttpGet]
-        public IActionResult GetAll([FromQuery] PaginationFilter filter)
+        public IActionResult GetAll([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _companyCrudService.AsQueryable(validFilter);
+            var records = new RecordCount<Company>();
+            
+            if(String.IsNullOrWhiteSpace(searchQuery))
+            {
+                records = _companyCrudService.AsQueryable(validFilter);
+
+            }
+            else
+            {
+                records = _companySearchService.AsQueryable(validFilter, searchQuery.ToLower());
+            }
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<Company>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 

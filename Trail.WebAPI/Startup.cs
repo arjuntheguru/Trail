@@ -80,6 +80,9 @@ namespace Trail.WebAPI
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<CompanyCrudService>();
+            services.AddScoped<SiteCrudService>();
+            services.AddScoped<UserCrudService>();
 
             services.AddCors(options =>
            {
