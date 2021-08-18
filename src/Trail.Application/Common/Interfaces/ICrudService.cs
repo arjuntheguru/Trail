@@ -1,4 +1,5 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,10 @@ namespace Trail.Application.Common.Interfaces
     {
         IEnumerable<TDocument> AsQueryable();
         RecordCount<TDocument> AsQueryable(PaginationFilter filter);
+
+        IMongoDatabase Database();
+
+        string GetCollectionName(Type documentType);
 
         IEnumerable<TDocument> FilterBy(Expression<Func<TDocument, bool>> filterExpression);
 
