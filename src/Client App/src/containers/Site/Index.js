@@ -51,6 +51,8 @@ const Site = () => {
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+	const [searchString, setSearchString] = useState("");
+
 	const [editData, setEditData] = useState({});
 	const [deleteData, setDeleteData] = useState({});
 
@@ -81,6 +83,15 @@ const Site = () => {
 
 	const deleteModalCloseHandler = () => {
 		setShowDeleteModal(false);
+	};
+
+	const searchButtonClickHandler = () => {
+		setCurrentPageNumber(1);
+		if (user.role === "Admin") {
+			dispatch(getSiteAdmin(undefined, searchString));
+		} else {
+			dispatch(getSiteManager(undefined, searchString));
+		}
 	};
 
 	useEffect(() => {
@@ -126,9 +137,14 @@ const Site = () => {
 													placeholder="Search"
 													aria-label="Search"
 													aria-describedby="basic-addon1"
+													onChange={(e) => setSearchString(e.target.value)}
+													value={searchString}
 												/>
 												<InputGroup.Append>
-													<Button variant="primary">
+													<Button
+														variant="primary"
+														onClick={() => searchButtonClickHandler()}
+													>
 														<FontAwesomeIcon icon={faSearch} />{" "}
 													</Button>
 												</InputGroup.Append>
@@ -281,7 +297,12 @@ const Site = () => {
 																currentPageNumber={currentPageNumber}
 																pageNumberChange={setCurrentPageNumber}
 																totalRecords={siteInfo.count}
-																callback={getSiteAdmin}
+																callback={
+																	user.role === "Admin"
+																		? getSiteAdmin
+																		: getSiteManager
+																}
+																searchQuery={searchString}
 															/>
 														</td>
 													</tr>

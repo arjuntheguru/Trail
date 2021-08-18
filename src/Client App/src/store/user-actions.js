@@ -29,13 +29,13 @@ export const registerUser =
 	};
 
 export const getUser =
-	(item = { pageNumber: 1, pageSize: 10 }, role = "") =>
+	(item = { pageNumber: 1, pageSize: 10 }, searchQuery = "") =>
 	(dispatch) => {
 		dispatch(userActions.start_loading());
 		console.log(item);
 		let config = tokenConfig();
 
-		const URL = `api/users?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}&role=${role}`;
+		const URL = `api/users?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}&searchQuery=${searchQuery}`;
 
 		API.get(URL, config)
 			.then((res) => {
@@ -107,9 +107,4 @@ export const deleteUser = (item, isActive) => (dispatch) => {
 			dispatch(userActions.error());
 			notifyError("Error occured while archiving User");
 		});
-};
-
-export const filter = (value) => (dispatch) => {
-	dispatch(userActions.start_loading());
-	dispatch(userActions.filter_user_success(value));
 };

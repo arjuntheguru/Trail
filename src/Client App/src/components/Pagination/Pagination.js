@@ -7,30 +7,36 @@ const TablePagination = ({
 	currentPageNumber,
 	totalRecords,
 	callback,
+	searchQuery = "",
 	pageNumberChange,
 }) => {
 	const dispatch = useDispatch();
 	console.log(currentPageNumber);
+	console.log(searchQuery);
 	const lastPage = Math.ceil(totalRecords / 10);
 	console.log(totalRecords);
 	const firstPageHandler = () => {
 		pageNumberChange(1);
-		dispatch(callback({ pageNumber: 1, pageSize: 10 }));
+		dispatch(callback({ pageNumber: 1, pageSize: 10 }, searchQuery));
 	};
 
 	const lastPageHandler = () => {
 		pageNumberChange(lastPage);
-		dispatch(callback({ pageNumber: lastPage, pageSize: 10 }));
+		dispatch(callback({ pageNumber: lastPage, pageSize: 10 }, searchQuery));
 	};
 
 	const previousPageHandler = () => {
 		pageNumberChange(currentPageNumber - 1);
-		dispatch(callback({ pageNumber: currentPageNumber - 1, pageSize: 10 }));
+		dispatch(
+			callback({ pageNumber: currentPageNumber - 1, pageSize: 10 }, searchQuery)
+		);
 	};
 
 	const nextPageHandler = () => {
 		pageNumberChange(currentPageNumber + 1);
-		dispatch(callback({ pageNumber: currentPageNumber + 1, pageSize: 10 }));
+		dispatch(
+			callback({ pageNumber: currentPageNumber + 1, pageSize: 10 }, searchQuery)
+		);
 	};
 
 	return (

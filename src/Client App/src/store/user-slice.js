@@ -60,22 +60,6 @@ const userSlice = createSlice({
 				status: succeeded,
 			};
 		},
-		filter_user_success: (state, action) => {
-			var userInfo = state.rootData.filter(
-				(item) =>
-					item.firstName.toLowerCase().includes(action.payload) ||
-					item.lastName.toLowerCase().includes(action.payload) ||
-					item.userName.toLowerCase().includes(action.payload) ||
-					item.email.toLowerCase().includes(action.payload) ||
-					item.role.toLowerCase().includes(action.payload)
-			);
-
-			return {
-				...state,
-				status: succeeded,
-				userInfo: userInfo,
-			};
-		},
 		error: (state) => {
 			return {
 				...state,

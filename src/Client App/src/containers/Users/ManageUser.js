@@ -48,6 +48,8 @@ const ManageUser = () => {
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+	const [searchString, setSearchString] = useState("");
+
 	const [editData, setEditData] = useState({});
 	const [deleteData, setDeleteData] = useState({});
 
@@ -87,9 +89,9 @@ const ManageUser = () => {
 		setShowDeleteModal(false);
 	};
 
-	const searchHandler = (value) => {
-		console.log(value);
-		dispatch(filter(value.toLowerCase()));
+	const searchButtonClickHandler = () => {
+		setCurrentPageNumber(1);
+		dispatch(getUser(undefined, searchString));
 	};
 
 	useEffect(() => {
@@ -139,12 +141,14 @@ const ManageUser = () => {
 													placeholder="Search"
 													aria-label="Search"
 													aria-describedby="basic-addon1"
-													// onChange={(e) => {
-													// 	searchHandler(e.target.value);
-													// }}
+													onChange={(e) => setSearchString(e.target.value)}
+													value={searchString}
 												/>
 												<InputGroup.Append>
-													<Button variant="primary">
+													<Button
+														variant="primary"
+														onClick={() => searchButtonClickHandler()}
+													>
 														<FontAwesomeIcon icon={faSearch} />{" "}
 													</Button>
 												</InputGroup.Append>
@@ -333,6 +337,7 @@ const ManageUser = () => {
 																pageNumberChange={setCurrentPageNumber}
 																totalRecords={userInfo.count}
 																callback={getUser}
+																searchQuery={searchString}
 															/>
 														</td>
 													</tr>

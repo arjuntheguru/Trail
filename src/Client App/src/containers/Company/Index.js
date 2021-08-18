@@ -42,6 +42,7 @@ const Company = () => {
 	const { status, companyInfo } = useSelector((state) => state.company);
 
 	const [showEditModal, setShowEditModal] = useState(false);
+	const [searchString, setSearchString] = useState("");
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [showAdminModal, setShowAdminModal] = useState(false);
@@ -85,6 +86,11 @@ const Company = () => {
 		setShowAdminModal(false);
 	};
 
+	const searchButtonClickHandler = () => {
+		setCurrentPageNumber(1);
+		dispatch(getCompany(undefined, searchString));
+	};
+
 	useEffect(() => {
 		if (status === idle) {
 			dispatch(getCompany());
@@ -119,9 +125,14 @@ const Company = () => {
 													placeholder="Search"
 													aria-label="Search"
 													aria-describedby="basic-addon1"
+													onChange={(e) => setSearchString(e.target.value)}
+													value={searchString}
 												/>
 												<InputGroup.Append>
-													<Button variant="primary">
+													<Button
+														variant="primary"
+														onClick={() => searchButtonClickHandler()}
+													>
 														<FontAwesomeIcon icon={faSearch} />{" "}
 													</Button>
 												</InputGroup.Append>
@@ -286,6 +297,7 @@ const Company = () => {
 															pageNumberChange={setCurrentPageNumber}
 															totalRecords={companyInfo.count}
 															callback={getCompany}
+															searchQuery={searchString}
 														/>
 													</td>
 												</tr>

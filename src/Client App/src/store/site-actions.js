@@ -62,12 +62,12 @@ export const deleteSite = (item) => (dispatch) => {
 };
 
 export const getSiteAdmin =
-	(item = { pageNumber: 1, pageSize: 10 }) =>
+	(item = { pageNumber: 1, pageSize: 10 }, searchQuery = "") =>
 	(dispatch) => {
 		dispatch(siteActions.start_loading());
 		let config = tokenConfig();
 		API.get(
-			`api/site/admin?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`,
+			`api/site/admin?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}&searchQuery=${searchQuery}`,
 			config
 		)
 			.then((res) => {
@@ -82,12 +82,12 @@ export const getSiteAdmin =
 	};
 
 export const getSiteManager =
-	(item = { pageNumber: 1, pageSize: 10 }) =>
+	(item = { pageNumber: 1, pageSize: 10 }, searchQuery = "") =>
 	(dispatch) => {
 		dispatch(siteActions.start_loading());
 		let config = tokenConfig();
 		API.get(
-			`api/site/manager?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}`,
+			`api/site/manager?pageNumber=${item.pageNumber}&pageSize=${item.pageSize}&searchQuery=${searchQuery}`,
 			config
 		)
 			.then((res) => {
