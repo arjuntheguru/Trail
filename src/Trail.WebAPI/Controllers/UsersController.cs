@@ -22,14 +22,17 @@ namespace Trail.WebAPI.Controllers
     public class UsersController : ApiControllerBase
     {
         private readonly IUserService _userService;
+        private readonly UserCrudService _userSearchService;
         private readonly ICrudService<User> _userCrudService;        
         public UsersController(
             IUserService userService, 
+            UserCrudService userSearchService,
             ICrudService<User> userCrudService, 
             IOptions<AppSettings> settings)
         {
             _userService = userService;
-            _userCrudService = userCrudService;           
+            _userCrudService = userCrudService;
+            _userSearchService = userSearchService;
         }
 
         
@@ -72,7 +75,7 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string role)
+        public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
             var userId = User.FindFirstValue("UserName");
             var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
@@ -81,13 +84,13 @@ namespace Trail.WebAPI.Controllers
 
             var records = new RecordCount<User>();
 
-            if (String.IsNullOrWhiteSpace(role))
+            if (String.IsNullOrWhiteSpace(searchQuery))
             {
                  records = _userCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
-            }
+            }           
             else
-            { 
-                records = _userCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId  && p.Role == role);
+            {
+                records = _userSearchService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId, searchQuery.ToLower());
             }
             return Ok(records);
         }
