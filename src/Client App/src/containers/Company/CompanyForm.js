@@ -9,7 +9,7 @@ import {
 import { InputField } from "../../components/InputField/InputField";
 import * as Yup from "yup";
 
-import { Card, Button } from "react-bootstrap";
+import { Modal, Button ,Tabs, Tab} from "react-bootstrap";
 
 const CompanyForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 	const companyInfoValidate = Yup.object({
@@ -124,34 +124,31 @@ const CompanyForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 		>
 			{(formik) => (
 				<div>
-					<Card className="bg-transparent">
-						<Card.Header className="bg-dark text-light text-center  ">
-							{!isEdit ? "Add Company" : "Edit Company"}
-						</Card.Header>
+					<Modal.Header closeButton>
+						{!isEdit ? "Add Company" : "Edit Company"}
+						</Modal.Header>
 						<Form>
-							<Card.Body className="card-body">
-								<div className="form-row">
-									<InputField
-										label="Name"
-										name="name"
-										type="text"
-										size={50}
-										readOnly={!isEdit ? false : true}
-									/>
-									<InputField
-										label="Registration No."
-										name="registrationNo"
-										type="text"
-										size={50}
-										readOnly={!isEdit ? false : true}
-									/>
-								</div>
-								<InputField label="Email" name="email" type="text" />
-								<Card className="mt-1 bg-transparent">
-									<Card.Header className="bg-dark text-light text-center">
-										Address
-									</Card.Header>
-									<Card.Body>
+						<Modal.Body>
+							<Tabs defaultActiveKey="companyinfo" id="uncontrolled-tab-example" className="mb-3 clean-tabs horizontal-tabs">
+									<Tab eventKey="companyinfo" title="Company Information">
+										<div className="form-row">
+											<InputField
+												label="Name"
+												name="name"
+												type="text"
+												size={50}
+												readOnly={!isEdit ? false : true}
+											/>
+											<InputField
+												label="Registration No."
+												name="registrationNo"
+												type="text"
+												size={50}
+												readOnly={!isEdit ? false : true}
+											/>
+										</div>
+										<InputField label="Email" name="email" type="text" />
+
 										<div className="form-row">
 											<InputField
 												label="Street Address"
@@ -194,14 +191,12 @@ const CompanyForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 												size={50}
 											/>
 										</div>
-									</Card.Body>
-								</Card>
+									</Tab>
+									<Tab eventKey="admininfo" title="Admin Information">
+											
 								{!isEdit ? (
-									<Card className="mt-1 bg-transparent">
-										<Card.Header className="bg-dark text-light text-center">
-											Admin Information
-										</Card.Header>
-										<Card.Body>
+									<>
+										
 											<div className="form-row">
 												<InputField
 													label="First Name"
@@ -244,27 +239,29 @@ const CompanyForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 													size={50}
 												/>
 											</div>
-										</Card.Body>
-									</Card>
+										</>
 								) : (
 									""
 								)}
-							</Card.Body>
-							<Card.Footer className="text-right">
-								<Button variant="success" type="submit" size="sm">
-									Submit
-								</Button>
+									</Tab>
+								</Tabs>
+								
+							
+							</Modal.Body>
+							<Modal.Footer className="justify-content-between">
+								
 								<Button
-									variant="danger"
-									className="ml-3"
-									type="reset"
-									size="sm"
+									variant="light"
+									type="button"
+									className="m-0"
 								>
 									Reset
 								</Button>
-							</Card.Footer>
+								<Button  variant="primary" type="submit" className="m-0">
+									Submit
+								</Button>
+							</Modal.Footer>
 						</Form>
-					</Card>
 				</div>
 			)}
 		</Formik>

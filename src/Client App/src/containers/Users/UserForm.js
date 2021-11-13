@@ -139,7 +139,7 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose, pageNumber }) => {
 										type="text"
 									/>
 								
-								<Tabs defaultActiveKey="profile" id="uncontrolled-tab-example" className="mb-3 clean-tabs">
+								<Tabs defaultActiveKey="profile" id="uncontrolled-tab-example" className="mb-3 clean-tabs horizontal-tabs">
 									<Tab eventKey="login" title="Login Details">
 											<InputField
 												label="Username"
@@ -223,50 +223,119 @@ const UserForm = ({ isEdit = false, siteInfo, data, onClose, pageNumber }) => {
 										</label>
 										</div>
 										<h6>Choose Site</h6>
+										<div style={{maxHeight:"200px", overflowY:"auto", overflowX:"hidden"}}>
 										<Row>
-										<Col lg="4">
+										<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="All" />
 											All
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site1" />
 											Site 1
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site2" />
 											Site 2
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site3" />
 											Site 3
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site4" />
 											Site 4
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site5" />
 											Site 5
 											</label>
 											</Col>
-											<Col lg="4">
+											<Col lg="6">
 											<label>
 											<Field type="checkbox" name="checked" value="site6" />
 											Site 6
 											</label>
 											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 7
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 8
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 9
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 10
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 11
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 12
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 13
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 14
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 15
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 16
+											</label>
+											</Col>
+											<Col lg="6">
+											<label>
+											<Field type="checkbox" name="checked" value="site6" />
+											Site 17
+											</label>
+											</Col>
 										</Row>
+										</div>
+										
 											{!_.isEmpty(siteInfo) && (
 												<>
 													<Col md={6}>

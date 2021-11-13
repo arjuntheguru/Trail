@@ -2,6 +2,7 @@
     &.clean-tabs{
         .nav-item{
             border: none;
+            padding: $nav-link-padding-y $nav-link-padding-x;
             border-bottom: 3px solid transparent;
             &.active{
                 color: $primary;
@@ -9,5 +10,8 @@
                 border-color: $primary;
             }
         }
+    }
+    &.horizontal-tabs{
+        flex-direction: row;
     }
 }
