@@ -1,0 +1,14 @@
+.accordion {
+    overflow-anchor: none;
+    cursor: pointer;
+    > .card {
+      overflow: hidden;
+        
+      &:not(:last-of-type) {
+        border-bottom-width:1px !important;
+      }
+      .card-header{
+          margin-bottom: 0 !important;
+      }
+    }
+}

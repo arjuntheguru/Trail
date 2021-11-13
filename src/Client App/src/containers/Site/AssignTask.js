@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Card, Modal, Row, Col, Button, Pagination, Spinner } from 'react-bootstrap';
+import { ListGroup, Modal, Row, Col, Button, Pagination, Spinner } from 'react-bootstrap';
 import TaskFrequencyModal from './TaskFrequencyModal';
 
 import { getUnallocatedTask, allocateTask } from "../../store/task-actions";
@@ -91,49 +91,47 @@ const AssignTask = ({ data, show, onClose }) => {
 
 
     return (
-        <Modal show={show} onHide={onClose} centered size="lg" >
+        <Modal show={show} onHide={onClose} centered >
+            {showTaskFrequencyModal ? <TaskFrequencyModal show={showTaskFrequencyModal} onClose={taskFrequencyModalCloseHandler} callback={onSubmitCallback} /> : ''}
+                                    <Modal.Header className="bg-light text-dark">
+                                        Assign Task
+                                        </Modal.Header>
             <Modal.Body className="">
-                <Card className="bgGradient" style={{minHeight:'150px'}}>
                     {
                         status === succeeded ?
                             !_.isEmpty(taskInfo.data) ?
                                 <>
-                                    {showTaskFrequencyModal ? <TaskFrequencyModal show={showTaskFrequencyModal} onClose={taskFrequencyModalCloseHandler} callback={onSubmitCallback} /> : ''}
-                                    <Card.Header className="bg-dark text-light">
-                                        Assign Task
-                                        </Card.Header>
-                                    <Card.Body>
+                                     <ListGroup variant="flush">
                                         {taskInfo.data.map((task) => {
                                             return (
                                                 <>
-                                                    <Row className="broder border-bottom my-2">
-                                                        <Col md={10}>
-                                                            {task.name}
-                                                        </Col>
-                                                        <Col md={2} className="mb-3">
-                                                            <Button variant="outline-success" type="button" size="sm" onClick={() => taskFrequencyHandler(task)}>Assign</Button>
-                                                        </Col>
-                                                    </Row>
+                                               
+                                                    <ListGroup.Item
+                                                        as="li"
+                                                        className="pl-0 py-2 d-flex justify-content-between align-items-start"
+                                                    >
+                                                        <div className="ms-2 me-auto">
+                                                        {task.name}
+                                                        </div>
+                                                        <Button variant="outline-primary" type="button" size="sm" onClick={() => taskFrequencyHandler(task)}>Assign</Button>
+                                                    </ListGroup.Item>
+                                                    
                                                 </>
                                             )
                                         })}
-                                    </Card.Body>
-                                    <Card.Footer>
+                                        </ListGroup> 
                                         <Pagination className="justify-content-center">
-                                            <Pagination.Item disabled={previousDisabled} onClick={previousPageHandler}>Previous</Pagination.Item>
+                                            <Pagination.First disabled={previousDisabled} onClick={previousPageHandler} />
                                             <Pagination.Item disabled={true}>{pageNumber} of {Math.ceil(taskInfo.count / 10)} </Pagination.Item>
-                                            <Pagination.Item disabled={nextDisabled} onClick={nextPageHandler}>Next</Pagination.Item>
+                                            <Pagination.Next disabled={nextDisabled} onClick={nextPageHandler}/>
                                         </Pagination>
-                                    </Card.Footer>
                                 </>
-                                : <Card.Body>
+                                : 
                                     <div>
                                         <h4 className="text-muted text-center">Either all tasks are assigned or there are no tasks.</h4>
                                     </div>
-                                </Card.Body>
                             : <Spinner animation="border spinner" />
                     }
-                </Card>
             </Modal.Body>
         </Modal >
     )

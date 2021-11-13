@@ -111,7 +111,7 @@ const Site = () => {
 		<div>
 			{status === succeeded ? (
 				<>
-					<section className="site-breadcrumb bg-light">
+					<section className="site-breadcrumb">
 						<Container className="text-center">
 							<Row>
 								<Col>
@@ -192,7 +192,7 @@ const Site = () => {
 											)}
 
 											<Table striped size="">
-												<thead className="bg-light text-dark">
+											<thead className="bg-dark text-light">
 													<tr>
 														<th>Name</th>
 														<th>Score Value</th>
