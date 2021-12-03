@@ -1,8 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSiteById } from '../../store/site-actions';
-
-import { Col, Row, Spinner, Button, Accordion } from 'react-bootstrap';
+import {
+	Container,
+	Col,
+	Row,
+	Spinner,
+	Button,
+	Table,
+    Badge,
+    Accordion,
+	Breadcrumb,
+	Dropdown,
+	InputGroup,
+	FormControl,
+} from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+	faPencilAlt,
+	faEllipsisV,
+	faTrash,
+	faTrashRestore,
+	faSearch,
+	faPlusCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import { getCalendar } from '../../store/calendar-actions';
 import TaskList from '../../components/TaskList/TaskList';
@@ -52,47 +73,73 @@ const ManageTask = ({ match }) => {
             {
                 siteStatus === succeeded ?
                     (!_.isEmpty(siteById) && siteById.id === match.params.id) ? (
+                        
                         <div>
-                            {showAssignTaskModal ? <AssignTask show={showAssignTaskModal} onClose={assignTaskModalCloseHandler} data={match.params.id} /> : ''}
-                            <Row className="mt-2">
-                                <Col md={10}>
-                                    <h1 className="display-4">{siteById.name}</h1>
-                                </Col>
-                                <Col md={2}>
-                                    <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={assignTaskHandler}>Assign Task</Button>
-                                </Col>
-                            </Row>
-                            <hr />
-                            <Row>
-                                <Col md={2}>
-                                    <DatePicker
+                            <section className="site-breadcrumb">
+						<Container className="text-center">
+							<Row>
+								<Col>
+									<h5 className="mb-0">{siteById.name}</h5>
+									<Breadcrumb className="justify-content-center">
+										<Breadcrumb.Item>Home</Breadcrumb.Item>
+                                        <Breadcrumb.Item>Sites</Breadcrumb.Item>
+										<Breadcrumb.Item active>{siteById.name}</Breadcrumb.Item>
+									</Breadcrumb>
+								</Col>
+							</Row>
+						</Container>
+					</section>
+                    <section>
+						<Container>
+							<Row>
+								<Col>
+									<div className="table-container bg-white" style={{marginTop:"-52.5px"}}>
+										<header className="table-cta bg-light p-2 clearfix">
+                                        <DatePicker
                                         selected={startDate}
                                         onChange={date => setStartDate(date)}
                                         maxDate={new Date()}
                                         todayButton="Today"
                                         className="form-control"
                                     />
+                                            <Button
+												type="button"
+												variant="primary"
+												className="float-right"
+											     onClick={assignTaskHandler}
+                                                 >
+                                                 Assign Task
+                                                 </Button>
+                                            
+                                        </header>
+                                        <div className="p-3">
+                                        {
+                                                calendarStatus === succeeded ?
+                                                    !_.isEmpty(calendarInfo.data) ?
+                                                        <Accordion defaultActiveKey="0">
+
+                                                            {orderByDueDate().map((taskListItem, i) => {
+                                                                return (
+                                                                    <>
+                                                                        <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} />
+                                                                        
+                                                                    </>
+                                                                )
+                                                            })}
+                                                        </Accordion>
+                                                        : <h4 className="text-muted center">No Tasks</h4>
+                                                    : <Spinner animation="border spinner" />
+
+                                            }
+                                        </div>
+                                           
+                                    </div>
                                 </Col>
                             </Row>
-                            <hr />
-                            {
-                                calendarStatus === succeeded ?
-                                    !_.isEmpty(calendarInfo.data) ?
-                                        <Accordion defaultActiveKey="0">
+                        </Container>
+                    </section>
+                            {showAssignTaskModal ? <AssignTask show={showAssignTaskModal} onClose={assignTaskModalCloseHandler} data={match.params.id} /> : ''}
 
-                                            {orderByDueDate().map((taskListItem, i) => {
-                                                return (
-                                                    <>
-                                                        <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} />
-                                                        <br />
-                                                    </>
-                                                )
-                                            })}
-                                        </Accordion>
-                                        : <h4 className="text-muted center">No Tasks</h4>
-                                    : <Spinner animation="border spinner" />
-
-                            }
 
                         </div>
                     ) : <Spinner animation="border spinner" /> 

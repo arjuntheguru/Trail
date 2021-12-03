@@ -17,8 +17,9 @@ const TaskList = ({ data, index, calendarId }) => {
     const dispatch = useDispatch();
 
     return (
-        <Card>
-            <Accordion.Toggle as={Card.Header} eventKey={index} className='bg-dark text-light'>
+        <Card className="mb-2 rounded-sm">
+            
+            <Accordion.Toggle as={Card.Header} eventKey={index} className='bg-light rounded-sm'>
                 <Row>
                     <Col md={7}>
                         {data.name}
@@ -59,7 +60,7 @@ const TaskList = ({ data, index, calendarId }) => {
                                 locked={data.isApproved}
                             />)}
                     </Card.Body>
-                    <Card.Footer className="border border-bottom">
+                    <Card.Footer className="">
                         
                             <div style={{maxHeight:"180px"}} className="overflow-auto">
                                 {data.comments.length > 0 &&
@@ -74,9 +75,9 @@ const TaskList = ({ data, index, calendarId }) => {
                                         )
                                     })}
                             </div>
-                        
-                        <hr />
-                        {!data.isApproved &&
+                        <Row>
+                                <Col >
+                                {!data.isApproved &&
                             <Formik
                                 initialValues={{ approvedBy: '' }}
                                 validationSchema={Yup.object({
@@ -98,13 +99,12 @@ const TaskList = ({ data, index, calendarId }) => {
                                 {formik => (
 
                                     <Form>
-                                        <div class="form-group my-1">
-                                            <div class="input-group">
-                                                <Field type="input" name="approvedBy" className="form-control" placeholder="Manager Sign-off" />
-                                                <div class="input-group-append">
-                                                    <Button variant="success" type="submit" className="float-right">Submit</Button>
-                                                </div>
-                                            </div>
+                                        <div class="form-group">
+                                                 <label htmlFor="approvedBy">Manager Sign-off</label>
+                                                <Field as="textarea" row="3" name="approvedBy" className="form-control mb-3" />
+                                                
+                                                <Button variant="primary" type="submit">Submit</Button>
+                                                
                                             <ErrorMessage component="div" name="approvedBy" className="error" />
                                         </div>
                                     </Form>
@@ -118,7 +118,9 @@ const TaskList = ({ data, index, calendarId }) => {
                                 </Badge>
                             </div>
                         }
-                        <Formik
+                                </Col>
+                                <Col >
+                                <Formik
                             initialValues={{ comment: '' }}
                             validationSchema={Yup.object({
                                 comment: Yup.string()
@@ -139,13 +141,12 @@ const TaskList = ({ data, index, calendarId }) => {
                         >
                             {formik => (
                                 <Form>
-                                    <div class="form-group mt-4">
-                                        <div class="input-group">
-                                            <Field type="input" name="comment" className="form-control" placeholder="Comment" />
-                                            <div class="input-group-append">
-                                                <Button variant="primary" type="submit" className="float-right">Submit</Button>
-                                            </div>
-                                        </div>
+                                    <div class="form-group">
+                                            <label htmlFor="comment">Comment</label>
+                                            <Field as="textarea" name="comment" row="3" className="form-control mb-3"/>
+                                            
+                                                <Button variant="primary" type="submit">Submit</Button>
+                                            
                                         <ErrorMessage component="div" name="comment" className="error" />
                                     </div>
                                 </Form>
@@ -156,9 +157,15 @@ const TaskList = ({ data, index, calendarId }) => {
                                 <FontAwesomeIcon icon={faBan} className="text-dark" size="sm" /><small>&nbsp;&nbsp;Task is Locked </small>
                             </div>
                         }
+                                 </Col>
+                        </Row>
+                        
+
+                        
                     </Card.Footer>
                 </>
             </Accordion.Collapse>
+            
         </Card>
     )
 
