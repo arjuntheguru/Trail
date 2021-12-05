@@ -26,7 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import DatePicker from "react-datepicker";
 import { getCalendar } from '../../store/calendar-actions';
-import TaskList from '../../components/TaskList/TaskList';
+import TaskList2 from '../../components/TaskList2/TaskList2';
 import AssignTask from './AssignTask';
 
 import _ from 'lodash';
@@ -113,24 +113,26 @@ const ManageTask = ({ match }) => {
                                             
                                         </header>
                                         <div className="p-3">
-                                        {
+                                        <TaskList2 />
+                                        
+                                        {/* {
                                                 calendarStatus === succeeded ?
                                                     !_.isEmpty(calendarInfo.data) ?
                                                         <Accordion defaultActiveKey="0">
 
                                                             {orderByDueDate().map((taskListItem, i) => {
-                                                                return (
-                                                                    <>
-                                                                        <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} />
+                                                                return ( */}
+                                                                    {/* <> */}
+                                                                        {/* <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} /> */}
                                                                         
-                                                                    </>
-                                                                )
+                                                                    {/* </> */}
+                                                                {/* )
                                                             })}
                                                         </Accordion>
                                                         : <h4 className="text-muted center">No Tasks</h4>
                                                     : <Spinner animation="border spinner" />
 
-                                            }
+                                            } */}
                                         </div>
                                            
                                     </div>

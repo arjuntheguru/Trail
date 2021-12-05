@@ -9,6 +9,13 @@
       }
       .card-header{
           margin-bottom: 0 !important;
+          background-color: $accordion-header-bg;
+          border: $accordion-header-border;
+      }
+      .list-group-item{
+        margin: $accordion-list-item-margin-x;
+        border-top-width: $accordion-list-item-border;
+        border-radius: $accordion-list-item-border-radius;
       }
     }
 }
