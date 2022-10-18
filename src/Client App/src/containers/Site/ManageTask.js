@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSiteById } from '../../store/site-actions';
 
-import { Col, Row, Spinner, Button, Accordion } from 'react-bootstrap';
+import { Col, Row, Spinner, Button, Accordion, Container, Form } from 'react-bootstrap';
 import DatePicker from "react-datepicker";
 import { getCalendar } from '../../store/calendar-actions';
 import TaskList from '../../components/TaskList/TaskList';
@@ -12,7 +12,8 @@ import _ from 'lodash';
 import { succeeded } from '../../utils/stateStatus';
 
 const ManageTask = ({ match }) => {
-
+    const [showCompleted, setShowCompleted] = useState("0")
+    const role = useSelector((state) => state.auth).user.role;
     const [startDate, setStartDate] = useState(new Date());
     const [showAssignTaskModal, setShowAssignTaskModal] = useState(false);
 
@@ -42,13 +43,17 @@ const ManageTask = ({ match }) => {
     }, [dispatch, match.params.id, startDate])
 
     const orderByDueDate = () => {
+        console.log(showCompleted);
         let orderedData = _.orderBy(calendarInfo.data.taskList, ['dueBy'], ['asc'])
-        return orderedData;
+        console.log(orderedData);
+        return showCompleted === ""?orderedData: orderedData.filter(t => t.status == showCompleted)
+        
+        // return orderedData;
     }
 
 
     return (
-        <>
+        <Container>
             {
                 siteStatus === succeeded ?
                     (!_.isEmpty(siteById) && siteById.id === match.params.id) ? (
@@ -56,15 +61,15 @@ const ManageTask = ({ match }) => {
                             {showAssignTaskModal ? <AssignTask show={showAssignTaskModal} onClose={assignTaskModalCloseHandler} data={match.params.id} /> : ''}
                             <Row className="mt-2">
                                 <Col md={10}>
-                                    <h1 className="display-4">{siteById.name}</h1>
+                                    <h1 className="display-4">Site - {siteById.name.toUpperCase()}</h1>
                                 </Col>
-                                <Col md={2}>
+                                {!role.includes("Team") && <Col md={2}>
                                     <Button type="button" variant="outline-dark" className='mt-4 float-right' onClick={assignTaskHandler}>Assign Task</Button>
-                                </Col>
+                                </Col>}
                             </Row>
                             <hr />
-                            <Row>
-                                <Col md={2}>
+                            <Row className="w-100">
+                                <Col md={3} className={"float-left"}>
                                     <DatePicker
                                         selected={startDate}
                                         onChange={date => setStartDate(date)}
@@ -73,6 +78,20 @@ const ManageTask = ({ match }) => {
                                         className="form-control"
                                     />
                                 </Col>
+                                <Col className="float-right">
+                                <Form.Control as="select"
+                                    className="w-25 float-left"
+                                    aria-label="Completed"
+                                    aria-describedby="select-site"
+                                    onChange={(e) => setShowCompleted(e.target.value)}
+                                    value={showCompleted}
+                                >
+                                    <option value="">All Tasks</option>
+                                    <option value="1">Completed</option>
+                                    <option value="0">Incomplete</option>
+                                    <option value="2">Late Completion</option>
+                                </Form.Control>
+                            </Col>
                             </Row>
                             <hr />
                             {
@@ -84,7 +103,6 @@ const ManageTask = ({ match }) => {
                                                 return (
                                                     <>
                                                         <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} />
-                                                        <br />
                                                     </>
                                                 )
                                             })}
@@ -99,7 +117,7 @@ const ManageTask = ({ match }) => {
                     
                     : <Spinner animation="border spinner" />
                 }
-        </>
+        </Container>
     )
 }
 

@@ -158,7 +158,7 @@ const TaskForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 											{() =>
 												values.taskItemInfo.map((taskItem, i) => {
 													return (
-														<div className="d-flex justify-content-start mb-2">
+														<div key={i} className="d-flex justify-content-start mb-2">
 															{/* <span className="">{i + 1}.</span> */}
 
 															<InputField

@@ -21,6 +21,7 @@ export const addSite =
 			.catch((err) => {
 				console.log(err.response.data);
 				dispatch(siteActions.error());
+				callback();
 				notifyError("Error occured while adding Site");
 			});
 	};

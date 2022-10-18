@@ -80,6 +80,7 @@ namespace Trail.WebAPI
 
             // configure DI for application services
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IReportService, ReportService>();
             services.AddScoped<CompanyCrudService>();
             services.AddScoped<SiteCrudService>();
             services.AddScoped<UserCrudService>();
@@ -122,6 +123,26 @@ namespace Trail.WebAPI
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Trail.WebAPI", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme {
+                            Reference = new OpenApiReference {
+                                Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
             });
 
             services.AddRouting(o => o.LowercaseUrls = true);
@@ -133,10 +154,14 @@ namespace Trail.WebAPI
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
             //if (env.IsDevelopment())
-           // {
-                //app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1"));
+            // {
+            //app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1");
+                c.RoutePrefix = String.Empty;
+            });
             //}
 
             app.UseHangfireDashboard();
@@ -145,12 +170,12 @@ namespace Trail.WebAPI
 
             app.UseHttpsRedirection();
 
-            app.UseStaticFiles();
+            // app.UseStaticFiles();
 
-            if (!env.IsDevelopment())
-            {
-                app.UseSpaStaticFiles();
-            }
+            // if (!env.IsDevelopment())
+            // {
+            //     app.UseSpaStaticFiles();
+            // }
 
 
             app.UseRouting();
@@ -164,10 +189,10 @@ namespace Trail.WebAPI
                 endpoints.MapControllers();
             });
 
-            app.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = "ClientApp";                
-            });
+            // app.UseSpa(spa =>
+            // {
+            //     spa.Options.SourcePath = "ClientApp";                
+            // });
 
 
             TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));

@@ -13,7 +13,7 @@ import { Button, Tabs, Tab, Modal } from "react-bootstrap";
 
 const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 	const auth = useSelector((state) => state.auth);
-
+	console.log(auth);
 	const WeekDays = [
 		{
 			eventKey: "sun",
@@ -74,7 +74,6 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 	];
 
 	const initialValues = {
-		id: "",
 		name: "",
 		streetAddress: "",
 		addressLine2: "",
@@ -230,7 +229,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 			onSubmit={(values) => {
 				console.log(values);
 				let siteInfo = {
-					Id: values.id,
+					Id: values.id ? values.id : null,
 					Name: values.name,
 					CompanyId: auth.user.companyId,
 					Address: {
@@ -252,6 +251,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 								pageSize: 10,
 							})
 						);
+
 					};
 					console.log(siteInfo);
 					dispatch(addSite(siteInfo, callback));
@@ -265,9 +265,6 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 		>
 			{({ values, setValues, setFieldValue }) => (
 				<div>
-					<Modal.Header closeButton>
-						{!isEdit ? "Add Site" : "Edit Site"}
-					</Modal.Header>
 					<Form>
 						<Modal.Body>
 							<InputField
@@ -307,7 +304,7 @@ const SiteForm = ({ isEdit = false, data = {}, onClose, pageNumber }) => {
 									<Tabs defaultActiveKey="sun" className="clean-tabs mb-3">
 										{values.buisnessHours.map((buisnessHour, i) => {
 											return (
-												<Tab
+												<Tab key={i}
 													eventKey={WeekDays[i].eventKey}
 													title={WeekDays[i].title}
 												>

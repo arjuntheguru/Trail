@@ -5,7 +5,8 @@ const initialState = {
     status : idle,
     calendarInfo: {
         data: {}       
-    }
+    },
+    // minorStatus: idle
 }
 
 const calendarSlice = createSlice({

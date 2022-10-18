@@ -10,20 +10,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBan } from '@fortawesome/free-solid-svg-icons'
 
 import { getLocalDate } from '../../utils/dateUtility';
+import { returnLoggedInUser } from '../../store/auth-actions';
 
 
 const TaskList = ({ data, index, calendarId }) => {
 
     const dispatch = useDispatch();
+    const user = dispatch(returnLoggedInUser());
 
     return (
         <Card>
             <Accordion.Toggle as={Card.Header} eventKey={index} className='bg-dark text-light'>
                 <Row>
-                    <Col md={7}>
+                    <Col md={6}>
                         {data.name}
                     </Col>
-                    <Col md={5} className="text-right px-0">
+                    <Col md={6} className="text-right px-0">
                         {
                             data.status === 0 ?
                                 <Badge pill variant="danger" className="px-3 py-2 mx-1">
@@ -53,6 +55,7 @@ const TaskList = ({ data, index, calendarId }) => {
                         <hr />
                         {data.taskItems.map((taskItem, i) =>
                             <TaskItem
+                                key={i}
                                 taskItem={taskItem}
                                 parentId={data.id}
                                 calendarId={calendarId}
@@ -60,21 +63,21 @@ const TaskList = ({ data, index, calendarId }) => {
                             />)}
                     </Card.Body>
                     <Card.Footer className="border border-bottom">
-                        
-                            <div style={{maxHeight:"180px"}} className="overflow-auto">
-                                {data.comments.length > 0 &&
-                                    data.comments.map((comment, i) => {
-                                        return (
-                                            <div className="clearfix my-2">
-                                                <Badge pill variant={i % 2 === 0 ? "info" : "secondary"} className="px-3 py-2 mx-1">
-                                                    {comment.description}
-                                                </Badge>
-                                                <small className="float-right text-muted">By {comment.createdBy} at {getLocalDate(comment.createdDate)} </small>
-                                            </div>
-                                        )
-                                    })}
-                            </div>
-                        
+
+                        <div style={{ maxHeight: "180px" }} className="overflow-auto">
+                            {data.comments.length > 0 &&
+                                data.comments.map((comment, i) => {
+                                    return (
+                                        <div key={i} className="clearfix my-2">
+                                            <Badge pill variant={i % 2 === 0 ? "info" : "secondary"} className="px-3 py-2 mx-1">
+                                                {comment.description}
+                                            </Badge>
+                                            <small className="float-right text-muted">By {comment.createdBy} at {getLocalDate(comment.createdDate)} </small>
+                                        </div>
+                                    )
+                                })}
+                        </div>
+
                         <hr />
                         {!data.isApproved &&
                             <Formik
@@ -95,20 +98,20 @@ const TaskList = ({ data, index, calendarId }) => {
                                     dispatch(updateTaskListStatus(item));
                                 }}
                             >
-                                {formik => (
+                                {(user.role == "Manager" || user.role == "Admin") && (formik => (
 
                                     <Form>
-                                        <div class="form-group my-1">
-                                            <div class="input-group">
+                                        <div className="form-group my-1">
+                                            <div className="input-group">
                                                 <Field type="input" name="approvedBy" className="form-control" placeholder="Manager Sign-off" />
-                                                <div class="input-group-append">
+                                                <div className="input-group-append">
                                                     <Button variant="success" type="submit" className="float-right">Submit</Button>
                                                 </div>
                                             </div>
                                             <ErrorMessage component="div" name="approvedBy" className="error" />
                                         </div>
                                     </Form>
-                                )}
+                                ))}
                             </Formik>
                         }
                         {data.isApproved &&
@@ -139,10 +142,10 @@ const TaskList = ({ data, index, calendarId }) => {
                         >
                             {formik => (
                                 <Form>
-                                    <div class="form-group mt-4">
-                                        <div class="input-group">
+                                    <div className="form-group mt-4">
+                                        <div className="input-group">
                                             <Field type="input" name="comment" className="form-control" placeholder="Comment" />
-                                            <div class="input-group-append">
+                                            <div className="input-group-append">
                                                 <Button variant="primary" type="submit" className="float-right">Submit</Button>
                                             </div>
                                         </div>

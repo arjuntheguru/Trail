@@ -30,6 +30,8 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { Welcome } from './containers/Common/Welcome';
 import CustomSuperAdminRoute from './components/Common/CustomSuperAdminRoute';
+import ManageUser2 from './containers/Users/ManageUser2';
+import Report from './containers/Report';
 
 
 
@@ -56,7 +58,9 @@ const App = () => {
             <CustomAdminRoute exact strict path='/site' component={Site} />
             <CustomCalendarRoute strict path='/site/:id' component={ManageTask} />
             <AdminRoute strict path='/users' component={ManageUser} />
+            <CustomAdminRoute strict path='/users-manage' component={ManageUser} />
             <Route exact strict path="/welcome" component={Welcome} />
+            <Route exact strict path="/overview" component={Report} />
             <Route path="*" component={NotFound} />
           </Switch>
         </main>

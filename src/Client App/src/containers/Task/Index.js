@@ -159,9 +159,9 @@ const Task = () => {
 											</thead>
 											<tbody>
 												{taskInfo.data.length > 0 ? (
-													taskInfo.data.map((task) => {
+													taskInfo.data.map((task, i) => {
 														return (
-															<tr>
+															<tr key={i}>
 																<td>{task.name}</td>
 																<td>{task.description}</td>
 																<td>

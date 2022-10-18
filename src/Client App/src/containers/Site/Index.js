@@ -117,8 +117,8 @@ const Site = () => {
 								<Col>
 									<h5 className="mb-0">Manage Site</h5>
 									<Breadcrumb className="justify-content-center">
-										<Breadcrumb.Item>
-											<Link to="/">Home</Link>
+										<Breadcrumb.Item href="/">
+											Home
 										</Breadcrumb.Item>
 										<Breadcrumb.Item active>Site</Breadcrumb.Item>
 									</Breadcrumb>
@@ -149,7 +149,7 @@ const Site = () => {
 													</Button>
 												</InputGroup.Append>
 											</InputGroup>
-											<Button
+											{user.role === "Admin" && <Button
 												type="button"
 												variant="primary"
 												className="float-right"
@@ -158,7 +158,7 @@ const Site = () => {
 												}}
 											>
 												<FontAwesomeIcon icon={faPlusCircle} /> Add Site
-											</Button>
+											</Button>}
 										</header>
 										<>
 											{showAddModal ? (
@@ -202,10 +202,10 @@ const Site = () => {
 													</tr>
 												</thead>
 												<tbody>
-													{siteInfo.data.length > 0 ? (
-														siteInfo.data.map((site) => {
+													{!siteInfo.data?<>"Error"</>:siteInfo.data.length > 0 ? (
+														siteInfo.data.map((site, i) => {
 															return (
-																<tr>
+																<tr key={i}>
 																	<td>
 																		<Link to={`/site/${site.id}`}>
 																			{site.name}

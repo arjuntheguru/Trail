@@ -49,13 +49,14 @@ const ManagerPopover = () => {
             >
                 <Popover>
                     <Popover.Title className="text-center">Sites</Popover.Title>
-                    <div class="form-row">
+                    <div className="form-row">
                         <input className="form-control form-control-sm m-3" type="text" placeholder="Search" onChange={onChangeHandler}/>
                     </div>       
                     <Popover.Content style={{maxHeight:"200px", overflow:"auto"}}>
                         {
-                            siteData.map(item => 
+                            siteData.map((item,index) => 
                                 <Link 
+                                    key={index}
                                     to={`/site/${item}`} 
                                     className='nav-link'
                                     onClick={() => {setShow(!show)}}

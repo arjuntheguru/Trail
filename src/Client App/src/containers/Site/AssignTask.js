@@ -9,12 +9,12 @@ import { succeeded } from '../../utils/stateStatus';
 import _ from 'lodash';
 
 const AssignTask = ({ data, show, onClose }) => {
-
+    
     const { status, taskInfo } = useSelector(state => state.task);
 
     const [pageNumber, setPageNumber] = useState(1);
     const [previousDisabled, setPreviousDisabled] = useState(true);
-    const [nextDisabled, setnextDisabled] = useState(false);    
+    const [nextDisabled, setnextDisabled] = useState(false);
 
     const [showTaskFrequencyModal, setTaskFrequencyModal] = useState(false);
     const [taskAllocationData, setTaskAllocationData] = useState({});
@@ -57,14 +57,14 @@ const AssignTask = ({ data, show, onClose }) => {
     }, [dispatch, data])
 
     useEffect(() => {
-        if(!_.isEmpty(taskInfo)){
+        if (!_.isEmpty(taskInfo)) {
             if (taskInfo.count <= 10) {
                 setnextDisabled(true)
             }
             else {
                 setnextDisabled(false);
             }
-        }        
+        }
 
     }, [taskInfo, taskInfo.count]);
 
@@ -93,7 +93,7 @@ const AssignTask = ({ data, show, onClose }) => {
     return (
         <Modal show={show} onHide={onClose} centered size="lg" >
             <Modal.Body className="">
-                <Card className="bgGradient" style={{minHeight:'150px'}}>
+                <Card className="bgGradient" style={{ minHeight: '150px' }}>
                     {
                         status === succeeded ?
                             !_.isEmpty(taskInfo.data) ?
@@ -101,7 +101,7 @@ const AssignTask = ({ data, show, onClose }) => {
                                     {showTaskFrequencyModal ? <TaskFrequencyModal show={showTaskFrequencyModal} onClose={taskFrequencyModalCloseHandler} callback={onSubmitCallback} /> : ''}
                                     <Card.Header className="bg-dark text-light">
                                         Assign Task
-                                        </Card.Header>
+                                    </Card.Header>
                                     <Card.Body>
                                         {taskInfo.data.map((task) => {
                                             return (

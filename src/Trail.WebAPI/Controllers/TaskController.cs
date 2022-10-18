@@ -160,7 +160,7 @@ namespace Trail.WebAPI.Controllers
 
             return Ok(pagedReponse);
         }
-
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost("allocation")]
         public async Task<IActionResult> CreateTaskAllocation(TaskAllocation taskAllocation)
         {
@@ -171,6 +171,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("allocation")]
         public async Task<IActionResult> UpdateTaskAllocation(TaskAllocation taskAllocation)
         {
@@ -189,6 +190,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(new Response<TaskAllocation>(response, "Task Allocation updated successfully"));
         }
 
+        [Authorize(Roles = "Admin,Manager")]
         [HttpDelete("allocation/{id}")]
         public async Task<IActionResult> DeleteTaskAllocation(string id)
         {

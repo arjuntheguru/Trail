@@ -13,6 +13,7 @@ import {
 	Dropdown,
 	InputGroup,
 	FormControl,
+	Form,
 } from "react-bootstrap";
 
 import { getUser, deleteUser, filter } from "../../store/user-actions";
@@ -32,6 +33,7 @@ import {
 import AddUser from "./AddUser";
 import EditUser from "./EditUser";
 import DeleteUser from "./DeleteUser";
+import { Field } from "formik";
 
 const ManageUser = () => {
 	const dispatch = useDispatch();
@@ -49,6 +51,7 @@ const ManageUser = () => {
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 	const [searchString, setSearchString] = useState("");
+	const [selectSite, setSelectedSite] = useState("");
 
 	const [editData, setEditData] = useState({});
 	const [deleteData, setDeleteData] = useState({});
@@ -120,8 +123,8 @@ const ManageUser = () => {
 								<Col>
 									<h5 className="mb-0">Manage User</h5>
 									<Breadcrumb className="justify-content-center">
-										<Breadcrumb.Item>
-											<Link to="/">Home</Link>
+										<Breadcrumb.Item href="/">
+											Home
 										</Breadcrumb.Item>
 										<Breadcrumb.Item active>User</Breadcrumb.Item>
 									</Breadcrumb>
@@ -136,7 +139,7 @@ const ManageUser = () => {
 								<Col>
 									<div className="table-container bg-white">
 										<header className="table-cta p-2 clearfix">
-											<InputGroup className="w-25 float-left">
+											<InputGroup className="w-25 float-left mr-2">
 												<FormControl
 													placeholder="Search"
 													aria-label="Search"
@@ -153,6 +156,19 @@ const ManageUser = () => {
 													</Button>
 												</InputGroup.Append>
 											</InputGroup>
+											<Form.Control as="select"
+												className="w-25 float-left"
+												placeholder="Search"
+												aria-label="Search"
+												aria-describedby="select-site"
+												onChange={(e) => setSelectedSite(e.target.value)}
+												value={selectSite}
+											>
+												<option value="">All Sites</option>
+												{siteInfo.data.map((site) =>
+													<option key={site.id} value={site.id}>{site.name}</option>
+												)}
+											</Form.Control>
 											<Button
 												type="button"
 												variant="primary"
@@ -174,8 +190,8 @@ const ManageUser = () => {
 													pageNumber={currentPageNumber}
 												/>
 											) : (
-												""
-											)}
+													""
+												)}
 											{showEditModal ? (
 												<EditUser
 													show={showEditModal}
@@ -184,8 +200,8 @@ const ManageUser = () => {
 													data={editData}
 												/>
 											) : (
-												""
-											)}
+													""
+												)}
 											{showDeleteModal ? (
 												<DeleteUser
 													show={showDeleteModal}
@@ -193,8 +209,8 @@ const ManageUser = () => {
 													data={deleteData}
 												/>
 											) : (
-												""
-											)}
+													""
+												)}
 
 											<Table striped size="">
 												<thead className="bg-light text-dark">
@@ -209,10 +225,10 @@ const ManageUser = () => {
 													</tr>
 												</thead>
 												<tbody>
-													{userInfo.data.length > 0 ? (
-														userInfo.data.map((user) => {
+													{!userInfo.data ? "Error" : userInfo.data.length > 0 ? (
+														userInfo.data.filter(u => selectSite === '' || u.siteId.includes(selectSite)).map((user, i) => {
 															return (
-																<tr>
+																<tr key={i}>
 																	<td>{`${user.firstName} ${user.lastName}`}</td>
 																	<td>{user.email}</td>
 																	<td>{user.userName}</td>
@@ -226,39 +242,39 @@ const ManageUser = () => {
 																				Active
 																			</Badge>
 																		) : (
-																			<Badge
-																				pill
-																				variant="danger"
-																				className="px-3 py-2 mx-1"
-																			>
-																				Inactive
-																			</Badge>
-																		)}
+																				<Badge
+																					pill
+																					variant="danger"
+																					className="px-3 py-2 mx-1"
+																				>
+																					Inactive
+																				</Badge>
+																			)}
 																	</td>
 																	<td>{user.role}</td>
 																	<td className="text-muted">
 																		{user.siteId == null
 																			? "All Sites"
 																			: user.siteId.map((siteId, i) => {
-																					if (i < 2) {
+																				if (i < 2) {
+																					return (
+																						<span key={i}>
+																							{i === 0 ? "" : ", "}
+																							{
+																								siteInfo.data.find(
+																									(item) => item.id === siteId
+																								).name
+																							}
+																						</span>
+																					);
+																				} else {
+																					if (!user.siteId[i + 1]) {
 																						return (
-																							<span>
-																								{i === 0 ? "" : ", "}
-																								{
-																									siteInfo.data.find(
-																										(item) => item.id === siteId
-																									).name
-																								}
-																							</span>
+																							<span key={i}>, +{i - 1} more</span>
 																						);
-																					} else {
-																						if (!user.siteId[i + 1]) {
-																							return (
-																								<span>, +{i - 1} more</span>
-																							);
-																						}
 																					}
-																			  })}{" "}
+																				}
+																			})}{" "}
 																	</td>
 
 																	<td>
@@ -297,18 +313,18 @@ const ManageUser = () => {
 																						Delete
 																					</Dropdown.Item>
 																				) : (
-																					<Dropdown.Item
-																						onClick={() => {
-																							restoreHandler(user);
-																						}}
-																					>
-																						<FontAwesomeIcon
-																							icon={faTrashRestore}
-																							className="mr-2"
-																						/>{" "}
+																						<Dropdown.Item
+																							onClick={() => {
+																								restoreHandler(user);
+																							}}
+																						>
+																							<FontAwesomeIcon
+																								icon={faTrashRestore}
+																								className="mr-2"
+																							/>{" "}
 																						Restore
-																					</Dropdown.Item>
-																				)}
+																						</Dropdown.Item>
+																					)}
 																			</Dropdown.Menu>
 																		</Dropdown>
 																	</td>
@@ -316,18 +332,18 @@ const ManageUser = () => {
 															);
 														})
 													) : (
-														<tr className="bg-transparent">
-															<td colSpan="100%">
-																<div className="text-center h-100 p-5">
-																	<FontAwesomeIcon icon={faSearch} size="3x" />
-																	<h6>Result Not Found</h6>
-																	<p className="text-muted">
-																		Please change keyword or modify filters
+															<tr className="bg-transparent">
+																<td colSpan="100%">
+																	<div className="text-center h-100 p-5">
+																		<FontAwesomeIcon icon={faSearch} size="3x" />
+																		<h6>Result Not Found</h6>
+																		<p className="text-muted">
+																			Please change keyword or modify filters
 																	</p>
-																</div>
-															</td>
-														</tr>
-													)}
+																	</div>
+																</td>
+															</tr>
+														)}
 												</tbody>
 												<tfoot>
 													<tr>
@@ -351,8 +367,8 @@ const ManageUser = () => {
 					</section>
 				</>
 			) : (
-				<Spinner animation="border spinner" />
-			)}
+					<Spinner animation="border spinner" />
+				)}
 		</div>
 	);
 };

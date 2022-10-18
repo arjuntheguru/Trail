@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getSiteById } from '../../store/site-actions';
 
-import { Col, Row, Spinner, Button, Accordion } from 'react-bootstrap';
+import { Col, Row, Spinner, Button, Accordion, Form } from 'react-bootstrap';
 import DatePicker from "react-datepicker";
 import { getCalendar } from '../../store/calendar-actions';
 import { calendarActions } from "../../store/calendar-slice";
@@ -12,7 +12,6 @@ import AssignTask from './AssignTask';
 import _ from 'lodash';
 
 const SiteDashboard = ({ match }) => {
-
     const [startDate, setStartDate] = useState(new Date());
     const [showAssignTaskModal, setShowAssignTaskModal] = useState(false);
 
@@ -37,7 +36,7 @@ const SiteDashboard = ({ match }) => {
 
     }, [dispatch, match.params.id, startDate])
 
-    const orderByDueDate = () => {        
+    const orderByDueDate = () => {
         let orderedData = _.orderBy(calendarInfo.data.taskList, ['dueBy'], ['asc'])
         return orderedData;
     }
@@ -45,7 +44,7 @@ const SiteDashboard = ({ match }) => {
 
     return (
         <>
-            { !isLoadingSite ?
+            {!isLoadingSite ?
                 siteInfo.count === 1 && siteInfo.constructor === Object ?
                     <div>
                         {showAssignTaskModal ? <AssignTask show={showAssignTaskModal} onClose={assignTaskModalCloseHandler} data={match.params.id} /> : ''}
@@ -63,19 +62,19 @@ const SiteDashboard = ({ match }) => {
                                 <DatePicker
                                     selected={startDate}
                                     onChange={date => setStartDate(date)}
-                                    maxDate={new Date() }
+                                    maxDate={new Date()}
                                     todayButton="Today"
                                     className="form-control"
-                                 />
+                                />
                             </Col>
                         </Row>
                         <hr />
                         {
                             !isLoadingCalendar ?
-                                calendarInfo.isLoaded  && !_.isEmpty(calendarInfo.data) ?
+                                calendarInfo.isLoaded && !_.isEmpty(calendarInfo.data) ?
                                     <Accordion defaultActiveKey="0">
-                                        
-                                        { orderByDueDate().map((taskListItem, i) => {
+
+                                        {orderByDueDate().map((taskListItem, i) => {
                                             return (
                                                 <>
                                                     <TaskList data={taskListItem} index={i.toString()} calendarId={calendarInfo.data.id} />

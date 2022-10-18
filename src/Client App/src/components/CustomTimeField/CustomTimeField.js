@@ -15,8 +15,8 @@ export const CustomTimeField = ({ label, ...props }) => {
                 onChange={(e) => 
                   props.setFieldValue(props.name + 'From.day', parseInt(e.target.value))
                 }>
-                    {props.options.map((option) =>
-                        <option value={option.value}>{option.name}</option>
+                    {props.options.map((option,index) =>
+                        <option key={index} value={option.value}>{option.name}</option>
                     )}
                 </Field>               
             </Col>
@@ -31,8 +31,8 @@ export const CustomTimeField = ({ label, ...props }) => {
                 onChange={(e) => 
                     props.setFieldValue(props.name + 'To.day', parseInt(e.target.value))
                   }>
-                    {props.options.map((option) =>
-                        <option value={option.value}>{option.name}</option>
+                    {props.options.map((option, i) =>
+                        <option key={i+option} value={option.value}>{option.name}</option>
                     )}
                 </Field>
             </Col>

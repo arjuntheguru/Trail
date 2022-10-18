@@ -20,16 +20,17 @@ export const getCalendar = (siteId, date) => (dispatch) => {
 
 export const updateTaskItemStatus = (item) => (dispatch) => {
 
-    dispatch(calendarActions.start_loading());
+    // dispatch(calendarActions.start_minor_loading());
     let config = tokenConfig();
 
     API.patch(`api/calendar/updateTaskItemStatus`, item , config)
         .then(res => {
+            // return "Success"
             dispatch(calendarActions.update_calendar_success(res.data));
         })
         .catch(err => {
             console.log(err.response);
-            dispatch(calendarActions.error());
+            // dispatch(calendarActions.error());
         });
 };
 

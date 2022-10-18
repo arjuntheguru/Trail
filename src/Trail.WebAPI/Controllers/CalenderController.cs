@@ -187,7 +187,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(new Response<Calendar>(response, "Comment inserted successfully"));
 
         }
-
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("updateTaskListStatus")]
         public async Task<IActionResult> UpdateTaskListStatus(TaskListUpdateDTO taskListUpdate)
         {

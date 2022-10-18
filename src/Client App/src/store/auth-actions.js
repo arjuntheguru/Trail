@@ -11,7 +11,7 @@ import API from '../utils/api';
 
 
 export const login = (userInfo, history) => dispatch => {
-
+    dispatch(logout());
     dispatch(authActions.user_loading());
 
     const config = {

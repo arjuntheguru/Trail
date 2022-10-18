@@ -16,6 +16,7 @@ using Trail.Application.Common.Wrappers;
 using Trail.Application.Common.Models.DTO;
 using System.Security.Claims;
 using Trail.Application.Common.Filters;
+using System.Linq.Expressions;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -23,11 +24,11 @@ namespace Trail.WebAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly UserCrudService _userSearchService;
-        private readonly ICrudService<User> _userCrudService;        
+        private readonly ICrudService<User> _userCrudService;
         public UsersController(
-            IUserService userService, 
+            IUserService userService,
             UserCrudService userSearchService,
-            ICrudService<User> userCrudService, 
+            ICrudService<User> userCrudService,
             IOptions<AppSettings> settings)
         {
             _userService = userService;
@@ -35,7 +36,7 @@ namespace Trail.WebAPI.Controllers
             _userSearchService = userSearchService;
         }
 
-        
+
         [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Authenticate(AuthenticateModel model)
@@ -45,7 +46,7 @@ namespace Trail.WebAPI.Controllers
             if (user == null)
                 return BadRequest(new { message = "Username or password is incorrect." });
 
-            if(user.IsActive == false)
+            if (user.IsActive == false)
                 return BadRequest(new { message = "Your account is locked. Please contact your admin." });
 
             return Ok(user);
@@ -57,7 +58,10 @@ namespace Trail.WebAPI.Controllers
         {
             var userId = User.FindFirstValue("UserName");
             var loggedInUser = await _userCrudService.FindOneAsync(p => p.UserName == userId);
-            user.CompanyId = loggedInUser.CompanyId;
+            if (loggedInUser.CompanyId != null)
+            {
+                user.CompanyId = loggedInUser.CompanyId;
+            }
             var createdUser = _userService.Create(user);
 
             if (user == null)
@@ -67,7 +71,7 @@ namespace Trail.WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpPost("logout")]        
+        [HttpPost("logout")]
         public IActionResult Logout()
         {
             return Ok();
@@ -83,14 +87,26 @@ namespace Trail.WebAPI.Controllers
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var records = new RecordCount<User>();
-
+            Expression<Func<User, bool>> _exp1 = p => 0 == 0;
+            if (!user.Role.ToLower().Contains("super"))
+            {
+                _exp1 = p => (p.CompanyId == user.CompanyId && p.Role != "Admin");
+            }
+            if (user.Role.ToLower() != "admin")
+            {
+                string[] data = new[] { "Manager", "Admin" };
+                //Expression<Func<User, bool>> _exp2 = p => p.Role == "Manager";
+                _exp1 = p => (p.Role != "Manager" && user.SiteId.Any(u => p.SiteId.Contains(u)) &&
+                p.CompanyId == user.CompanyId && p.Role != "Admin");
+                //_exp1 = Expression.Lambda<Func<User, bool>>(Expression.AndAlso(_exp1.Body, _exp2.Body), "p", _exp1.Parameters);
+            }
             if (String.IsNullOrWhiteSpace(searchQuery))
             {
-                 records = _userCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
-            }           
+                records = _userCrudService.FilterBy(validFilter, _exp1);
+            }
             else
             {
-                records = _userSearchService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId, searchQuery.ToLower());
+                records = _userSearchService.FilterBy(validFilter, _exp1, searchQuery.ToLower());
             }
             return Ok(records);
         }
@@ -99,7 +115,7 @@ namespace Trail.WebAPI.Controllers
         [HttpPost("changePassword")]
         public async Task<IActionResult> ChangePassword(AuthenticateModel model)
         {
-            var user = _userCrudService.FindOne(p => p.UserName == model.UserName );
+            var user = _userCrudService.FindOne(p => p.UserName == model.UserName);
 
             if (user == null)
                 return BadRequest(new { message = "User does not exist." });

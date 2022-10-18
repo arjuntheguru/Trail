@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -35,7 +36,7 @@ namespace Trail.WebAPI.Controllers
             _siteSearchService = siteSearchService;
         }
 
-        [Authorize(Roles="Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public IActionResult GetAll([FromQuery] PaginationFilter filter)
         {
@@ -60,7 +61,7 @@ namespace Trail.WebAPI.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpGet("admin")]
         public async Task<IActionResult> GetSitesFromCompanyId([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
@@ -78,21 +79,26 @@ namespace Trail.WebAPI.Controllers
             else
             {
                 records = _siteSearchService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId, searchQuery.ToLower());
-            }           
-                      
+            }
+
 
             var pagedReponse = PaginationHelper.CreatePagedReponse<Site>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Manager")]
         [HttpGet("all/{companyId}")]
-        public IActionResult GetSitesFromCompanyIdWithoutPagination(string companyId) 
-        {           
-
-            var records = _siteCrudService.FilterBy(p => p.CompanyId == companyId);            
-
+        public IActionResult GetSitesFromCompanyIdWithoutPagination(string companyId)
+        {
+            var user = _userCrudService.FindOne(p => p.UserName == User.FindFirstValue("UserName"));
+            if (user.CompanyId != companyId)
+                throw new UnauthorizedAccessException();
+            IEnumerable<Site> records = _siteCrudService.FilterBy(p => p.CompanyId == companyId);
+            if (user.Role == "Manager")
+            {
+                records = records.Where(r => user.SiteId.Contains(r.Id));
+            }
             return Ok(records.ToList());
         }
 
@@ -103,7 +109,7 @@ namespace Trail.WebAPI.Controllers
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var userId = User.FindFirstValue("UserName");
-            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);            
+            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
 
             var records = new RecordCount<Site>();
 
@@ -135,15 +141,18 @@ namespace Trail.WebAPI.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut]
         public async Task<IActionResult> Update(Site site)
         {
             var item = await _siteCrudService.FindByIdAsync(site.Id);
-
             if (item == null)
             {
                 return NotFound(new Response<Site>("Site does not exist"));
+            }
+            if (User.IsInRole("Manager"))
+            {
+                if (item.Name != site.Name) return BadRequest();
             }
 
             item.Name = site.Name;

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
-import { Navbar, Nav, Container, NavDropdown } from "react-bootstrap";
+import { Navbar, Nav, Container, NavDropdown, Badge } from "react-bootstrap";
 import { logout } from "./../../store/auth-actions";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -55,8 +55,8 @@ const Header = () => {
 						data={editData}
 					/>
 				) : (
-					""
-				)}
+						""
+					)}
 				<Link to="/" className="navbar-brand mt-1">
 					<FontAwesomeIcon size="lg" icon={faJedi} className="" />
 				</Link>
@@ -136,8 +136,16 @@ const Header = () => {
 											setDropdown1(!dropdown1);
 										}}
 									>
+
 										<FontAwesomeIcon icon={faTasks} className="mr-2" /> Task
 									</Link>
+									<Link
+										to="/overView"
+										className="dropdown-item"
+										onClick={() => {
+											setDropdown1(!dropdown1);
+										}}
+									>Overview</Link>
 								</NavDropdown>
 							</Nav>
 						</>
@@ -147,28 +155,54 @@ const Header = () => {
 								<Link to="/" className="nav-link">
 									Home
 								</Link>
-								<Link to="/site" className="nav-link">
+								<NavDropdown
+									title="Manage"
+									className="text-info"
+									show={dropdown1}
+									onToggle={() => {
+										setDropdown1(!dropdown1);
+									}}
+								>
+									<Link
+										to="/site"
+										className="dropdown-item"
+										onClick={() => {
+											setDropdown1(!dropdown1);
+										}}
+									>
+										<FontAwesomeIcon icon={faStore} className="mr-2" /> Sites
+									</Link>
+									<Link
+										to="/users-manage"
+										className="dropdown-item"
+										onClick={() => {
+											setDropdown1(!dropdown1);
+										}}
+									>
+										<FontAwesomeIcon icon={faUser} className="mr-2" /> Users
+									</Link>
+									{/* <Link to="/site" className="nav-link">
 									Sites
-								</Link>
+								</Link> */}
+								</NavDropdown>
 							</Nav>
 						</>
 					) : (
-						<>
-							<Nav className="mr-auto mt-1">
-								<Link to="/" className="nav-link">
-									Home
-								</Link>
-								<Link to={`/site/${auth.user.siteId[0]}`} className="nav-link">
-									Complete Tasks
-								</Link>
-							</Nav>
-						</>
-					)
+									<>
+										<Nav className="mr-auto mt-1">
+											<Link to="/" className="nav-link">
+												Home</Link>
+											<Link to={`/site/${auth.user.siteId[0]}`} className="nav-link">
+												Complete Tasks</Link>
+										</Nav>
+									</>
+								)
 				) : (
-					""
-				)}
+						""
+					)}
 				{auth.isAuthenticated && (
 					<Nav className="mt-1">
+						<h5><Badge variant="danger" pill>{auth.user.role}</Badge></h5>
 						<NavDropdown
 							title={
 								<FontAwesomeIcon icon={faCog} size="lg" className="mr-2" />
@@ -211,7 +245,7 @@ const Header = () => {
 					)}
 				</Nav>
 			</Container>
-		</Navbar>
+		</Navbar >
 	);
 };
 

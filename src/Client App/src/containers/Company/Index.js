@@ -198,7 +198,7 @@ const Company = () => {
 												{companyInfo.data.length > 0 ? (
 													companyInfo.data.map((company) => {
 														return (
-															<tr>
+															<tr key={company.id}>
 																<td>{company.name}</td>
 																<td>{company.registrationNo}</td>
 																<td>{company.email}</td>

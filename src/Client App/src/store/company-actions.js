@@ -16,6 +16,7 @@ export const addCompany = (item, userInfo, callback) => (dispatch) => {
 			dispatch(companyActions.add_company_success(res.data));
 
 			userInfo.companyId = res.data.data;
+			console.log(userInfo);
 			dispatch(registerUser(userInfo));
 			callback();
 			notifySuccess(res.data.message);
