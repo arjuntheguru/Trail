@@ -190,8 +190,8 @@ const ManageUser = () => {
 													pageNumber={currentPageNumber}
 												/>
 											) : (
-													""
-												)}
+												""
+											)}
 											{showEditModal ? (
 												<EditUser
 													show={showEditModal}
@@ -200,8 +200,8 @@ const ManageUser = () => {
 													data={editData}
 												/>
 											) : (
-													""
-												)}
+												""
+											)}
 											{showDeleteModal ? (
 												<DeleteUser
 													show={showDeleteModal}
@@ -209,8 +209,8 @@ const ManageUser = () => {
 													data={deleteData}
 												/>
 											) : (
-													""
-												)}
+												""
+											)}
 
 											<Table striped size="">
 												<thead className="bg-light text-dark">
@@ -242,14 +242,14 @@ const ManageUser = () => {
 																				Active
 																			</Badge>
 																		) : (
-																				<Badge
-																					pill
-																					variant="danger"
-																					className="px-3 py-2 mx-1"
-																				>
-																					Inactive
-																				</Badge>
-																			)}
+																			<Badge
+																				pill
+																				variant="danger"
+																				className="px-3 py-2 mx-1"
+																			>
+																				Inactive
+																			</Badge>
+																		)}
 																	</td>
 																	<td>{user.role}</td>
 																	<td className="text-muted">
@@ -313,18 +313,18 @@ const ManageUser = () => {
 																						Delete
 																					</Dropdown.Item>
 																				) : (
-																						<Dropdown.Item
-																							onClick={() => {
-																								restoreHandler(user);
-																							}}
-																						>
-																							<FontAwesomeIcon
-																								icon={faTrashRestore}
-																								className="mr-2"
-																							/>{" "}
+																					<Dropdown.Item
+																						onClick={() => {
+																							restoreHandler(user);
+																						}}
+																					>
+																						<FontAwesomeIcon
+																							icon={faTrashRestore}
+																							className="mr-2"
+																						/>{" "}
 																						Restore
-																						</Dropdown.Item>
-																					)}
+																					</Dropdown.Item>
+																				)}
 																			</Dropdown.Menu>
 																		</Dropdown>
 																	</td>
@@ -332,18 +332,18 @@ const ManageUser = () => {
 															);
 														})
 													) : (
-															<tr className="bg-transparent">
-																<td colSpan="100%">
-																	<div className="text-center h-100 p-5">
-																		<FontAwesomeIcon icon={faSearch} size="3x" />
-																		<h6>Result Not Found</h6>
-																		<p className="text-muted">
-																			Please change keyword or modify filters
+														<tr className="bg-transparent">
+															<td colSpan="100%">
+																<div className="text-center h-100 p-5">
+																	<FontAwesomeIcon icon={faSearch} size="3x" />
+																	<h6>Result Not Found</h6>
+																	<p className="text-muted">
+																		Please change keyword or modify filters
 																	</p>
-																	</div>
-																</td>
-															</tr>
-														)}
+																</div>
+															</td>
+														</tr>
+													)}
 												</tbody>
 												<tfoot>
 													<tr>
@@ -367,8 +367,8 @@ const ManageUser = () => {
 					</section>
 				</>
 			) : (
-					<Spinner animation="border spinner" />
-				)}
+				<Spinner animation="border spinner" />
+			)}
 		</div>
 	);
 };

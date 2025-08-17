@@ -5,8 +5,7 @@ import TaskForm from "./TaskForm";
 const AddTask = ({ show, onClose, pageNumber }) => {
 	return (
 		<Modal show={show} onHide={onClose} centered>
-				{<TaskForm onClose={onClose} pageNumber={pageNumber} />}
-			
+			{<TaskForm onClose={onClose} pageNumber={pageNumber} />}
 		</Modal>
 	);
 };

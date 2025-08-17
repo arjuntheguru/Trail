@@ -1,4 +1,4 @@
-using FluentValidation.AspNetCore;
+﻿using FluentValidation.AspNetCore;
 using Hangfire;
 using Hangfire.Mongo;
 using Hangfire.Mongo.Migration.Strategies;
@@ -34,30 +34,31 @@ namespace Trail.WebAPI
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // Register services
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<DatabaseSettings>(Configuration.GetSection("DatabaseSettings"));
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
 
-            services.AddSingleton<IDatabaseSettings>(serviceProvider =>
-            serviceProvider.GetRequiredService<IOptions<DatabaseSettings>>().Value);
+            services.AddSingleton<IDatabaseSettings>(sp =>
+                sp.GetRequiredService<IOptions<DatabaseSettings>>().Value);
 
             services.AddScoped(typeof(ICrudService<>), typeof(CrudService<>));
 
-            // configure strongly typed settings objects
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
 
             services.AddSingleton<IUriService>(o =>
             {
                 var accessor = o.GetRequiredService<IHttpContextAccessor>();
-                var request = accessor.HttpContext.Request;
-                var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent());
+                var request = accessor.HttpContext?.Request;
+                var uri = request != null
+                    ? string.Concat(request.Scheme, "://", request.Host.ToUriComponent())
+                    : string.Empty;
                 return new UriService(uri);
             });
 
-            // configure jwt authentication
+            // JWT auth
             var appSettings = appSettingsSection.Get<AppSettings>();
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             services.AddAuthentication(x =>
@@ -78,21 +79,25 @@ namespace Trail.WebAPI
                 };
             });
 
-            // configure DI for application services
+            // DI for services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<CompanyCrudService>();
             services.AddScoped<SiteCrudService>();
             services.AddScoped<UserCrudService>();
 
+            // Allow React dev server
             services.AddCors(options =>
-           {
-               options.AddPolicy("CorsPolicy",
-                   builder => builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader());
-           });
+            {
+                options.AddPolicy("CorsPolicy", builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000") // React app
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+            });
 
+            // Hangfire
             var mongoConnection = Configuration.GetConnectionString("HangfireConnection");
             var migrationOptions = new MongoStorageOptions
             {
@@ -102,42 +107,46 @@ namespace Trail.WebAPI
                     BackupStrategy = new CollectionMongoBackupStrategy()
                 }
             };
-
             services.AddHangfire(config =>
             {
                 config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
                 config.UseSimpleAssemblyNameTypeSerializer();
                 config.UseRecommendedSerializerSettings();
-
                 config.UseMongoStorage(mongoConnection, migrationOptions);
-
             });
-
             services.AddHangfireServer();
 
+            // Controllers + JSON options
             services.AddControllers()
-                .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CompanyValidator>())
+                .AddFluentValidation(fv =>
+                    fv.RegisterValidatorsFromAssemblyContaining<CompanyValidator>())
                 .AddJsonOptions(options =>
-                 options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter()));
+                    options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter()));
 
+            // ✅ Swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Trail.WebAPI", Version = "v1" });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
                     Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 1safsfsdfdfd\"",
+                    Description = "JWT Authorization header using the Bearer scheme.\r\n\r\n" +
+                                  "Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\n" +
+                                  "Example: \"Bearer 1safsfsdfdfd\""
                 });
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
                     {
-                        new OpenApiSecurityScheme {
-                            Reference = new OpenApiReference {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
                                 Type = ReferenceType.SecurityScheme,
-                                    Id = "Bearer"
+                                Id = "Bearer"
                             }
                         },
                         new string[] {}
@@ -148,21 +157,19 @@ namespace Trail.WebAPI
             services.AddRouting(o => o.LowercaseUrls = true);
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        // Configure middleware pipeline
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider provider)
         {
             app.UseMiddleware<ErrorHandlingMiddleware>();
 
-            //if (env.IsDevelopment())
-            // {
-            //app.UseDeveloperExceptionPage();
+            // ✅ Swagger always enabled
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1");
-                c.RoutePrefix = String.Empty;
+                // RoutePrefix = "" means Swagger UI at https://localhost:44305/
+                c.RoutePrefix = "swagger";
             });
-            //}
 
             app.UseHangfireDashboard();
 
@@ -170,18 +177,9 @@ namespace Trail.WebAPI
 
             app.UseHttpsRedirection();
 
-            // app.UseStaticFiles();
-
-            // if (!env.IsDevelopment())
-            // {
-            //     app.UseSpaStaticFiles();
-            // }
-
-
             app.UseRouting();
 
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -189,18 +187,11 @@ namespace Trail.WebAPI
                 endpoints.MapControllers();
             });
 
-            // app.UseSpa(spa =>
-            // {
-            //     spa.Options.SourcePath = "ClientApp";                
-            // });
-
-
+            // Background tasks
             TaskManager taskManger = (TaskManager)ActivatorUtilities.CreateInstance(provider, typeof(TaskManager));
-
             taskManger.RunTasks();
 
             SeedData seedData = (SeedData)ActivatorUtilities.CreateInstance(provider, typeof(SeedData));
-
             seedData.Run();
         }
     }

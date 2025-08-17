@@ -32,9 +32,9 @@ export const login = (userInfo, history) => dispatch => {
             }
         })
         .catch((err) => {
-            console.log(err.response);
-            dispatch(authActions.login_fail(err.response.data.message));
-            notifyError(err.response.data.message);
+            console.log(err?.response);
+            dispatch(authActions.login_fail(err?.response?.data?.message));
+            notifyError(err?.response?.data?.message);
         });
 
 }

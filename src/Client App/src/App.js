@@ -34,7 +34,6 @@ import ManageUser2 from './containers/Users/ManageUser2';
 import Report from './containers/Report';
 
 
-
 const App = () => {
 
   const dispatch = useDispatch();
@@ -66,8 +65,8 @@ const App = () => {
         </main>
         <footer className="border-top fixed-bottom bg-dark text-center text-light p-2">
           <div className="container-fluid">
-            &copy; 2021 - Dailo Technologies
-        </div>
+            &copy; {new Date().getFullYear()} - Dailo Technologies
+          </div>
         </footer>
       </Fragment>
     </Router>

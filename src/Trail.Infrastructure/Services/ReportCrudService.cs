@@ -77,11 +77,26 @@ namespace Trail.Infrastructure.Services
             //])
             //var data = await _collection.Aggregate<BsonDocument>(Pipeline).ToListAsync();
             var data = await _collection
-                .Aggregate().Match(c => c.Date >= DateTime.Parse(from) && c.Date <= DateTime.Parse(to))
-                .Group(key => key.SiteId,g => new { 
-                    avgScore = g.Average(i => i.ScoreValue),
-                    scores = ()
-                }).ToListAsync();
+             .Aggregate()
+             .Match(c => c.Date >= DateTime.Parse(from) && c.Date <= DateTime.Parse(to))
+             .Group(
+                 key => key.SiteId,
+                 g => new BsonDocument
+                 {
+                    { "_id", g.Key },
+                    { "avgScore", g.Average(i => i.ScoreValue) },
+                    { "scores", new BsonArray(
+                        g.Select(x => new BsonDocument
+                        {
+                            { "_id", x.Id },
+                            { "score", x.ScoreValue },
+                            { "date", x.Date }
+                        })
+                    )}
+                 }
+             )
+             .ToListAsync();
+
             return data;
         }
 
