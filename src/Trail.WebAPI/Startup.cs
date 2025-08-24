@@ -86,14 +86,24 @@ namespace Trail.WebAPI
             services.AddScoped<SiteCrudService>();
             services.AddScoped<UserCrudService>();
 
-            // Allow React dev server
+            // ✅ CORS configuration
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000") // React app
-                           .AllowAnyHeader()
-                           .AllowAnyMethod();
+                    builder.WithOrigins(
+                            "http://localhost:3000",        // React local dev
+                            "http://127.0.0.1:3000",        // React local dev
+                            "http://localhost:3001",        // React local dev
+                            "http://127.0.0.1:3001",        // React local dev
+                            "https://164.68.116.52:3000",  // React deployed on port 3000
+                            "https://164.68.116.52",       // React deployed without port
+                            "https://foods-safety.netlify.app",       // Replace with your actual domain
+                            "*"
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
                 });
             });
 
@@ -167,12 +177,12 @@ namespace Trail.WebAPI
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Trail.WebAPI v1");
-                // RoutePrefix = "" means Swagger UI at https://localhost:44305/
                 c.RoutePrefix = "swagger";
             });
 
             app.UseHangfireDashboard();
 
+            // ✅ Apply CORS policy
             app.UseCors("CorsPolicy");
 
             app.UseHttpsRedirection();

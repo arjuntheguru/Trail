@@ -1,9 +1,7 @@
 ﻿using MongoDB.Driver;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
+using System.Threading.Tasks;
 using Trail.Application.Common.Filters;
 using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Wrappers;
@@ -14,6 +12,7 @@ namespace Trail.Infrastructure.Services
     public class UserCrudService
     {
         private readonly ICrudService<User> _userCrudService;
+
         public UserCrudService(ICrudService<User> userCrudService)
         {
             _userCrudService = userCrudService;
@@ -24,23 +23,47 @@ namespace Trail.Infrastructure.Services
             var database = _userCrudService.Database();
             var collection = database.GetCollection<User>(_userCrudService.GetCollectionName(typeof(User)));
 
-            var records = collection.Find(filterExpression).ToEnumerable()
-                .Where(p => p.FirstName.ToLower().Contains(searchQuery)
-                || p.LastName.ToLower().Contains(searchQuery)
-                || p.Email.ToLower().Contains(searchQuery)
-                || p.UserName.ToLower().Contains(searchQuery)
-                || p.Role.ToLower().Contains(searchQuery));
+            // Convert expression to MongoDB filter
+            var baseFilter = Builders<User>.Filter.Where(filterExpression);
+            var finalFilter = baseFilter;
 
-            var result = new RecordCount<User>
+            // Add search filter if provided
+            if (!string.IsNullOrEmpty(searchQuery))
             {
-                Records = records
+                var searchTerm = searchQuery.ToLower();
+                var searchFilter = Builders<User>.Filter.Or(
+                    Builders<User>.Filter.Where(u => u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)),
+                    Builders<User>.Filter.Where(u => u.LastName != null && u.LastName.ToLower().Contains(searchTerm)),
+                    Builders<User>.Filter.Where(u => u.Email != null && u.Email.ToLower().Contains(searchTerm)),
+                    Builders<User>.Filter.Where(u => u.UserName != null && u.UserName.ToLower().Contains(searchTerm)),
+                    Builders<User>.Filter.Where(u => u.Role != null && u.Role.ToLower().Contains(searchTerm))
+                );
+
+                finalFilter = Builders<User>.Filter.And(baseFilter, searchFilter);
+            }
+
+            // Get total count
+            var totalCount = (int)collection.CountDocuments(finalFilter);
+
+            // Get paginated results
+            var records = collection.Find(finalFilter)
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
-                .Take(filter.PageSize)
+                .Limit(filter.PageSize)
+                .ToList();
+
+            return new RecordCount<User>
+            {
+                Records = records,
+                Count = totalCount
             };
+        }
 
-            result.Count = records.Count();
+        public async Task<User> FindOneAsync(Expression<Func<User, bool>> filterExpression)
+        {
+            var database = _userCrudService.Database();
+            var collection = database.GetCollection<User>(_userCrudService.GetCollectionName(typeof(User)));
 
-            return result;
+            return await collection.Find(filterExpression).FirstOrDefaultAsync();
         }
     }
 }

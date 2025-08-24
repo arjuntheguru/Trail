@@ -81,34 +81,75 @@ namespace Trail.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string searchQuery = null)
         {
-            var userId = User.FindFirstValue("UserName");
-            var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("UserName");
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { message = "User identifier not found" });
+                }
 
-            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+                var user = await _userCrudService.FindOneAsync(p => p.UserName == userId || p.Id == userId);
+                if (user == null)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
 
-            var records = new RecordCount<User>();
-            Expression<Func<User, bool>> _exp1 = p => 0 == 0;
-            if (!user.Role.ToLower().Contains("super"))
-            {
-                _exp1 = p => (p.CompanyId == user.CompanyId && p.Role != "Admin");
+                var userRole = user.Role?.ToLower() ?? "";
+                Expression<Func<User, bool>> filterExpression;
+
+                if (userRole.Contains("super"))
+                {
+                    // Super admin sees all users
+                    filterExpression = p => true;
+                }
+                else if (userRole == "admin")
+                {
+                    // Admin sees other admins in same company
+                    filterExpression = p => p.CompanyId == user.CompanyId &&
+                                          p.Role != null &&
+                                          p.Role.ToLower() == "admin" &&
+                                          p.Id != user.Id; // Exclude self
+                }
+                else
+                {
+                    // Regular users see non-manager, non-admin users in their sites
+                    var userSiteIds = user.SiteId ?? new System.Collections.Generic.List<string>();
+                    filterExpression = p => p.CompanyId == user.CompanyId &&
+                                          p.Role != null &&
+                                          p.Role.ToLower() != "manager" &&
+                                          p.Role.ToLower() != "admin" &&
+                                          p.SiteId != null &&
+                                          userSiteIds.Any(userSiteId => p.SiteId.Contains(userSiteId)) &&
+                                          p.Id != user.Id; // Exclude self
+                }
+
+                var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+                RecordCount<User> records;
+
+                if (string.IsNullOrWhiteSpace(searchQuery))
+                {
+                    records = _userCrudService.FilterBy(validFilter, filterExpression);
+                }
+                else
+                {
+                    records = _userSearchService.FilterBy(validFilter, filterExpression, searchQuery.ToLower());
+                }
+
+                return Ok(new
+                {
+                    Success = true,
+                    Records = records.Records,
+                    Count = records.Count,
+                    CurrentPage = validFilter.PageNumber,
+                    PageSize = validFilter.PageSize,
+                    TotalPages = (int)Math.Ceiling(records.Count / (double)validFilter.PageSize)
+                });
             }
-            if (user.Role.ToLower() != "admin")
+            catch (Exception ex)
             {
-                string[] data = new[] { "Manager", "Admin" };
-                //Expression<Func<User, bool>> _exp2 = p => p.Role == "Manager";
-                _exp1 = p => (p.Role != "Manager" && user.SiteId.Any(u => p.SiteId.Contains(u)) &&
-                p.CompanyId == user.CompanyId && p.Role != "Admin");
-                //_exp1 = Expression.Lambda<Func<User, bool>>(Expression.AndAlso(_exp1.Body, _exp2.Body), "p", _exp1.Parameters);
+                return StatusCode(500, new { message = "An error occurred while fetching users", error = ex.Message });
             }
-            if (String.IsNullOrWhiteSpace(searchQuery))
-            {
-                records = _userCrudService.FilterBy(validFilter, _exp1);
-            }
-            else
-            {
-                records = _userSearchService.FilterBy(validFilter, _exp1, searchQuery.ToLower());
-            }
-            return Ok(records);
         }
 
         [Authorize]
