@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Trail.Application.Common.Filters;
@@ -31,13 +32,34 @@ namespace Trail.Infrastructure.Services
             if (!string.IsNullOrEmpty(searchQuery))
             {
                 var searchTerm = searchQuery.ToLower();
-                var searchFilter = Builders<User>.Filter.Or(
-                    Builders<User>.Filter.Where(u => u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)),
-                    Builders<User>.Filter.Where(u => u.LastName != null && u.LastName.ToLower().Contains(searchTerm)),
-                    Builders<User>.Filter.Where(u => u.Email != null && u.Email.ToLower().Contains(searchTerm)),
-                    Builders<User>.Filter.Where(u => u.UserName != null && u.UserName.ToLower().Contains(searchTerm)),
-                    Builders<User>.Filter.Where(u => u.Role != null && u.Role.ToLower().Contains(searchTerm))
-                );
+                var tokens = searchTerm.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                // Build an OR filter for a single token representing a match against the common fields.
+                FilterDefinition<User> BuildTokenFilter(string term) =>
+                    Builders<User>.Filter.Or(
+                        Builders<User>.Filter.Where(u => u.FirstName != null && u.FirstName.ToLower().Contains(term)),
+                        Builders<User>.Filter.Where(u => u.LastName != null && u.LastName.ToLower().Contains(term)),
+                        Builders<User>.Filter.Where(u => u.Email != null && u.Email.ToLower().Contains(term)),
+                        Builders<User>.Filter.Where(u => u.UserName != null && u.UserName.ToLower().Contains(term)),
+                        Builders<User>.Filter.Where(u => u.Role != null && u.Role.ToLower().Contains(term))
+                    );
+
+                FilterDefinition<User> searchFilter;
+
+                if (tokens.Length <= 1)
+                {
+                    // Single token behaves the same as the previous implementation.
+                    searchFilter = BuildTokenFilter(searchTerm);
+                }
+                else
+                {
+                    // Require every token (e.g. first + last name) to match at least one searchable field.
+                    var tokenFilters = tokens
+                        .Select(token => BuildTokenFilter(token))
+                        .ToArray();
+
+                    searchFilter = Builders<User>.Filter.And(tokenFilters);
+                }
 
                 finalFilter = Builders<User>.Filter.And(baseFilter, searchFilter);
             }

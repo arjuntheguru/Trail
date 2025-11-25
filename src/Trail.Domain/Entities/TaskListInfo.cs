@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Trail.Domain.Common;
 using Trail.Domain.Enums;
@@ -26,7 +27,15 @@ namespace Trail.Domain.Entities
         {
             RuleFor(p => p.Name).NotEmpty();
             RuleFor(p => p.Description).NotEmpty();
-            RuleForEach(p => p.TaskItemInfo).SetValidator(new TaskItemInfoValidator());
+            RuleFor(p => p.TaskItemInfo)
+                .NotNull()
+                .Must(p => p.Any())
+                .When(p => p.TaskType == TaskType.Checklist)
+                .WithMessage("At least one task item is required for checklist tasks");
+
+            RuleForEach(p => p.TaskItemInfo)
+                .SetValidator(new TaskItemInfoValidator())
+                .When(p => p.TaskType == TaskType.Checklist);
         }
     }
 }

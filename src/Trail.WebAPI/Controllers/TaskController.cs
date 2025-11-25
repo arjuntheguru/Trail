@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Trail.Application.Common.Filters;
@@ -10,6 +11,7 @@ using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Models;
 using Trail.Application.Common.Wrappers;
+using Trail.Domain.Common;
 using Trail.Domain.Entities;
 
 namespace Trail.WebAPI.Controllers
@@ -36,29 +38,88 @@ namespace Trail.WebAPI.Controllers
         
         [Authorize(Roles ="SuperAdmin")]
         [HttpGet]
-        public IActionResult GetTaskSuperAdmin([FromQuery] PaginationFilter filter)
+        public IActionResult GetTaskSuperAdmin([FromQuery] PaginationFilter filter, string searchQuery = null, bool? isActive = null)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == null);
+            Expression<Func<TaskListInfo, bool>> predicate;
+            if (isActive.HasValue)
+            {
+                predicate = p => p.CompanyId == null && p.IsActive == isActive.Value;
+            }
+            else
+            {
+                predicate = p => p.CompanyId == null;
+            }
 
-            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
+            var taskRecords = _taskListInfoCrudService.FilterBy(predicate).ToList();
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var formattedQuery = searchQuery.Trim().ToLower();
+                taskRecords = taskRecords
+                    .Where(p =>
+                        (!string.IsNullOrEmpty(p.Name) &&
+                         p.Name.ToLower().Contains(formattedQuery)) ||
+                        (!string.IsNullOrEmpty(p.Description) &&
+                         p.Description.ToLower().Contains(formattedQuery)))
+                    .ToList();
+            }
+
+            var totalCount = taskRecords.Count();
+
+            var pagedRecords = taskRecords
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToList();
+
+            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(pagedRecords, validFilter, totalCount, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("admin")]
-        public async Task<IActionResult> GetTaskAdmin([FromQuery] PaginationFilter filter)
+        public async Task<IActionResult> GetTaskAdmin([FromQuery] PaginationFilter filter, string searchQuery = null, bool? isActive = null)
         {
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var userId = User.FindFirstValue("UserName");
             var user = await _userCrudService.FindOneAsync(p => p.UserName == userId);
 
-            var records = _taskListInfoCrudService.FilterBy(validFilter, p => p.CompanyId == user.CompanyId);
+            Expression<Func<TaskListInfo, bool>> predicate;
 
-            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(records.Records.ToList(), validFilter, records.Count, _uriService, this.Route, Array.Empty<RequestParameter>());
+            if (isActive.HasValue)
+            {
+                predicate = p => p.CompanyId == user.CompanyId && p.IsActive == isActive.Value;
+            }
+            else
+            {
+                predicate = p => p.CompanyId == user.CompanyId;
+            }
+
+            var taskRecords = _taskListInfoCrudService.FilterBy(predicate).ToList();
+
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                var formattedQuery = searchQuery.Trim().ToLower();
+                taskRecords = taskRecords
+                    .Where(p =>
+                        (!string.IsNullOrEmpty(p.Name) &&
+                         p.Name.ToLower().Contains(formattedQuery)) ||
+                        (!string.IsNullOrEmpty(p.Description) &&
+                         p.Description.ToLower().Contains(formattedQuery)))
+                    .ToList();
+            }
+
+            var totalCount = taskRecords.Count();
+
+            var pagedRecords = taskRecords
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToList();
+
+            var pagedReponse = PaginationHelper.CreatePagedReponse<TaskListInfo>(pagedRecords, validFilter, totalCount, _uriService, this.Route, Array.Empty<RequestParameter>());
 
             return Ok(pagedReponse);
         }
@@ -103,7 +164,10 @@ namespace Trail.WebAPI.Controllers
 
             item.Name = task.Name;
             item.Description = task.Description;
-            item.TaskItemInfo = task.TaskItemInfo;
+            item.TaskType = task.TaskType;
+            item.TaskItemInfo = task.TaskType == Domain.Enums.TaskType.RecordLog
+                ? new List<TaskItemInfo>()
+                : task.TaskItemInfo;
             item.IsActive = task.IsActive;
 
             var response = await _taskListInfoCrudService.ReplaceOneAsync(item);
@@ -119,9 +183,14 @@ namespace Trail.WebAPI.Controllers
 
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
-            var defaultTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == null);
-            var customTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == user.CompanyId);
-            var finalTaskList = defaultTasks.Concat(customTasks);
+            // Only show tasks from the logged-in user's company
+            var companyTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == user.CompanyId);
+            var finalTaskList = companyTasks.AsEnumerable();
+
+            if (User.IsInRole(Role.Team))
+            {
+                finalTaskList = finalTaskList.Where(p => p.IsActive);
+            }
 
             var allocatedTasks = _taskAllocationCrudService.FilterBy(p => p.SiteId == siteId);
 
