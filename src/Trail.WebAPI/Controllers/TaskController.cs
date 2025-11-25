@@ -81,6 +81,8 @@ namespace Trail.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(TaskListInfo taskList)
         {
+            // Set IsActive to true by default for new tasks
+            taskList.IsActive = true;
 
             var id = await _taskListInfoCrudService.InsertOneAsync(taskList);
 
@@ -102,6 +104,7 @@ namespace Trail.WebAPI.Controllers
             item.Name = task.Name;
             item.Description = task.Description;
             item.TaskItemInfo = task.TaskItemInfo;
+            item.IsActive = task.IsActive;
 
             var response = await _taskListInfoCrudService.ReplaceOneAsync(item);
 

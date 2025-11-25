@@ -17,6 +17,7 @@ namespace Trail.Domain.Entities
         public IEnumerable<RecordLog> RecordLogs { get; set; }
         public string CompanyId { get; set; }        
         public IEnumerable<TaskItemInfo> TaskItemInfo { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 
     public class TaskListInfoValidator : AbstractValidator<TaskListInfo>

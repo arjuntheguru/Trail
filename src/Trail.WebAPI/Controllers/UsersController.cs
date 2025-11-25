@@ -105,11 +105,21 @@ namespace Trail.WebAPI.Controllers
                 }
                 else if (userRole == "admin")
                 {
-                    // Admin sees other admins in same company
-                    filterExpression = p => p.CompanyId == user.CompanyId &&
-                                          p.Role != null &&
-                                          p.Role.ToLower() == "admin" &&
-                                          p.Id != user.Id; // Exclude self
+                    // Admin sees all users in same company (except SuperAdmin)
+                    // If Admin has no CompanyId, they see all non-SuperAdmin users
+                    if (string.IsNullOrEmpty(user.CompanyId))
+                    {
+                        filterExpression = p => p.Role != null &&
+                                              !p.Role.ToLower().Contains("super") &&
+                                              p.Id != user.Id; // Exclude self
+                    }
+                    else
+                    {
+                        filterExpression = p => p.CompanyId == user.CompanyId &&
+                                              p.Role != null &&
+                                              !p.Role.ToLower().Contains("super") &&
+                                              p.Id != user.Id; // Exclude self
+                    }
                 }
                 else
                 {

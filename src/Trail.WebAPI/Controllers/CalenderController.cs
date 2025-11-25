@@ -66,15 +66,22 @@ namespace Trail.WebAPI.Controllers
         [HttpGet("{siteId}/{date}")]
         public async Task<IActionResult> GetCalendarFromDate(string siteId, DateTime date)
         {
+            // Normalize the date to midnight (start of day) to compare only the date portion, ignoring time
+            var normalizedDate = date.Date;
+            var nextDay = normalizedDate.AddDays(1);
 
-            var record = await _calendarCrudService.FindOneAsync(p => p.SiteId == siteId && p.Date == date);
+            // Compare dates by checking if the calendar date falls within the same day
+            var record = await _calendarCrudService.FindOneAsync(p => 
+                p.SiteId == siteId && 
+                p.Date >= normalizedDate && 
+                p.Date < nextDay);
 
             if (record == null)
             {
-                return Ok(new Response<Object>(new { }, $"Fetched calendar for {date} successfully"));
+                return Ok(new Response<Object>(new { }, $"Fetched calendar for {normalizedDate:yyyy-MM-dd} successfully"));
             }
 
-            var response = new Response<Calendar>(record, $"Fetched calendar for {date} successfully");
+            var response = new Response<Calendar>(record, $"Fetched calendar for {normalizedDate:yyyy-MM-dd} successfully");
 
             return Ok(response);
         }

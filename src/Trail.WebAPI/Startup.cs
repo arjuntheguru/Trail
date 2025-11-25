@@ -86,24 +86,15 @@ namespace Trail.WebAPI
             services.AddScoped<SiteCrudService>();
             services.AddScoped<UserCrudService>();
 
-            // ✅ CORS configuration
+            // ✅ CORS configuration - Allow all origins
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    builder.WithOrigins(
-                            "http://localhost:3000",        // React local dev
-                            "http://127.0.0.1:3000",        // React local dev
-                            "http://localhost:3001",        // React local dev
-                            "http://127.0.0.1:3001",        // React local dev
-                            "https://164.68.116.52:3000",  // React deployed on port 3000
-                            "https://164.68.116.52",       // React deployed without port
-                            "https://foods-safety.netlify.app",       // Replace with your actual domain
-                            "*"
-                        )
+                    builder.SetIsOriginAllowed(_ => true)  // Allow all origins
                         .AllowAnyHeader()
                         .AllowAnyMethod()
-                        .AllowCredentials();
+                        .AllowCredentials();  // Allow credentials (cookies, auth headers)
                 });
             });
 
@@ -131,7 +122,11 @@ namespace Trail.WebAPI
                 .AddFluentValidation(fv =>
                     fv.RegisterValidatorsFromAssemblyContaining<CompanyValidator>())
                 .AddJsonOptions(options =>
-                    options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter()));
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never;
+                    options.JsonSerializerOptions.Converters.Add(new TimeSpanConverter());
+                });
 
             // ✅ Swagger
             services.AddSwaggerGen(c =>
