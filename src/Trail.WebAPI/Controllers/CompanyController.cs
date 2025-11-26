@@ -9,6 +9,7 @@ using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
 using Trail.Application.Common.Models;
 using Trail.Application.Common.Wrappers;
+using Trail.Application.Common.Models.DTO;
 using Trail.Domain.Common;
 using Trail.Domain.Entities;
 using Trail.Infrastructure.Services;
@@ -115,7 +116,7 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize(Roles = "SuperAdmin")]
         [HttpPatch("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(string id, [FromBody] CompanyStatusUpdateDTO statusUpdate)
         {
             var item = await _companyCrudService.FindByIdAsync(id);
 
@@ -124,11 +125,13 @@ namespace Trail.WebAPI.Controllers
                 return NotFound(new Response<Company>("Company does not exist"));
             }
 
-            item.IsActive = false;
+            item.IsActive = statusUpdate?.IsActive ?? false;
 
             var response = await _companyCrudService.ReplaceOneAsync(item);
 
-            return Ok(new Response<Company>(response, "Company deleted successfully"));
+            var message = item.IsActive ? "Company activated successfully" : "Company deactivated successfully";
+
+            return Ok(new Response<Company>(response, message));
 
         }
 

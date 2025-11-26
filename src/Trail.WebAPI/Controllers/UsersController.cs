@@ -25,15 +25,18 @@ namespace Trail.WebAPI.Controllers
         private readonly IUserService _userService;
         private readonly UserCrudService _userSearchService;
         private readonly ICrudService<User> _userCrudService;
+        private readonly ICrudService<Company> _companyCrudService;
         public UsersController(
             IUserService userService,
             UserCrudService userSearchService,
             ICrudService<User> userCrudService,
+            ICrudService<Company> companyCrudService,
             IOptions<AppSettings> settings)
         {
             _userService = userService;
             _userCrudService = userCrudService;
             _userSearchService = userSearchService;
+            _companyCrudService = companyCrudService;
         }
 
 
@@ -48,6 +51,15 @@ namespace Trail.WebAPI.Controllers
 
             if (user.IsActive == false)
                 return BadRequest(new { message = "Your account is locked. Please contact your admin." });
+
+            if (!string.IsNullOrEmpty(user.CompanyId))
+            {
+                var company = _companyCrudService.FindById(user.CompanyId);
+                if (company == null || !company.IsActive)
+                {
+                    return BadRequest(new { message = "Your company is inactive. Please contact your administrator." });
+                }
+            }
 
             return Ok(user);
         }
@@ -256,12 +268,25 @@ namespace Trail.WebAPI.Controllers
                 return NotFound(new Response<User>("User does not exist"));
             }
 
+            var loggedInUserName = User.FindFirstValue("UserName");
+            var loggedInUser = await _userCrudService.FindOneAsync(p => p.UserName == loggedInUserName);
+
+            var isSuperAdmin = loggedInUser?.Role == Role.SuperAdmin;
+
+            if (!isSuperAdmin)
+            {
+                if (loggedInUser == null || loggedInUser.Id != user.Id || loggedInUser.Role != Role.Admin)
+                {
+                    return Forbid();
+                }
+            }
+
             item.FirstName = user.FirstName;
             item.LastName = user.LastName;
             item.UserName = user.UserName;
             item.Email = user.Email;
-            item.Role = user.Role;
-            item.SiteId = user.SiteId;
+            item.Role = isSuperAdmin ? user.Role : item.Role;
+            item.SiteId = isSuperAdmin ? user.SiteId : item.SiteId;
 
             var response = await _userCrudService.ReplaceOneAsync(item);
 
