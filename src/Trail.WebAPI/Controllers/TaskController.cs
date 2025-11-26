@@ -187,10 +187,8 @@ namespace Trail.WebAPI.Controllers
             var companyTasks = _taskListInfoCrudService.FilterBy(p => p.CompanyId == user.CompanyId);
             var finalTaskList = companyTasks.AsEnumerable();
 
-            if (User.IsInRole(Role.Team))
-            {
-                finalTaskList = finalTaskList.Where(p => p.IsActive);
-            }
+            // Only show active tasks when assigning to a site (applies to all roles)
+            finalTaskList = finalTaskList.Where(p => p.IsActive);
 
             var allocatedTasks = _taskAllocationCrudService.FilterBy(p => p.SiteId == siteId);
 

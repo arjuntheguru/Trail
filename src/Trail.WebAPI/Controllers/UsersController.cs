@@ -79,7 +79,7 @@ namespace Trail.WebAPI.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string searchQuery = null)
+        public async Task<IActionResult> GetUser([FromQuery] PaginationFilter filter, string searchQuery = null, string companyId = null, string role = null)
         {
             try
             {
@@ -100,25 +100,91 @@ namespace Trail.WebAPI.Controllers
 
                 if (userRole.Contains("super"))
                 {
-                    // Super admin sees all users
-                    filterExpression = p => true;
+                    // Super admin sees all users, but can filter by companyId and role if provided
+                    if (!string.IsNullOrEmpty(companyId) && !string.IsNullOrEmpty(role))
+                    {
+                        filterExpression = p => p.CompanyId == companyId && p.Role != null && p.Role.ToLower() == role.ToLower();
+                    }
+                    else if (!string.IsNullOrEmpty(companyId))
+                    {
+                        filterExpression = p => p.CompanyId == companyId;
+                    }
+                    else if (!string.IsNullOrEmpty(role))
+                    {
+                        filterExpression = p => p.Role != null && p.Role.ToLower() == role.ToLower();
+                    }
+                    else
+                    {
+                        filterExpression = p => true;
+                    }
                 }
                 else if (userRole == "admin")
                 {
                     // Admin sees all users in same company (except SuperAdmin)
                     // If Admin has no CompanyId, they see all non-SuperAdmin users
-                    if (string.IsNullOrEmpty(user.CompanyId))
+                    // If companyId is provided, filter by it (but only if it matches their company or they have no company)
+                    if (!string.IsNullOrEmpty(companyId))
                     {
-                        filterExpression = p => p.Role != null &&
-                                              !p.Role.ToLower().Contains("super") &&
-                                              p.Id != user.Id; // Exclude self
+                        // Only allow filtering by companyId if user has no company or it matches their company
+                        if (string.IsNullOrEmpty(user.CompanyId) || user.CompanyId == companyId)
+                        {
+                            // Add role filter if provided
+                            if (!string.IsNullOrEmpty(role))
+                            {
+                                filterExpression = p => p.CompanyId == companyId &&
+                                                      p.Role != null &&
+                                                      !p.Role.ToLower().Contains("super") &&
+                                                      p.Role.ToLower() == role.ToLower() &&
+                                                      p.Id != user.Id; // Exclude self
+                            }
+                            else
+                            {
+                                filterExpression = p => p.CompanyId == companyId &&
+                                                      p.Role != null &&
+                                                      !p.Role.ToLower().Contains("super") &&
+                                                      p.Id != user.Id; // Exclude self
+                            }
+                        }
+                        else
+                        {
+                            return Unauthorized(new { message = "You are not authorized to view users from this company" });
+                        }
+                    }
+                    else if (string.IsNullOrEmpty(user.CompanyId))
+                    {
+                        // Add role filter if provided
+                        if (!string.IsNullOrEmpty(role))
+                        {
+                            filterExpression = p => p.Role != null &&
+                                                  !p.Role.ToLower().Contains("super") &&
+                                                  p.Role.ToLower() == role.ToLower() &&
+                                                  p.Id != user.Id; // Exclude self
+                        }
+                        else
+                        {
+                            filterExpression = p => p.Role != null &&
+                                                  !p.Role.ToLower().Contains("super") &&
+                                                  p.Id != user.Id; // Exclude self
+                        }
                     }
                     else
                     {
-                        filterExpression = p => p.CompanyId == user.CompanyId &&
-                                              p.Role != null &&
-                                              !p.Role.ToLower().Contains("super") &&
-                                              p.Id != user.Id; // Exclude self
+                        // Add role filter if provided
+                        if (!string.IsNullOrEmpty(role))
+                        {
+                            filterExpression = p => p.CompanyId == user.CompanyId &&
+                                                  p.Role != null &&
+                                                  !p.Role.ToLower().Contains("super") &&
+                                                  p.Role.ToLower() == role.ToLower() &&
+                                                  p.Id != user.Id; // Exclude self
+                        }
+                        else
+                        {
+                            filterExpression = p => p.CompanyId == user.CompanyId &&
+                                                  p.Role != null &&
+                                                  !p.Role.ToLower().Contains("super") &&
+                                                  p.Id != user.Id; // Exclude self
+                        }
                     }
                 }
                 else
