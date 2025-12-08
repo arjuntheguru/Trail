@@ -16,7 +16,7 @@ namespace Trail.Domain.Entities
     {
         public CommentValidator()
         {
-            RuleFor(p => p.Description).NotEmpty();
+            // Description is now optional - comment can be empty if images are provided
             RuleFor(p => p.CreatedDate).NotEmpty();
             RuleFor(p => p.CreatedBy).NotEmpty();
         }

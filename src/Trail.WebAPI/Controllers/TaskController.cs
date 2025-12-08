@@ -13,6 +13,7 @@ using Trail.Application.Common.Models;
 using Trail.Application.Common.Wrappers;
 using Trail.Domain.Common;
 using Trail.Domain.Entities;
+using Trail.Domain.Enums;
 
 namespace Trail.WebAPI.Controllers
 {
@@ -23,17 +24,20 @@ namespace Trail.WebAPI.Controllers
         private readonly ICrudService<User> _userCrudService;
         private readonly ICrudService<TaskAllocation> _taskAllocationCrudService;
         private readonly IUriService _uriService;
+        private readonly ITaskManager _taskManager;
 
         public TaskController(
             ICrudService<TaskListInfo> taskListCrudService,
             ICrudService<TaskAllocation> taskAllocationCrudService,
             ICrudService<User> userCrudService,
-            IUriService uriService)
+            IUriService uriService,
+            ITaskManager taskManager)
         {
             _taskListInfoCrudService = taskListCrudService;
             _taskAllocationCrudService = taskAllocationCrudService;
             _userCrudService = userCrudService;
             _uriService = uriService;
+            _taskManager = taskManager;
         }
         
         [Authorize(Roles ="SuperAdmin")]
@@ -168,6 +172,7 @@ namespace Trail.WebAPI.Controllers
             item.TaskItemInfo = task.TaskType == Domain.Enums.TaskType.RecordLog
                 ? new List<TaskItemInfo>()
                 : task.TaskItemInfo;
+            item.Groups = task.Groups ?? new List<Group>();
             item.IsActive = task.IsActive;
 
             var response = await _taskListInfoCrudService.ReplaceOneAsync(item);
@@ -235,6 +240,31 @@ namespace Trail.WebAPI.Controllers
         public async Task<IActionResult> CreateTaskAllocation(TaskAllocation taskAllocation)
         {
             var id = await _taskAllocationCrudService.InsertOneAsync(taskAllocation);
+
+            // Immediately create calendar entry if applicable:
+            // - If Daily: always create for today
+            // - If Weekly: create for today if today matches the WeeklyRepetition day
+            bool shouldCreateImmediately = false;
+            DateTime targetDate = DateTime.Today;
+
+            if (taskAllocation.TaskFrequency == TaskFrequency.Daily)
+            {
+                shouldCreateImmediately = true;
+            }
+            else if (taskAllocation.TaskFrequency == TaskFrequency.Weekly)
+            {
+                // Check if today matches the weekly repetition day
+                if (DateTime.Today.DayOfWeek == taskAllocation.WeeklyRepetition)
+                {
+                    shouldCreateImmediately = true;
+                }
+            }
+
+            if (shouldCreateImmediately)
+            {
+                // Create calendar entry immediately for today
+                await _taskManager.CreateCalendarEntryForTaskAllocation(taskAllocation, targetDate);
+            }
 
             var response = new Response<string>(id, "Task Allocation created successfully");
 

@@ -51,17 +51,11 @@ namespace Trail.WebAPI.Controllers
             return Ok(pagedReponse);
         }
 
-        [Authorize]
         [HttpGet("id/{id}")]
         public IActionResult GetById(string id)
         {
 
             var record = _siteCrudService.FindById(id);
-
-            if (record != null && User.IsInRole(Role.Team) && !record.IsActive)
-            {
-                return Forbid();
-            }
 
             var response = new Response<Site>(record, "Site fetched successfully");
 

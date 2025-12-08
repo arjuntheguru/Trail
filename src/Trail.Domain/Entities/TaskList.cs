@@ -24,6 +24,7 @@ namespace Trail.Domain.Entities
         public string ApprovedBy { get; set; }
         public DateTime? ApprovedDate { get; set; }
         public IEnumerable<TaskItem> TaskItems { get; set; }
+        public IEnumerable<Group> Groups { get; set; }
 
     }
 

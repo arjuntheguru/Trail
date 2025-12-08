@@ -9,11 +9,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
+using System.IO;
 using System.Text;
 using Trail.Application.Common.Helpers;
 using Trail.Application.Common.Interfaces;
@@ -82,6 +84,7 @@ namespace Trail.WebAPI
             // DI for services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<ITaskManager, TaskManager>();
             services.AddScoped<CompanyCrudService>();
             services.AddScoped<SiteCrudService>();
             services.AddScoped<UserCrudService>();
@@ -181,6 +184,21 @@ namespace Trail.WebAPI
             app.UseCors("CorsPolicy");
 
             app.UseHttpsRedirection();
+
+            // Enable static files for uploaded images (must be before UseRouting)
+            // Configure static files to serve from wwwroot (default)
+            app.UseStaticFiles();
+            
+            // Also serve static files from ContentRootPath/uploads if wwwroot doesn't exist
+            var uploadsPath = Path.Combine(env.ContentRootPath, "uploads");
+            if (Directory.Exists(uploadsPath))
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(uploadsPath),
+                    RequestPath = "/uploads"
+                });
+            }
 
             app.UseRouting();
 

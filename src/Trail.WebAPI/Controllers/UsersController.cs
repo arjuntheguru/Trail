@@ -70,6 +70,13 @@ namespace Trail.WebAPI.Controllers
         {
             var userId = User.FindFirstValue("UserName");
             var loggedInUser = await _userCrudService.FindOneAsync(p => p.UserName == userId);
+            
+            // Only SuperAdmin and Admin can create users
+            if (loggedInUser == null || (loggedInUser.Role != Role.SuperAdmin && loggedInUser.Role != Role.Admin))
+            {
+                return Forbid();
+            }
+            
             if (loggedInUser.CompanyId != null)
             {
                 user.CompanyId = loggedInUser.CompanyId;
@@ -271,14 +278,19 @@ namespace Trail.WebAPI.Controllers
             var loggedInUserName = User.FindFirstValue("UserName");
             var loggedInUser = await _userCrudService.FindOneAsync(p => p.UserName == loggedInUserName);
 
-            var isSuperAdmin = loggedInUser?.Role == Role.SuperAdmin;
-
-            if (!isSuperAdmin)
+            if (loggedInUser == null)
             {
-                if (loggedInUser == null || loggedInUser.Id != user.Id || loggedInUser.Role != Role.Admin)
-                {
-                    return Forbid();
-                }
+                return Forbid();
+            }
+
+            var isSuperAdmin = loggedInUser.Role == Role.SuperAdmin;
+            var isAdmin = loggedInUser.Role == Role.Admin;
+            var isUpdatingSelf = loggedInUser.Id == user.Id;
+
+            // Authorization: SuperAdmin and Admin can update any user, regular users can only update themselves
+            if (!isSuperAdmin && !isAdmin && !isUpdatingSelf)
+            {
+                return Forbid();
             }
 
             item.FirstName = user.FirstName;

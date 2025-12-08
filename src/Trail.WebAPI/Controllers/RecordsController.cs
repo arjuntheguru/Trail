@@ -52,11 +52,9 @@ namespace Trail.WebAPI.Controllers
             return Ok(records);
         }
         [HttpGet("calendar")]
-        public IActionResult GetCalendar(string startdate, string enddate, int gap)
+        public async Task<IActionResult> GetCalendar(string startdate, string enddate, int gap)
         {
-            
-            var records = _reportService.Daily(startdate,enddate);
-
+            var records = await _reportService.Daily(startdate, enddate);
             return Ok(records);
         }
         [HttpGet("testBson")]

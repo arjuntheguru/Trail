@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections;
@@ -11,6 +13,7 @@ using Trail.Application.Common.Models;
 using Trail.Application.Common.Models.DTO;
 using Trail.Application.Common.Wrappers;
 using Trail.Domain.Entities;
+using Trail.WebAPI.Helpers;
 using System.Security.Claims;
 using System.Collections.Generic;
 using MongoDB.Driver;
@@ -22,16 +25,22 @@ namespace Trail.WebAPI.Controllers
     {
         private readonly ICrudService<Calendar> _calendarCrudService;
         private readonly ICrudService<Site> _siteCrudService;
+        private readonly ICrudService<TaskListInfo> _taskListInfoCrudService;
         private readonly IUriService _uriService;
+        private readonly IWebHostEnvironment _environment;
 
         public CalendarController(
             ICrudService<Calendar> calendarCrudService,
             ICrudService<Site> siteCrudService,
-            IUriService uriService)
+            ICrudService<TaskListInfo> taskListInfoCrudService,
+            IUriService uriService,
+            IWebHostEnvironment environment)
         {
             _calendarCrudService = calendarCrudService;
             _siteCrudService = siteCrudService;
+            _taskListInfoCrudService = taskListInfoCrudService;
             _uriService = uriService;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -79,6 +88,49 @@ namespace Trail.WebAPI.Controllers
             if (record == null)
             {
                 return Ok(new Response<Object>(new { }, $"Fetched calendar for {normalizedDate:yyyy-MM-dd} successfully"));
+            }
+
+            // Enrich TaskList items with groups from TaskListInfo if groups are missing
+            if (record.TaskList != null)
+            {
+                var taskList = record.TaskList.ToList();
+                foreach (var taskListItem in taskList)
+                {
+                    // If groups are null or empty, try to populate them from TaskListInfo
+                    if (taskListItem.Groups == null || !taskListItem.Groups.Any())
+                    {
+                        // Find matching TaskListInfo by name and description
+                        var matchingTask = await _taskListInfoCrudService.FindOneAsync(t => 
+                            t.Name == taskListItem.Name && 
+                            t.Description == taskListItem.Description &&
+                            t.IsActive);
+
+                        if (matchingTask != null && matchingTask.Groups != null && matchingTask.Groups.Any())
+                        {
+                            // Copy groups from TaskListInfo, initializing answers as empty
+                            var groups = new List<Group>();
+                            foreach (var group in matchingTask.Groups)
+                            {
+                                var questionAnswerPairs = new List<QuestionAnswerPair>();
+                                foreach (var qaPair in group.QuestionAnswerPairs)
+                                {
+                                    questionAnswerPairs.Add(new QuestionAnswerPair
+                                    {
+                                        Question = qaPair.Question,
+                                        Answer = string.Empty // Initialize answer as empty
+                                    });
+                                }
+                                groups.Add(new Group
+                                {
+                                    GroupName = group.GroupName,
+                                    QuestionAnswerPairs = questionAnswerPairs
+                                });
+                            }
+                            taskListItem.Groups = groups;
+                        }
+                    }
+                }
+                record.TaskList = taskList;
             }
 
             var response = new Response<Calendar>(record, $"Fetched calendar for {normalizedDate:yyyy-MM-dd} successfully");
@@ -155,8 +207,68 @@ namespace Trail.WebAPI.Controllers
 
         }
 
+        [HttpPatch("updateGroups")]
+        public async Task<IActionResult> UpdateGroups(UpdateGroupsDTO updateGroupsDTO)
+        {
+            var item = await _calendarCrudService.FindByIdAsync(updateGroupsDTO.CalendarId);
+
+            if (item == null)
+            {
+                return NotFound(new Response<Calendar>("Calendar does not exist"));
+            }
+
+            var taskList = item.TaskList.ToList();
+            var taskListInfo = taskList.Single(p => p.Id == updateGroupsDTO.TaskListId);
+
+            // Update Groups with answers
+            if (updateGroupsDTO.Groups != null && updateGroupsDTO.Groups.Any())
+            {
+                // Completely replace the groups on the task instance with what the client sends,
+                // and drop any groups that don't contain at least one question.
+                var updatedGroups = new List<Group>();
+
+                foreach (var groupUpdate in updateGroupsDTO.Groups)
+                {
+                    if (groupUpdate.QuestionAnswerPairs == null)
+                    {
+                        continue;
+                    }
+
+                    var qaPairs = groupUpdate.QuestionAnswerPairs
+                        .Where(qa => !string.IsNullOrWhiteSpace(qa.Question))
+                        .Select(qa => new QuestionAnswerPair
+                        {
+                            Question = qa.Question,
+                            Answer = qa.Answer ?? string.Empty
+                        })
+                        .ToList();
+
+                    // Skip groups that end up with no valid questions
+                    if (!qaPairs.Any())
+                    {
+                        continue;
+                    }
+
+                    updatedGroups.Add(new Group
+                    {
+                        GroupName = groupUpdate.GroupName,
+                        QuestionAnswerPairs = qaPairs
+                    });
+                }
+
+                taskListInfo.Groups = updatedGroups;
+            }
+
+            taskList[taskList.FindIndex(p => p.Id == updateGroupsDTO.TaskListId)] = taskListInfo;
+            item.TaskList = taskList;
+
+            var response = await _calendarCrudService.ReplaceOneAsync(item);
+
+            return Ok(new Response<Calendar>(response, "Groups updated successfully"));
+        }
+
         [HttpPut("comment")]
-        public async Task<IActionResult> InsertComment(InsertCommentDTO insertComment)
+        public async Task<IActionResult> InsertComment([FromForm] InsertCommentDTO insertComment)
         {
             var item = await _calendarCrudService.FindByIdAsync(insertComment.CalendarId);
             if (item == null)
@@ -164,23 +276,24 @@ namespace Trail.WebAPI.Controllers
                 return NotFound(new Response<Calendar>("Calendar does not exist"));
             }
 
-            var filter = Builders<Calendar>.Filter.Eq(p => p.Id, insertComment.CalendarId)
-                & Builders<Calendar>.Filter.ElemMatch(p => p.TaskList, Builders<TaskList>.Filter.Eq(p => p.Id, insertComment.TaskListId));
+            // Upload images if any
+            var uploadedFilePaths = new List<string>();
+            if (Request.Form.Files != null && Request.Form.Files.Count > 0)
+            {
+                uploadedFilePaths = await FileUploadHelper.UploadImagesAsync(Request.Form.Files, _environment);
+            }
 
             var comment = new Comment
             {
                 Id = Guid.NewGuid().ToString(),
                 Description = insertComment.Description,
+                Files = uploadedFilePaths.ToArray(),
                 CreatedBy = User.FindFirstValue("UserName"),
                 CreatedDate = DateTime.Now
             };
 
-            var update = Builders<Calendar>.Update.Push(p => p.TaskList.ToArray()[-1].Comments, comment);
-
             var taskList = item.TaskList.ToList();
             var taskListInfo = taskList.Single(p => p.Id == insertComment.TaskListId);
-
-           
 
             var comments = taskListInfo.Comments.Append(comment);
             taskListInfo.Comments = comments;

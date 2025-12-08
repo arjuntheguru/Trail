@@ -18,6 +18,7 @@ namespace Trail.Domain.Entities
         public IEnumerable<RecordLog> RecordLogs { get; set; }
         public string CompanyId { get; set; }        
         public IEnumerable<TaskItemInfo> TaskItemInfo { get; set; }
+        public IEnumerable<Group> Groups { get; set; }
         public bool IsActive { get; set; } = true;
     }
 
@@ -36,6 +37,10 @@ namespace Trail.Domain.Entities
             RuleForEach(p => p.TaskItemInfo)
                 .SetValidator(new TaskItemInfoValidator())
                 .When(p => p.TaskType == TaskType.Checklist);
+
+            RuleForEach(p => p.Groups)
+                .SetValidator(new GroupValidator())
+                .When(p => p.Groups != null && p.Groups.Any());
         }
     }
 }
