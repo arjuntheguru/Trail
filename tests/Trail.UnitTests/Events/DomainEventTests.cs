@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Trail.Application;
+using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;
 using Trail.Domain.Common;
 using Trail.Domain.Issues;
@@ -61,6 +63,10 @@ public sealed class DomainEventTests
         var services = new ServiceCollection().AddApplication();
         var log = new List<string>();
         services.AddSingleton(log);
+        // The application's own handlers (webhook outbox, ...) are registered too; give them inert dependencies.
+        services.AddSingleton(Substitute.For<IAppDbContext>());
+        services.AddSingleton(Substitute.For<ITenantContext>());
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<IDomainEventHandler<TaskCompleted>, First>();
         services.AddScoped<IDomainEventHandler<TaskCompleted>, Second>();
         await using var provider = services.BuildServiceProvider();

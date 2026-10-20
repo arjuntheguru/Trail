@@ -7,6 +7,7 @@ using Serilog;
 using Trail.Api.Infrastructure;
 using Trail.Application;
 using Trail.Application.Common.Abstractions;
+using Trail.Application.Features.Integrations;
 using Trail.Infrastructure;
 using Trail.Infrastructure.Security;
 
@@ -56,6 +57,14 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions { PermitLimit = rateLimits.AuthPermitsPerMinute, Window = TimeSpan.FromMinutes(1) }));
+    // Rate limiting runs before authentication, so the key's database id is not known yet: the partition is the key's
+    // public prefix (the identifier part of the key), and requests without a well-formed key share the client IP.
+    options.AddPolicy(RateLimitPolicies.Sensors, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ApiKeyFormat.TryParse(ApiKeyAuth.ReadKey(context.Request), out var prefix)
+                ? $"key:{prefix}"
+                : $"ip:{context.Connection.RemoteIpAddress}",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = rateLimits.SensorPermitsPerMinute, Window = TimeSpan.FromMinutes(1) }));
 });
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

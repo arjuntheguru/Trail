@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Trail.Application.Common.Security;
+using Trail.Application.Features.Integrations;
+using Trail.Domain.Integrations;
 using Trail.Infrastructure.Security;
 
 namespace Trail.Api.Infrastructure;
@@ -20,7 +23,11 @@ internal static class AuthSetup
 {
     public static IServiceCollection AddTrailAuth(this IServiceCollection services)
     {
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+        // JWT stays the default scheme. API keys are a separate scheme that only the policies below name explicitly,
+        // so a key never authenticates a normal endpoint and a token never authenticates a sensor endpoint.
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer()
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuth.Scheme, null);
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
             .Configure<IOptions<JwtOptions>>((bearer, jwtOptions) =>
             {
@@ -44,7 +51,11 @@ internal static class AuthSetup
 
         var authorization = services.AddAuthorizationBuilder()
             .AddPolicy(AuthPolicies.PlatformAdmin, p => p.RequireClaim(TrailClaimTypes.PlatformAdmin, "true"))
-            .AddPolicy(AuthPolicies.OrganizationMember, p => p.RequireClaim(TrailClaimTypes.OrganizationId));
+            .AddPolicy(AuthPolicies.OrganizationMember, p => p.RequireClaim(TrailClaimTypes.OrganizationId))
+            .AddPolicy(ApiKeyAuth.SensorsWritePolicy, p => p
+                .AddAuthenticationSchemes(ApiKeyAuth.Scheme)
+                .RequireClaim(TrailClaimTypes.OrganizationId)
+                .RequireClaim(ApiKeyClaims.Scope, ApiKeyScopes.SensorsWrite));
 
         // Each permission is a policy of the same name: .RequireAuthorization(Permissions.Sites.Manage).
         foreach (var permission in Permissions.All)
@@ -61,6 +72,12 @@ internal static class AuthSetup
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
                 BearerFormat = "JWT",
+            };
+            document.Components.SecuritySchemes["ApiKey"] = new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.ApiKey,
+                Name = ApiKeyAuth.HeaderName,
+                In = ParameterLocation.Header,
             };
             document.Security = [new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference("Bearer", document)] = [] }];
             return Task.CompletedTask;
