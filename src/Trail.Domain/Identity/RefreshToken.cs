@@ -7,6 +7,7 @@ namespace Trail.Domain.Identity;
 /// replaces it with a new one in the same <see cref="FamilyId"/>; presenting an already-used token means it
 /// was stolen, so the whole family is revoked.
 /// </summary>
+[NotAudited]
 public sealed class RefreshToken : Entity
 {
     public Guid UserId { get; set; }
