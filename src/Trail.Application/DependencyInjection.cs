@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Trail.Application.Common.Abstractions;
+using Trail.Application.Common.Events;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Auth;
 using Trail.Application.Features.Issues;
@@ -24,6 +25,16 @@ public static class DependencyInjection
                      && t.Name.EndsWith("Handler", StringComparison.Ordinal)))
         {
             services.AddScoped(handler.AsType());
+        }
+
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+        foreach (var type in assembly.DefinedTypes.Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }))
+        {
+            foreach (var contract in type.ImplementedInterfaces.Where(i =>
+                         i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDomainEventHandler<>)))
+            {
+                services.AddScoped(contract, type.AsType());
+            }
         }
 
         services.AddScoped<OrganizationProvisioner>();
