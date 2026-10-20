@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
+using Trail.Domain.Issues;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 
@@ -29,6 +30,9 @@ public interface IAppDbContext
     DbSet<SiteTask> SiteTasks { get; }
     DbSet<TaskEntry> TaskEntries { get; }
     DbSet<Attachment> Attachments { get; }
+
+    DbSet<Issue> Issues { get; }
+    DbSet<IssueEvent> IssueEvents { get; }
 
     DbSet<User> Users { get; }
     DbSet<Membership> Memberships { get; }

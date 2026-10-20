@@ -4,6 +4,7 @@ using Trail.Application.Common.Abstractions;
 using Trail.Domain.Common;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
+using Trail.Domain.Issues;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.Infrastructure.Persistence.Conventions;
@@ -30,6 +31,9 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
     public DbSet<SiteTask> SiteTasks => Set<SiteTask>();
     public DbSet<TaskEntry> TaskEntries => Set<TaskEntry>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
+
+    public DbSet<Issue> Issues => Set<Issue>();
+    public DbSet<IssueEvent> IssueEvents => Set<IssueEvent>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();
