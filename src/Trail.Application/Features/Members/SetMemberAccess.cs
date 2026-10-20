@@ -33,11 +33,15 @@ public sealed class SetMemberAccessHandler(IAppDbContext db, ICurrentUser user, 
     public async Task<Result<MemberAccessResponse>> Handle(
         Guid membershipId, SetMemberAccessCommand command, CancellationToken ct)
     {
-        var membership = await db.Memberships.FirstOrDefaultAsync(m => m.Id == membershipId, ct);
-        if (membership is null) return Error.NotFound("member.not_found", "Member not found.");
+        var membership = await db.Memberships.Include(m => m.Role).FirstOrDefaultAsync(m => m.Id == membershipId, ct);
+        if (membership is null) return MemberRules.NotFound;
 
-        if (membership.Id == user.MembershipId)
+        if (membership.Id == user.MembershipId || membership.UserId == user.UserId)
             return Error.Forbidden("member.cannot_change_own_access", "You cannot change your own access.");
+
+        // Same rule as role changes: you cannot manage someone who holds permissions you do not.
+        if (!MemberRules.CallerHolds(user, membership.Role.Permissions))
+            return MemberRules.Escalation("change this member's access");
 
         var siteIds = (command.SiteIds ?? []).Distinct().ToList();
         var regionIds = (command.RegionIds ?? []).Distinct().ToList();

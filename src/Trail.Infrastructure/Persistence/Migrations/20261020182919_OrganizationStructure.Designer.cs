@@ -11,7 +11,7 @@ using Trail.Infrastructure.Persistence;
 namespace Trail.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TrailDbContext))]
-    [Migration("20261020174335_OrganizationStructure")]
+    [Migration("20261020182919_OrganizationStructure")]
     partial class OrganizationStructure
     {
         /// <inheritdoc />
@@ -226,7 +226,7 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("FamilyId")
                         .HasColumnType("char(36)");
 
-                    b.Property<Guid>("OrganizationId")
+                    b.Property<Guid?>("OrganizationId")
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime?>("RevokedAt")
@@ -796,8 +796,7 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.HasOne("Trail.Domain.Organizations.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Trail.Domain.Identity.User", null)
                         .WithMany()

@@ -193,6 +193,18 @@ public sealed class MemberAccessTests(MySqlFixture mysql) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task An_admin_cannot_change_the_access_of_someone_holding_more_permissions()
+    {
+        var adminClient = _factory.CreateClient(await _factory.AddMemberAsync(_owner.OrganizationId, SystemRoles.Admin));
+
+        var response = await adminClient.PutJsonAsync(AccessUrl(_owner), new SetMemberAccessCommand(false, [_northSite.Id], null, null));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await response.ProblemCodeAsync()).ShouldBe("member.privilege_escalation");
+        (await GetAccessAsync(_ownerClient, _owner)).AllSites.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Permissions_are_enforced()
     {
         var target = await _factory.AddMemberAsync(_owner.OrganizationId, SystemRoles.TeamMember);
