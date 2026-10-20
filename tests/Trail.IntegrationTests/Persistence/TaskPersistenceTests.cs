@@ -148,4 +148,25 @@ public sealed class TaskPersistenceTests(MySqlFixture mysql) : IAsyncLifetime
         duplicate.SiteTasks.Add(NewTask(schedule.Id, new DateOnly(2026, 1, 15)));
         await Should.ThrowAsync<DbUpdateException>(() => duplicate.SaveChangesAsync(Ct));
     }
+
+    [Fact]
+    public async Task A_child_added_through_a_tracked_parent_is_inserted()
+    {
+        var task = NewTask(null, new DateOnly(2026, 1, 16));
+        await using (var write = _db.ContextFor(_org))
+        {
+            write.SiteTasks.Add(task);
+            await write.SaveChangesAsync(Ct);
+        }
+
+        await using (var edit = _db.ContextFor(_org))
+        {
+            var loaded = await edit.SiteTasks.Include(t => t.Entries).SingleAsync(t => t.Id == task.Id, Ct);
+            loaded.Entries.Add(new TaskEntry { Note = "Added via the navigation" });
+            await edit.SaveChangesAsync(Ct);
+        }
+
+        await using var read = _db.ContextFor(_org);
+        (await read.TaskEntries.AsNoTracking().SingleAsync(e => e.SiteTaskId == task.Id, Ct)).Note.ShouldBe("Added via the navigation");
+    }
 }

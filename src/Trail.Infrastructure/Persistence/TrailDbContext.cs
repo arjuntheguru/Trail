@@ -58,6 +58,12 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
         {
             var clrType = entityType.ClrType;
 
+            // Ids are assigned in code (Guid v7) when an entity is constructed. Telling EF they are never generated
+            // makes a new child added through a navigation of a tracked parent an insert, not an update of a row
+            // that does not exist.
+            if (typeof(Entity).IsAssignableFrom(clrType))
+                modelBuilder.Entity(clrType).Property(nameof(Entity.Id)).ValueGeneratedNever();
+
             if (typeof(IAuditable).IsAssignableFrom(clrType))
                 modelBuilder.Entity(clrType).Property(nameof(IAuditable.ConcurrencyStamp)).IsConcurrencyToken();
 
