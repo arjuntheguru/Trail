@@ -10,7 +10,8 @@ namespace Trail.Domain.Identity;
 public sealed class RefreshToken : Entity
 {
     public Guid UserId { get; set; }
-    public Guid OrganizationId { get; set; }
+    /// <summary>Organization the session acts in; null for platform-admin sessions outside any organization.</summary>
+    public Guid? OrganizationId { get; set; }
     public Guid FamilyId { get; set; }
 
     public required string TokenHash { get; set; }

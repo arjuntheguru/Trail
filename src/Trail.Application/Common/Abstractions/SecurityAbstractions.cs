@@ -16,7 +16,16 @@ public sealed record AccessTokenSubject(
 
 public interface IAccessTokenIssuer
 {
+    TimeSpan RefreshTokenLifetime { get; }
+
     AccessToken Issue(AccessTokenSubject subject);
+}
+
+/// <summary>Details of the HTTP request a use case runs in, recorded on sessions for the user's review.</summary>
+public interface IRequestContext
+{
+    string? IpAddress { get; }
+    string? UserAgent { get; }
 }
 
 public interface IPasswordHasher

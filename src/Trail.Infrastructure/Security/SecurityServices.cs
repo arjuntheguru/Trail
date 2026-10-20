@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
+using Trail.Application.Common.Settings;
 using Trail.Domain.Identity;
 
 namespace Trail.Infrastructure.Security;
@@ -16,6 +17,8 @@ namespace Trail.Infrastructure.Security;
 internal sealed class AccessTokenIssuer(IOptions<JwtOptions> options, TimeProvider clock) : IAccessTokenIssuer
 {
     private readonly JsonWebTokenHandler _handler = new();
+
+    public TimeSpan RefreshTokenLifetime => TimeSpan.FromDays(options.Value.RefreshTokenDays);
 
     public AccessToken Issue(AccessTokenSubject subject)
     {

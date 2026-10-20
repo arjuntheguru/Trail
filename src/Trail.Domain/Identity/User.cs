@@ -56,7 +56,7 @@ public sealed class User : AuditableEntity
         }
     }
 
-    public void RecordSuccessfulSignIn(DateTime now, Guid organizationId)
+    public void RecordSuccessfulSignIn(DateTime now, Guid? organizationId)
     {
         AccessFailedCount = 0;
         LockoutEndsAt = null;

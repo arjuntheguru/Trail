@@ -32,6 +32,8 @@ public sealed class TrailApiFactory(string connectionString) : WebApplicationFac
             ["Jwt:SigningKey"] = "integration-test-signing-key-0123456789abcdef",
             ["App:FrontendBaseUrl"] = "https://app.trail.test",
             ["Serilog:MinimumLevel:Default"] = "Warning",
+            ["RateLimiting:GlobalPermitsPerMinute"] = "100000",
+            ["RateLimiting:AuthPermitsPerMinute"] = "100000",
         }));
         builder.ConfigureTestServices(services => services.AddSingleton<IEmailSender>(Emails));
     }

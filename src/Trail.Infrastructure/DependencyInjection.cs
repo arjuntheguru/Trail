@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Trail.Application.Common.Abstractions;
+using Trail.Application.Common.Settings;
 using Trail.Infrastructure.Persistence;
 using Trail.Infrastructure.Persistence.Interceptors;
 using Trail.Infrastructure.Security;
