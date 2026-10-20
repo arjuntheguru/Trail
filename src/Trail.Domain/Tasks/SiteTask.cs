@@ -72,6 +72,32 @@ public sealed class SiteTask : TenantEntity
 
     public List<TaskEntry> Entries { get; set; } = [];
 
+    /// <summary>
+    /// A task for <paramref name="date"/> at a site, copying the template's current fields. Times are site-local:
+    /// due at <paramref name="dueTime"/> and listed from <paramref name="availableFrom"/> (null: all day).
+    /// </summary>
+    public static SiteTask FromTemplate(
+        TaskTemplate template, Guid siteId, TimeZoneInfo siteZone, DateOnly date, TimeOnly dueTime, TimeOnly? availableFrom,
+        SiteTaskSource source, Guid? scheduleId = null, Guid? departmentId = null) => new()
+    {
+        SiteId = siteId,
+        TemplateId = template.Id,
+        TemplateVersion = template.Version,
+        ScheduleId = scheduleId,
+        DepartmentId = departmentId,
+        Source = source,
+        Title = template.Name,
+        Description = template.Description,
+        Kind = template.Kind,
+        Fields = [.. template.Fields],
+        RequiresApproval = template.RequiresApproval,
+        RequiresPhoto = template.RequiresPhoto,
+        ScheduledDate = date,
+        DueDate = date,
+        DueAt = SiteTime.ToUtc(date, dueTime, siteZone),
+        AvailableAt = availableFrom is { } from ? SiteTime.ToUtc(date, from, siteZone) : null,
+    };
+
     public bool IsOverdue(DateTime now) => Status == SiteTaskStatus.Open && now > DueAt;
 
     public bool IsAwaitingApproval => Status == SiteTaskStatus.Completed && RequiresApproval && ApprovedAt is null;

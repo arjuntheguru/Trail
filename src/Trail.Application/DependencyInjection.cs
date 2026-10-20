@@ -5,6 +5,7 @@ using Trail.Application.Common.Security;
 using Trail.Application.Features.Auth;
 using Trail.Application.Features.Members;
 using Trail.Application.Features.Organizations;
+using Trail.Application.Features.Tasks;
 
 namespace Trail.Application;
 
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<EmailConfirmationSender>();
         services.AddScoped<InvitationSender>();
         services.AddScoped<ISiteAccess, SiteAccess>();
+        services.AddScoped<TaskGenerator>();
 
         return services;
     }
