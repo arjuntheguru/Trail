@@ -39,6 +39,9 @@ public sealed class TrailApiFactory(string connectionString) : WebApplicationFac
             ["RateLimiting:AuthPermitsPerMinute"] = "100000",
             // Tests drive generation explicitly through RunTaskGenerationAsync against Clock.
             ["TaskGeneration:Enabled"] = "false",
+            ["NotificationEmail:Enabled"] = "false",
+            ["IssueEscalation:Enabled"] = "false",
+            ["DailyDigest:Enabled"] = "false",
         }));
         builder.ConfigureTestServices(services => services.AddSingleton<IEmailSender>(Emails));
     }

@@ -77,6 +77,12 @@ public sealed class Issue : TenantEntity
     public DateTime? ClosedAt { get; private set; }
     public Guid? ClosedById { get; private set; }
 
+    /// <summary>When the overdue notice went out. Cleared when the due time changes so a new deadline can be missed again.</summary>
+    public DateTime? OverdueNotifiedAt { get; private set; }
+
+    /// <summary>When the issue was escalated to the next level up for staying overdue. Cleared with the due time.</summary>
+    public DateTime? EscalatedAt { get; private set; }
+
     public List<IssueEvent> Events { get; set; } = [];
 
     public bool IsActive => Status is IssueStatus.Open or IssueStatus.InProgress;
@@ -123,7 +129,13 @@ public sealed class Issue : TenantEntity
         if (dueAt == DueAt) return;
         Record(now, userId, IssueEventKind.DueChanged, DueAt?.ToString("O"), dueAt?.ToString("O"));
         DueAt = dueAt;
+        OverdueNotifiedAt = null;
+        EscalatedAt = null;
     }
+
+    public void MarkOverdueNotified(DateTime now) => OverdueNotifiedAt ??= now;
+
+    public void MarkEscalated(DateTime now) => EscalatedAt ??= now;
 
     public void Start(DateTime now, Guid? userId)
     {

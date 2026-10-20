@@ -3,6 +3,7 @@ using Trail.Domain.Auditing;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
 using Trail.Domain.Issues;
+using Trail.Domain.Notifications;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 
@@ -35,6 +36,9 @@ public interface IAppDbContext
     DbSet<Issue> Issues { get; }
     DbSet<IssueEvent> IssueEvents { get; }
     DbSet<AuditEntry> AuditEntries { get; }
+
+    DbSet<Notification> Notifications { get; }
+    DbSet<NotificationPreference> NotificationPreferences { get; }
 
     DbSet<User> Users { get; }
     DbSet<Membership> Memberships { get; }

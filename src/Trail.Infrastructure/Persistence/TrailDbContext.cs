@@ -7,6 +7,7 @@ using Trail.Domain.Common;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
 using Trail.Domain.Issues;
+using Trail.Domain.Notifications;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.Infrastructure.Persistence.Conventions;
@@ -41,6 +42,9 @@ public sealed class TrailDbContext(
     public DbSet<Issue> Issues => Set<Issue>();
     public DbSet<IssueEvent> IssueEvents => Set<IssueEvent>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();

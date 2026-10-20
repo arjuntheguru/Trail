@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Trail.Application;
+using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;
+using Trail.Application.Features.Notifications;
 using Trail.Domain.Common;
 using Trail.Domain.Issues;
 using Trail.Domain.Tasks;
@@ -61,6 +64,10 @@ public sealed class DomainEventTests
         var services = new ServiceCollection().AddApplication();
         var log = new List<string>();
         services.AddSingleton(log);
+        // The notification handlers registered by AddApplication need their (database-backed) services to resolve.
+        services.AddScoped(_ => Substitute.For<IAppDbContext>());
+        services.AddScoped<NotificationWriter>();
+        services.AddScoped<MembershipDirectory>();
         services.AddScoped<IDomainEventHandler<TaskCompleted>, First>();
         services.AddScoped<IDomainEventHandler<TaskCompleted>, Second>();
         await using var provider = services.BuildServiceProvider();
