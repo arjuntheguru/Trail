@@ -2,6 +2,7 @@ using FluentValidation;
 using Trail.Application.Common;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
+using Trail.Application.Features.Issues;
 using Trail.Domain.Tasks;
 
 namespace Trail.Application.Features.Tasks;
@@ -18,7 +19,8 @@ internal sealed class CompleteTaskValidator : AbstractValidator<CompleteTaskComm
     public CompleteTaskValidator() => TaskRules.AddCommonRules(this, x => x.Answers, x => x.Note, x => x.PhotoIds);
 }
 
-public sealed class CompleteTaskHandler(IAppDbContext db, ISiteAccess access, ICurrentUser user, TimeProvider clock)
+public sealed class CompleteTaskHandler(
+    IAppDbContext db, ISiteAccess access, ICurrentUser user, IssueRaiser issues, TimeProvider clock)
 {
     public async Task<Result<TaskDetailResponse>> Handle(Guid id, CompleteTaskCommand command, CancellationToken ct)
     {
@@ -28,12 +30,23 @@ public sealed class CompleteTaskHandler(IAppDbContext db, ISiteAccess access, IC
         var now = clock.GetUtcNow().UtcDateTime;
         if (TaskRules.CheckWorkable(task, now) is { } notWorkable) return notWorkable;
 
-        var result = task.Kind == TaskKind.RecordLog
-            ? FinishRecordLog(task, command)
-            : await SubmitEntryAsync(task, command, now, ct);
-        if (result.IsFailure) return result.Error!;
+        bool hasFailures;
+        if (task.Kind == TaskKind.RecordLog)
+        {
+            // Each reading raised its own issues when it was added.
+            var finished = FinishRecordLog(task, command);
+            if (finished.IsFailure) return finished.Error!;
+            hasFailures = finished.Value;
+        }
+        else
+        {
+            var submitted = await SubmitEntryAsync(task, command, now, ct);
+            if (submitted.IsFailure) return submitted.Error!;
+            hasFailures = submitted.Value.HasFailures;
+            await issues.RaiseForFailuresAsync(task, submitted.Value, now, user.UserId, ct);
+        }
 
-        task.Complete(now, user.UserId, result.Value);
+        task.Complete(now, user.UserId, hasFailures);
         await db.SaveChangesAsync(ct);
         return await TaskMapping.ToDetailAsync(db, task, now, ct);
     }
@@ -60,8 +73,8 @@ public sealed class CompleteTaskHandler(IAppDbContext db, ISiteAccess access, IC
         return entries.Any(e => e.HasFailures);
     }
 
-    /// <returns>Whether any answer failed.</returns>
-    private async Task<Result<bool>> SubmitEntryAsync(SiteTask task, CompleteTaskCommand command, DateTime now, CancellationToken ct)
+    /// <returns>The submitted entry.</returns>
+    private async Task<Result<TaskEntry>> SubmitEntryAsync(SiteTask task, CompleteTaskCommand command, DateTime now, CancellationToken ct)
     {
         if (TaskRules.CheckKind(task, TaskKind.Checklist, TaskKind.Form) is { } wrongKind) return wrongKind;
 
@@ -90,6 +103,6 @@ public sealed class CompleteTaskHandler(IAppDbContext db, ISiteAccess access, IC
         if (command.Note is not null) entry.Note = command.Note.Trim().NullIfEmpty();
         entry.SubmittedAt = now;
         entry.SubmittedById = user.UserId;
-        return evaluation.HasFailures;
+        return entry;
     }
 }
