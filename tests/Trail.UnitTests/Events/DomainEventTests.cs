@@ -64,8 +64,10 @@ public sealed class DomainEventTests
         var services = new ServiceCollection().AddApplication();
         var log = new List<string>();
         services.AddSingleton(log);
-        // The notification handlers registered by AddApplication need their (database-backed) services to resolve.
-        services.AddScoped(_ => Substitute.For<IAppDbContext>());
+        // The application's own event handlers (notifications, webhook outbox) are registered too; give them inert dependencies.
+        services.AddSingleton(Substitute.For<IAppDbContext>());
+        services.AddSingleton(Substitute.For<ITenantContext>());
+        services.AddSingleton(TimeProvider.System);
         services.AddScoped<NotificationWriter>();
         services.AddScoped<MembershipDirectory>();
         services.AddScoped<IDomainEventHandler<TaskCompleted>, First>();

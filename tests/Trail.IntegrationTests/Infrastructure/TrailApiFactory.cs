@@ -42,6 +42,7 @@ public sealed class TrailApiFactory(string connectionString) : WebApplicationFac
             ["NotificationEmail:Enabled"] = "false",
             ["IssueEscalation:Enabled"] = "false",
             ["DailyDigest:Enabled"] = "false",
+            ["Webhooks:Enabled"] = "false",
         }));
         builder.ConfigureTestServices(services => services.AddSingleton<IEmailSender>(Emails));
     }

@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
+using Trail.Application.Features.Integrations;
+using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Files;
 using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Notifications;
@@ -48,7 +50,35 @@ public static class DependencyInjection
         services.AddSingleton<TaskGenerationJob>();
         services.AddHostedService(sp => sp.GetRequiredService<TaskGenerationJob>());
 
+        AddIntegrations(services);
+
         return services;
+    }
+
+    private static void AddIntegrations(IServiceCollection services)
+    {
+        services.AddOptions<WebhookOptions>().BindConfiguration(WebhookOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+
+        // Webhook targets are customer-chosen URLs. Unless development explicitly allows it, the client connects
+        // only to public addresses (checked on the address it connects to), follows no redirects and uses no proxy.
+        services.AddHttpClient(WebhookOptions.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10))
+            .RemoveAllLoggers() // request URLs may carry tokens
+            .ConfigurePrimaryHttpMessageHandler(sp =>
+            {
+                var handler = new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                    UseProxy = false,
+                    ConnectTimeout = TimeSpan.FromSeconds(5),
+                    PooledConnectionLifetime = TimeSpan.FromMinutes(2), // re-resolve DNS regularly
+                };
+                if (!sp.GetRequiredService<IOptions<WebhookOptions>>().Value.AllowInsecureTargets)
+                    handler.ConnectCallback = SsrfSafeConnect.ConnectAsync;
+                return handler;
+            });
+        services.AddSingleton<WebhookSender>();
+        services.AddSingleton<WebhookDeliveryJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<WebhookDeliveryJob>());
     }
 
     private static void AddSecurity(IServiceCollection services)

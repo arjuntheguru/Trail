@@ -6,6 +6,7 @@ using Trail.Domain.Auditing;
 using Trail.Domain.Common;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
+using Trail.Domain.Integrations;
 using Trail.Domain.Issues;
 using Trail.Domain.Notifications;
 using Trail.Domain.Organizations;
@@ -45,6 +46,10 @@ public sealed class TrailDbContext(
 
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
+    public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<SensorDevice> SensorDevices => Set<SensorDevice>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();

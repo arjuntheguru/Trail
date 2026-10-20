@@ -4,6 +4,7 @@ using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Auth;
+using Trail.Application.Features.Integrations;
 using Trail.Application.Features.Issues;
 using Trail.Application.Features.Members;
 using Trail.Application.Features.Organizations;
@@ -44,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<ISiteAccess, SiteAccess>();
         services.AddScoped<TaskGenerator>();
         services.AddScoped<IssueRaiser>();
+        services.AddIntegrationFeatures();
 
         return services;
     }

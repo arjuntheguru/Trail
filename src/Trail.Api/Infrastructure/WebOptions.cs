@@ -18,10 +18,16 @@ public sealed class RateLimitOptions
 
     /// <summary>Requests per minute per client IP to sign-in, refresh and password endpoints.</summary>
     public int AuthPermitsPerMinute { get; set; } = 10;
+
+    /// <summary>Requests per minute per API key to the sensor endpoints (each request may carry up to 500 readings).</summary>
+    public int SensorPermitsPerMinute { get; set; } = 120;
 }
 
 public static class RateLimitPolicies
 {
     /// <summary>Tight per-IP limit for login, refresh, password reset and similar unauthenticated endpoints.</summary>
     public const string Auth = "auth";
+
+    /// <summary>Per-API-key limit for sensor readings.</summary>
+    public const string Sensors = "sensors";
 }
