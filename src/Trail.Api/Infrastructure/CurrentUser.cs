@@ -14,6 +14,8 @@ internal sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 
     public Guid? OrganizationId => ReadGuid(TrailClaimTypes.OrganizationId);
 
+    public Guid? MembershipId => ReadGuid(TrailClaimTypes.MembershipId);
+
     public bool IsPlatformAdmin => IsAuthenticated && Principal!.HasClaim(TrailClaimTypes.PlatformAdmin, "true");
 
     public bool HasPermission(string permission) =>

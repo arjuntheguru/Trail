@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Trail.Application.Features.Organizations;
 
 namespace Trail.Application;
 
@@ -18,6 +19,8 @@ public static class DependencyInjection
         {
             services.AddScoped(handler.AsType());
         }
+
+        services.AddScoped<OrganizationProvisioner>();
 
         return services;
     }

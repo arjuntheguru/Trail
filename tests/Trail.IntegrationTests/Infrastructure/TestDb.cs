@@ -48,6 +48,8 @@ public sealed record TestUser(Guid? UserId, Guid? OrganizationId, bool IsPlatfor
     public static TestUser MemberOf(Guid organizationId, params string[] permissions) =>
         new(Guid.CreateVersion7(), organizationId, false, permissions);
 
+    public Guid? MembershipId => null;
+
     public bool IsAuthenticated => UserId is not null;
 
     public bool HasPermission(string permission) => Permissions.Contains(permission);

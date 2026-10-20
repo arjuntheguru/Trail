@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Trail.Domain.Identity;
 using Trail.Domain.Organizations;
 
 namespace Trail.Application.Common.Abstractions;
@@ -11,6 +12,12 @@ public interface IAppDbContext
 {
     DbSet<Organization> Organizations { get; }
     DbSet<Tag> Tags { get; }
+
+    DbSet<User> Users { get; }
+    DbSet<Membership> Memberships { get; }
+    DbSet<Role> Roles { get; }
+    DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<UserToken> UserTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

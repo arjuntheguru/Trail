@@ -8,6 +8,7 @@ using Trail.Api.Infrastructure;
 using Trail.Application;
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure;
+using Trail.Infrastructure.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-builder.Services.AddOpenApi();
+builder.Services.AddTrailAuth();
 
 builder.Services.AddOptions<FrontendCorsOptions>().BindConfiguration(FrontendCorsOptions.SectionName);
 builder.Services.AddCors(options =>
@@ -82,6 +83,8 @@ else
 app.UseSerilogRequestLogging();
 app.UseCors(FrontendCorsOptions.PolicyName);
 app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
@@ -89,6 +92,7 @@ app.MapEndpointGroups(typeof(Program).Assembly);
 
 if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
     await app.Services.MigrateDatabaseAsync();
+await app.Services.EnsurePlatformAdminAsync();
 
 await app.RunAsync();
 

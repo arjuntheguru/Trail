@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Trail.Application.Common.Abstractions;
 using Trail.Domain.Common;
+using Trail.Domain.Identity;
 using Trail.Domain.Organizations;
 using Trail.Infrastructure.Persistence.Conventions;
 
@@ -12,6 +13,12 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
 {
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Tag> Tags => Set<Tag>();
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Membership> Memberships => Set<Membership>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserToken> UserTokens => Set<UserToken>();
 
     /// <summary>Read by the tenant query filter on every query, so it reflects the tenant at execution time.</summary>
     internal Guid? CurrentOrganizationId => tenant.OrganizationId;
