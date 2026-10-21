@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# Local uploads
+App_Data/

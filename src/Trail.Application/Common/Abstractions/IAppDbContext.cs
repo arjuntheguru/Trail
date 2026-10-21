@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Trail.Domain.Files;
 using Trail.Domain.Identity;
 using Trail.Domain.Organizations;
+using Trail.Domain.Tasks;
 
 namespace Trail.Application.Common.Abstractions;
 
@@ -18,6 +20,15 @@ public interface IAppDbContext
     DbSet<MembershipSite> MembershipSites { get; }
     DbSet<MembershipRegion> MembershipRegions { get; }
     DbSet<MembershipDepartment> MembershipDepartments { get; }
+
+    DbSet<TaskTemplate> TaskTemplates { get; }
+    DbSet<TaskTemplateTag> TaskTemplateTags { get; }
+    DbSet<TaskSchedule> TaskSchedules { get; }
+    DbSet<TaskScheduleSite> TaskScheduleSites { get; }
+    DbSet<TaskScheduleRegion> TaskScheduleRegions { get; }
+    DbSet<SiteTask> SiteTasks { get; }
+    DbSet<TaskEntry> TaskEntries { get; }
+    DbSet<Attachment> Attachments { get; }
 
     DbSet<User> Users { get; }
     DbSet<Membership> Memberships { get; }

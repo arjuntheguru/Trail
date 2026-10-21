@@ -6,9 +6,12 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Organizations;
+using Trail.Application.Features.Tasks;
 using Trail.Domain.Identity;
 using Trail.Infrastructure;
 using Trail.Infrastructure.Persistence;
@@ -34,6 +37,8 @@ public sealed class TrailApiFactory(string connectionString) : WebApplicationFac
             ["Serilog:MinimumLevel:Default"] = "Warning",
             ["RateLimiting:GlobalPermitsPerMinute"] = "100000",
             ["RateLimiting:AuthPermitsPerMinute"] = "100000",
+            // Tests drive generation explicitly through RunTaskGenerationAsync against Clock.
+            ["TaskGeneration:Enabled"] = "false",
         }));
         builder.ConfigureTestServices(services => services.AddSingleton<IEmailSender>(Emails));
     }
@@ -104,6 +109,22 @@ public sealed class TrailApiFactory(string connectionString) : WebApplicationFac
         await using var scope = Services.CreateAsyncScope();
         scope.ServiceProvider.GetRequiredService<ITenantContext>().UseOrganization(organizationId);
         return await action(scope.ServiceProvider.GetRequiredService<TrailDbContext>());
+    }
+
+    /// <summary>
+    /// Runs one generation pass (close ended days, then generate) for an organization as if it were
+    /// <paramref name="at"/>. The app's own clock is left alone so tokens keep validating.
+    /// </summary>
+    public async Task<(int Created, int Missed)> RunTaskGenerationAsync(Guid organizationId, DateTimeOffset at)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+        sp.GetRequiredService<ITenantContext>().UseOrganization(organizationId);
+        var generator = new TaskGenerator(
+            sp.GetRequiredService<IAppDbContext>(), new FakeTimeProvider(at), NullLogger<TaskGenerator>.Instance);
+        var missed = await generator.MarkMissedAsync(CancellationToken.None);
+        var created = await generator.GenerateAsync(CancellationToken.None);
+        return (created, missed);
     }
 
     private static User NewUser(IServiceProvider sp, string email)

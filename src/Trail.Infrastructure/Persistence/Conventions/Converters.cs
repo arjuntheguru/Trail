@@ -17,6 +17,18 @@ internal sealed class NullableUtcDateTimeConverter() : ValueConverter<DateTime?,
     v => v == null ? v : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc));
 
 /// <summary>
+/// The Oracle MySQL provider writes DateOnly and TimeOnly but reads them back as DateTime and TimeSpan and fails
+/// the cast, so both go through the types the driver actually returns.
+/// </summary>
+internal sealed class DateOnlyConverter() : ValueConverter<DateOnly, DateTime>(
+    v => v.ToDateTime(TimeOnly.MinValue),
+    v => DateOnly.FromDateTime(v));
+
+internal sealed class TimeOnlyConverter() : ValueConverter<TimeOnly, TimeSpan>(
+    v => v.ToTimeSpan(),
+    v => TimeOnly.FromTimeSpan(v));
+
+/// <summary>
 /// The Oracle MySQL provider has no native JSON mapping (no ToJson, no primitive collections), so structured
 /// values that are never queried relationally are stored in a <c>json</c> column through System.Text.Json.
 /// Anything that must be filtered, joined or indexed belongs in real columns instead.

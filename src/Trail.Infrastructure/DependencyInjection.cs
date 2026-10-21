@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
+using Trail.Infrastructure.Files;
+using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Persistence;
 using Trail.Infrastructure.Persistence.Interceptors;
 using Trail.Infrastructure.Security;
@@ -34,6 +36,13 @@ public static class DependencyInjection
         services.AddHealthChecks().AddDbContextCheck<TrailDbContext>("database", tags: ["ready"]);
 
         AddSecurity(services);
+
+        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
+
+        services.AddOptions<TaskGenerationOptions>().BindConfiguration(TaskGenerationOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton<TaskGenerationJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<TaskGenerationJob>());
 
         return services;
     }

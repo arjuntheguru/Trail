@@ -2,8 +2,10 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Trail.Application.Common.Abstractions;
 using Trail.Domain.Common;
+using Trail.Domain.Files;
 using Trail.Domain.Identity;
 using Trail.Domain.Organizations;
+using Trail.Domain.Tasks;
 using Trail.Infrastructure.Persistence.Conventions;
 
 namespace Trail.Infrastructure.Persistence;
@@ -20,6 +22,15 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
     public DbSet<MembershipRegion> MembershipRegions => Set<MembershipRegion>();
     public DbSet<MembershipDepartment> MembershipDepartments => Set<MembershipDepartment>();
 
+    public DbSet<TaskTemplate> TaskTemplates => Set<TaskTemplate>();
+    public DbSet<TaskTemplateTag> TaskTemplateTags => Set<TaskTemplateTag>();
+    public DbSet<TaskSchedule> TaskSchedules => Set<TaskSchedule>();
+    public DbSet<TaskScheduleSite> TaskScheduleSites => Set<TaskScheduleSite>();
+    public DbSet<TaskScheduleRegion> TaskScheduleRegions => Set<TaskScheduleRegion>();
+    public DbSet<SiteTask> SiteTasks => Set<SiteTask>();
+    public DbSet<TaskEntry> TaskEntries => Set<TaskEntry>();
+    public DbSet<Attachment> Attachments => Set<Attachment>();
+
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<Role> Roles => Set<Role>();
@@ -33,6 +44,8 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
         configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+        configurationBuilder.Properties<DateOnly>().HaveConversion<DateOnlyConverter>().HaveColumnType("date");
+        configurationBuilder.Properties<TimeOnly>().HaveConversion<TimeOnlyConverter>().HaveColumnType("time");
         configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
         configurationBuilder.Properties<Enum>().HaveConversion<string>().HaveMaxLength(64);
     }
@@ -44,6 +57,12 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => t.BaseType is null).ToList())
         {
             var clrType = entityType.ClrType;
+
+            // Ids are assigned in code (Guid v7) when an entity is constructed. Telling EF they are never generated
+            // makes a new child added through a navigation of a tracked parent an insert, not an update of a row
+            // that does not exist.
+            if (typeof(Entity).IsAssignableFrom(clrType))
+                modelBuilder.Entity(clrType).Property(nameof(Entity.Id)).ValueGeneratedNever();
 
             if (typeof(IAuditable).IsAssignableFrom(clrType))
                 modelBuilder.Entity(clrType).Property(nameof(IAuditable.ConcurrencyStamp)).IsConcurrencyToken();
