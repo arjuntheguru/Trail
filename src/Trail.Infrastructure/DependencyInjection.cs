@@ -7,6 +7,7 @@ using Trail.Infrastructure.Files;
 using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Persistence;
 using Trail.Infrastructure.Persistence.Interceptors;
+using Trail.Infrastructure.Persistence.Sequences;
 using Trail.Infrastructure.Security;
 using Trail.Infrastructure.Tenancy;
 
@@ -32,6 +33,7 @@ public static class DependencyInjection
                 .AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
         });
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<TrailDbContext>());
+        services.AddScoped<ISequenceAllocator, SequenceAllocator>();
 
         services.AddHealthChecks().AddDbContextCheck<TrailDbContext>("database", tags: ["ready"]);
 

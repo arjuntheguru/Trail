@@ -2,6 +2,7 @@ using FluentValidation;
 using Trail.Application.Common;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
+using Trail.Application.Features.Issues;
 using Trail.Domain.Tasks;
 
 namespace Trail.Application.Features.Tasks;
@@ -19,7 +20,8 @@ internal sealed class AddTaskEntryValidator : AbstractValidator<AddTaskEntryComm
     }
 }
 
-public sealed class AddTaskEntryHandler(IAppDbContext db, ISiteAccess access, ICurrentUser user, TimeProvider clock)
+public sealed class AddTaskEntryHandler(
+    IAppDbContext db, ISiteAccess access, ICurrentUser user, IssueRaiser issues, TimeProvider clock)
 {
     public async Task<Result<TaskDetailResponse>> Handle(Guid id, AddTaskEntryCommand command, CancellationToken ct)
     {
@@ -38,7 +40,7 @@ public sealed class AddTaskEntryHandler(IAppDbContext db, ISiteAccess access, IC
         if (await TaskRules.CheckAttachmentsAsync(db, task, command.Answers, photoIds, ct) is { } badAttachments)
             return badAttachments;
 
-        db.TaskEntries.Add(new TaskEntry
+        var entry = new TaskEntry
         {
             SiteTaskId = task.Id,
             Answers = new Dictionary<string, FieldAnswer>(command.Answers),
@@ -47,8 +49,10 @@ public sealed class AddTaskEntryHandler(IAppDbContext db, ISiteAccess access, IC
             Failures = [.. evaluation.Failures],
             SubmittedAt = now,
             SubmittedById = user.UserId,
-        });
+        };
+        db.TaskEntries.Add(entry);
         task.HasFailures |= evaluation.HasFailures;
+        await issues.RaiseForFailuresAsync(task, entry, now, user.UserId, ct);
 
         await db.SaveChangesAsync(ct);
         return await TaskMapping.ToDetailAsync(db, task, now, ct);
