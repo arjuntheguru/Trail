@@ -1,5 +1,8 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using Trail.Application.Features.Auth;
+using Trail.Application.Features.Members;
+using Trail.Application.Features.Organizations;
 
 namespace Trail.Application;
 
@@ -18,6 +21,11 @@ public static class DependencyInjection
         {
             services.AddScoped(handler.AsType());
         }
+
+        services.AddScoped<OrganizationProvisioner>();
+        services.AddScoped<SessionIssuer>();
+        services.AddScoped<EmailConfirmationSender>();
+        services.AddScoped<InvitationSender>();
 
         return services;
     }

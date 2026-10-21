@@ -30,4 +30,7 @@ public static class ResultExtensions
 
     public static IResult ToHttp(this Result result) =>
         result.IsSuccess ? TypedResults.NoContent() : result.Error!.ToProblem();
+
+    public static IResult ToHttp(this Result result, Func<IResult> onSuccess) =>
+        result.IsSuccess ? onSuccess() : result.Error!.ToProblem();
 }

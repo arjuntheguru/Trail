@@ -51,6 +51,18 @@ checklists and record logs per site, issues and corrective actions, audit trail 
   `ITenantContext.UseOrganization(orgId)` in their own scope per organization.
 - An id from the URL that is not visible to the caller returns 404, never 403, so ids cannot be probed.
 
+### Identity and permissions
+- Users are global; `Membership` links a user to an organization with a `Role` (a set of permission strings).
+  Permission constants live in `Common/Security/Permissions.cs`; each one is also an authorization policy,
+  so endpoints use `.RequireAuthorization(Permissions.Sites.Manage)`. Never check role names for access.
+- Access tokens (15 min) carry `sub`, `org`, `mid` (membership), `perm` claims; read them via `ICurrentUser`.
+  Permission changes apply at the next refresh. Refresh tokens rotate and are single use.
+- Anything that grants access (roles, invitations, member changes) must refuse to grant permissions or
+  sites the caller does not hold (`MemberRules.CallerHolds`), and members can never change themselves.
+- Anonymous endpoints (sign-in flows) go in the `auth` group with the `auth` rate-limit policy. Do not add
+  `RequireAuthorization` inside an `AllowAnonymous` group: AllowAnonymous wins.
+- Secrets (`Jwt:SigningKey`, SMTP password, bootstrap admin password) come from user secrets or env vars.
+
 ### Use cases (Application/Features/<Area>/<UseCase>.cs)
 One file per use case containing the request record, its validator and its handler:
 ```csharp
@@ -91,6 +103,10 @@ internal sealed class TagEndpoints : IEndpointGroup
 ### Tests
 - Integration tests per area in `tests/Trail.IntegrationTests/<Area>/`: create a `TrailApiFactory` per test
   class via `TrailApiFactory.CreateAsync(mysql)` and drive the real HTTP API.
+- Helpers: `_factory.CreateOrganizationAsync()` returns an Owner; `AddMemberAsync(orgId, SystemRoles.X, allSites)`
+  adds a member; `_factory.CreateClient(member)` gives an authenticated client; `WithDbAsync(orgId, db => ...)`
+  for direct setup/asserts; `HttpExtensions` (`PostJsonAsync`, `ReadAsync<T>`, `ShouldBeAsync(status, code)`);
+  `_factory.Emails` captures outgoing email (`TokenFromLastEmailTo`).
 - Every new tenant-owned endpoint gets a test proving another organization cannot read or change the data.
 - Cover validation failures, not-found, permission denied and the happy path. Use
   `TestContext.Current.CancellationToken`.

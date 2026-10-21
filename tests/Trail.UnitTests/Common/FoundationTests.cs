@@ -1,5 +1,6 @@
 using NSubstitute;
 using Trail.Application.Common.Abstractions;
+using Trail.Application.Common.Exceptions;
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Results;
 using Trail.Infrastructure.Tenancy;
@@ -87,7 +88,7 @@ public sealed class TenantContextTests
     {
         var tenant = new TenantContext(User(Guid.CreateVersion7()));
 
-        Should.Throw<InvalidOperationException>(() => tenant.UseOrganization(Guid.CreateVersion7()));
+        Should.Throw<TenantIsolationException>(() => tenant.UseOrganization(Guid.CreateVersion7()));
     }
 
     [Fact]
