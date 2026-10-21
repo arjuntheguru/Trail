@@ -3,7 +3,16 @@ namespace Trail.Domain.Common;
 /// <summary>Base type for everything persisted. Ids are time-ordered GUIDs (v7) so they index well.</summary>
 public abstract class Entity
 {
+    private List<IDomainEvent>? _domainEvents;
+
     public Guid Id { get; protected init; } = Guid.CreateVersion7();
+
+    /// <summary>Events raised since the last save. Not persisted.</summary>
+    public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents ?? [];
+
+    protected void Raise(IDomainEvent domainEvent) => (_domainEvents ??= []).Add(domainEvent);
+
+    public void ClearDomainEvents() => _domainEvents?.Clear();
 }
 
 /// <summary>Entity with audit columns and an optimistic-concurrency stamp, all maintained by the persistence layer.</summary>

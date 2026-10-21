@@ -77,6 +77,12 @@ public sealed class Issue : TenantEntity
     public DateTime? ClosedAt { get; private set; }
     public Guid? ClosedById { get; private set; }
 
+    /// <summary>When the overdue notice went out. Cleared when the due time changes so a new deadline can be missed again.</summary>
+    public DateTime? OverdueNotifiedAt { get; private set; }
+
+    /// <summary>When the issue was escalated to the next level up for staying overdue. Cleared with the due time.</summary>
+    public DateTime? EscalatedAt { get; private set; }
+
     public List<IssueEvent> Events { get; set; } = [];
 
     public bool IsActive => Status is IssueStatus.Open or IssueStatus.InProgress;
@@ -89,13 +95,15 @@ public sealed class Issue : TenantEntity
         if (Events.Count > 0) throw new InvalidOperationException("The issue was already raised.");
         DueAt = dueAt;
         Record(now, userId, IssueEventKind.Raised, to: Priority.ToString());
+        Raise(new IssueRaised(Id, SiteId, userId, now));
     }
 
     public void Comment(DateTime now, Guid? userId, string text, IReadOnlyList<Guid> photoIds)
     {
         if (string.IsNullOrWhiteSpace(text) && photoIds.Count == 0)
             throw new InvalidOperationException("A comment needs text or a photo.");
-        Record(now, userId, IssueEventKind.Comment, note: text, photoIds: photoIds);
+        var comment = Record(now, userId, IssueEventKind.Comment, note: text, photoIds: photoIds);
+        Raise(new IssueCommented(Id, SiteId, comment.Id, userId, now));
     }
 
     public void Assign(DateTime now, Guid? userId, Guid? assigneeId)
@@ -103,6 +111,7 @@ public sealed class Issue : TenantEntity
         RequireActive("reassigned");
         if (assigneeId == AssigneeId) return;
         Record(now, userId, IssueEventKind.Assigned, AssigneeId?.ToString(), assigneeId?.ToString());
+        Raise(new IssueAssigned(Id, SiteId, AssigneeId, assigneeId, userId, now));
         AssigneeId = assigneeId;
     }
 
@@ -120,7 +129,13 @@ public sealed class Issue : TenantEntity
         if (dueAt == DueAt) return;
         Record(now, userId, IssueEventKind.DueChanged, DueAt?.ToString("O"), dueAt?.ToString("O"));
         DueAt = dueAt;
+        OverdueNotifiedAt = null;
+        EscalatedAt = null;
     }
+
+    public void MarkOverdueNotified(DateTime now) => OverdueNotifiedAt ??= now;
+
+    public void MarkEscalated(DateTime now) => EscalatedAt ??= now;
 
     public void Start(DateTime now, Guid? userId)
     {
@@ -169,13 +184,15 @@ public sealed class Issue : TenantEntity
     private void ChangeStatus(DateTime now, Guid? userId, IssueStatus status, string? note, IReadOnlyList<Guid>? photoIds = null)
     {
         Record(now, userId, IssueEventKind.StatusChanged, Status.ToString(), status.ToString(), note, photoIds);
+        Raise(new IssueStatusChanged(Id, SiteId, Status, status, string.IsNullOrWhiteSpace(note) ? null : note.Trim(), userId, now));
         Status = status;
     }
 
-    private void Record(
+    private IssueEvent Record(
         DateTime now, Guid? userId, IssueEventKind kind,
-        string? from = null, string? to = null, string? note = null, IReadOnlyList<Guid>? photoIds = null) =>
-        Events.Add(new IssueEvent
+        string? from = null, string? to = null, string? note = null, IReadOnlyList<Guid>? photoIds = null)
+    {
+        var issueEvent = new IssueEvent
         {
             IssueId = Id,
             Kind = kind,
@@ -185,7 +202,10 @@ public sealed class Issue : TenantEntity
             PhotoIds = photoIds is null ? [] : [.. photoIds],
             OccurredAt = now,
             ActorId = userId,
-        });
+        };
+        Events.Add(issueEvent);
+        return issueEvent;
+    }
 }
 
 public enum IssueEventKind

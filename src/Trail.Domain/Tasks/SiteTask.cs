@@ -114,6 +114,7 @@ public sealed class SiteTask : TenantEntity
         CompletedAt = now;
         CompletedById = userId;
         HasFailures = hasFailures;
+        Raise(new TaskCompleted(Id, SiteId, userId, now));
     }
 
     public void Approve(DateTime now, Guid? userId, string? note)
@@ -122,6 +123,7 @@ public sealed class SiteTask : TenantEntity
         ApprovedAt = now;
         ApprovedById = userId;
         ApprovalNote = note;
+        Raise(new TaskApproved(Id, SiteId, userId, now));
     }
 
     /// <summary>Sends a completed task back to the list, e.g. when a manager rejects the sign-off.</summary>
