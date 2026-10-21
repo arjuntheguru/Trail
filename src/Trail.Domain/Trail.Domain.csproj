@@ -1,12 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>Trail.Domain</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="FluentValidation" Version="9.5.3" />
-    <PackageReference Include="MongoDB.Bson" Version="2.12.1" />
-  </ItemGroup>
 
 </Project>

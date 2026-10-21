@@ -1,28 +1,26 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Services\te52jppq.mck~" />
-  </ItemGroup>
-
-  <ItemGroup>    
-    <PackageReference Include="MailKit" Version="2.13.0" />    
-    <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />    
-    <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />    
-    <PackageReference Include="MimeKit" Version="2.13.0" />    
-    <PackageReference Include="MongoDB.Driver" Version="2.17.1" />    
-    <PackageReference Include="PluralizeService.Core" Version="1.2.21070.12" />    
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.10.0" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.7.20" />
-    <PackageReference Include="Hangfire.Core" Version="1.7.20" />
-    <PackageReference Include="Hangfire.Mongo" Version="0.7.20" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Trail.Application\Trail.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="MySql.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Trail.UnitTests" />
+    <InternalsVisibleTo Include="Trail.IntegrationTests" />
   </ItemGroup>
 
 </Project>

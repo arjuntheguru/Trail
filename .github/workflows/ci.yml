@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet restore Trail.slnx
+      - run: dotnet build Trail.slnx --no-restore -c Release
+      - name: Test (integration tests start MySQL 8.4 via Testcontainers)
+        run: dotnet test --solution Trail.slnx --no-build -c Release
+      - name: Check for vulnerable packages
+        run: |
+          dotnet list Trail.slnx package --vulnerable --include-transitive | tee vuln.txt
+          ! grep -q "has the following vulnerable packages" vuln.txt
+      - name: Check migrations are up to date
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes -p src/Trail.Infrastructure -s src/Trail.Api
