@@ -13,6 +13,12 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
 {
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<Region> Regions => Set<Region>();
+    public DbSet<Site> Sites => Set<Site>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<MembershipSite> MembershipSites => Set<MembershipSite>();
+    public DbSet<MembershipRegion> MembershipRegions => Set<MembershipRegion>();
+    public DbSet<MembershipDepartment> MembershipDepartments => Set<MembershipDepartment>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();

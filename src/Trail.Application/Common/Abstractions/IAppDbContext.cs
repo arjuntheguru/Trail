@@ -12,6 +12,12 @@ public interface IAppDbContext
 {
     DbSet<Organization> Organizations { get; }
     DbSet<Tag> Tags { get; }
+    DbSet<Region> Regions { get; }
+    DbSet<Site> Sites { get; }
+    DbSet<Department> Departments { get; }
+    DbSet<MembershipSite> MembershipSites { get; }
+    DbSet<MembershipRegion> MembershipRegions { get; }
+    DbSet<MembershipDepartment> MembershipDepartments { get; }
 
     DbSet<User> Users { get; }
     DbSet<Membership> Memberships { get; }

@@ -11,6 +11,9 @@ public sealed class MySqlFixture : IAsyncLifetime
     private readonly MySqlContainer _container = new MySqlBuilder("mysql:8.4")
         .WithUsername("root")
         .WithPassword("trail-test")
+        // Every test class has its own database and so its own connection pool; idle pooled connections from
+        // finished classes add up past the default limit of 151.
+        .WithCommand("--max-connections=2000")
         .Build();
 
     public async ValueTask InitializeAsync() => await _container.StartAsync();
@@ -27,6 +30,13 @@ public sealed class MySqlFixture : IAsyncLifetime
         command.CommandText = $"CREATE DATABASE `{name}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci";
         await command.ExecuteNonQueryAsync();
 
-        return new MySqlConnectionStringBuilder(_container.GetConnectionString()) { Database = name }.ConnectionString;
+        return new MySqlConnectionStringBuilder(_container.GetConnectionString())
+        {
+            Database = name,
+            // The container is local and unencrypted. Connector/NET's TLS setup is not thread-safe when many
+            // test classes open their first connection at once.
+            SslMode = MySqlSslMode.Disabled,
+            MaximumPoolSize = 20,
+        }.ConnectionString;
     }
 }
