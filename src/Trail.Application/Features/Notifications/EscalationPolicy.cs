@@ -38,6 +38,9 @@ public static class EscalationPolicy
         return new EscalationDecision(overdueNotifiedAt is null, escalate);
     }
 
+    /// <summary>Issues of <paramref name="priority"/> due before this are late enough to escalate at <paramref name="now"/>.</summary>
+    public static DateTime EscalationCutoff(IssuePriority priority, DateTime now) => now - IssuePolicy.DefaultResponseTime(priority);
+
     /// <summary>The assignee when there is one, otherwise everyone who manages issues at the site.</summary>
     public static IReadOnlyList<Guid> OverdueRecipients(Guid? assigneeId, IReadOnlyList<SiteMember> managers) =>
         assigneeId is { } assignee ? [assignee] : managers.Select(m => m.MembershipId).Distinct().ToList();

@@ -15,10 +15,11 @@ internal sealed class CreateWebhookValidator : AbstractValidator<CreateWebhookCo
         WebhookRules.AddCommonRules(this, x => x.Url, x => x.Description, x => x.EventTypes, options.Value.AllowInsecureTargets);
 }
 
-public sealed class CreateWebhookHandler(IAppDbContext db)
+public sealed class CreateWebhookHandler(IAppDbContext db, ISiteAccess access)
 {
     public async Task<Result<WebhookWithSecretResponse>> Handle(CreateWebhookCommand command, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         if (await db.WebhookSubscriptions.CountAsync(ct) >= WebhookSubscription.MaxPerOrganization)
             return Error.Conflict("webhook.limit_reached", $"An organization can have at most {WebhookSubscription.MaxPerOrganization} webhooks.");
 

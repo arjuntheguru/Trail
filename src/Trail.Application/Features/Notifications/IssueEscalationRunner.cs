@@ -20,10 +20,21 @@ public sealed class IssueEscalationRunner(
     public async Task<(int Overdue, int Escalated)> RunAsync(CancellationToken ct)
     {
         var now = clock.GetUtcNow().UtcDateTime;
+        // Only issues that still have something to do, or the oldest ones would fill the batch for good (priority is
+        // stored as text, so it is compared for equality per level, each with its own escalation cutoff).
+        var low = EscalationPolicy.EscalationCutoff(IssuePriority.Low, now);
+        var medium = EscalationPolicy.EscalationCutoff(IssuePriority.Medium, now);
+        var high = EscalationPolicy.EscalationCutoff(IssuePriority.High, now);
+        var critical = EscalationPolicy.EscalationCutoff(IssuePriority.Critical, now);
         var issues = await db.Issues
             .Where(i => (i.Status == IssueStatus.Open || i.Status == IssueStatus.InProgress)
                         && i.DueAt != null && i.DueAt < now
-                        && (i.OverdueNotifiedAt == null || i.EscalatedAt == null))
+                        && (i.OverdueNotifiedAt == null
+                            || (i.EscalatedAt == null
+                                && ((i.Priority == IssuePriority.Low && i.DueAt < low)
+                                    || (i.Priority == IssuePriority.Medium && i.DueAt < medium)
+                                    || (i.Priority == IssuePriority.High && i.DueAt < high)
+                                    || (i.Priority == IssuePriority.Critical && i.DueAt < critical)))))
             .OrderBy(i => i.DueAt)
             .Take(BatchSize)
             .ToListAsync(ct);

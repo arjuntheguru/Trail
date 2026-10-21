@@ -185,12 +185,14 @@ internal sealed class WebhookDeliveryJob(
 
         if (result.Succeeded)
         {
-            await deliveries.ExecuteUpdateAsync(s => s
+            var updated = await deliveries.ExecuteUpdateAsync(s => s
                 .SetProperty(d => d.Status, WebhookDeliveryStatus.Succeeded)
                 .SetProperty(d => d.DeliveredAt, now)
                 .SetProperty(d => d.LastStatusCode, code)
                 .SetProperty(d => d.LastError, (string?)null)
                 .SetProperty(d => d.ClaimToken, (Guid?)null), ct);
+            // No row updated means another run owns the delivery now (it was recovered as stuck); it records the outcome.
+            if (updated == 0) return;
             await subscriptions.ExecuteUpdateAsync(s => s
                 .SetProperty(w => w.FailureCount, 0)
                 .SetProperty(w => w.LastSuccessAt, now), ct);
@@ -201,14 +203,14 @@ internal sealed class WebhookDeliveryJob(
         var (status, next) = subscriptionLive
             ? WebhookRetryPolicy.OnFailure(claimed.Attempts, now)
             : (WebhookDeliveryStatus.Failed, now);
-        await deliveries.ExecuteUpdateAsync(s => s
+        var recorded = await deliveries.ExecuteUpdateAsync(s => s
             .SetProperty(d => d.Status, status)
             .SetProperty(d => d.NextAttemptAt, next)
             .SetProperty(d => d.LastStatusCode, code)
             .SetProperty(d => d.LastError, error)
             .SetProperty(d => d.ClaimToken, (Guid?)null), ct);
 
-        if (!subscriptionLive) return;
+        if (recorded == 0 || !subscriptionLive) return;
 
         await subscriptions.ExecuteUpdateAsync(s => s
             .SetProperty(w => w.FailureCount, w => w.FailureCount + 1)

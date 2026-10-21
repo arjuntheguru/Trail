@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
@@ -57,7 +58,11 @@ public static class DependencyInjection
 
     private static void AddIntegrations(IServiceCollection services)
     {
-        services.AddOptions<WebhookOptions>().BindConfiguration(WebhookOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
+        services.AddOptions<WebhookOptions>().BindConfiguration(WebhookOptions.SectionName).ValidateDataAnnotations()
+            .Validate<IHostEnvironment>(
+                (o, env) => !o.AllowInsecureTargets || WebhookOptions.InsecureTargetsAllowedIn(env.EnvironmentName),
+                "Webhooks:AllowInsecureTargets can only be enabled in the Development environment.")
+            .ValidateOnStart();
 
         // Webhook targets are customer-chosen URLs. Unless development explicitly allows it, the client connects
         // only to public addresses (checked on the address it connects to), follows no redirects and uses no proxy.

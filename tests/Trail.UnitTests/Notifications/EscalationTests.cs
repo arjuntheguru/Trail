@@ -12,6 +12,22 @@ public sealed class EscalationTests
         DateTime? notified = null, DateTime? escalated = null, DateTime? due = null) =>
         EscalationPolicy.Decide(status, priority, due ?? Due, notified, escalated, now);
 
+    [Theory]
+    [InlineData(IssuePriority.Critical, 4)]
+    [InlineData(IssuePriority.High, 24)]
+    [InlineData(IssuePriority.Medium, 72)]
+    [InlineData(IssuePriority.Low, 168)]
+    public void The_escalation_cutoff_matches_when_Decide_starts_escalating(IssuePriority priority, int hours)
+    {
+        var now = Due.AddDays(30);
+        var cutoff = EscalationPolicy.EscalationCutoff(priority, now);
+
+        cutoff.ShouldBe(now.AddHours(-hours));
+        Decide(now, priority).Escalate.ShouldBeTrue();
+        EscalationPolicy.Decide(IssueStatus.Open, priority, cutoff, null, null, now).Escalate.ShouldBeFalse();
+        EscalationPolicy.Decide(IssueStatus.Open, priority, cutoff.AddTicks(-1), null, null, now).Escalate.ShouldBeTrue();
+    }
+
     [Fact]
     public void Nothing_happens_before_the_due_time_or_without_one()
     {

@@ -4,10 +4,11 @@ using Trail.Application.Common.Results;
 
 namespace Trail.Application.Features.Integrations;
 
-public sealed class DeleteWebhookHandler(IAppDbContext db)
+public sealed class DeleteWebhookHandler(IAppDbContext db, ISiteAccess access)
 {
     public async Task<Result> Handle(Guid id, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var webhook = await db.WebhookSubscriptions.FirstOrDefaultAsync(w => w.Id == id, ct);
         if (webhook is null) return WebhookRules.NotFound;
 

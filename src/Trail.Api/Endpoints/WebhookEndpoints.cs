@@ -12,7 +12,7 @@ internal sealed class WebhookEndpoints : IEndpointGroup
         var group = app.MapGroup("webhooks").WithTags("Webhooks").RequireAuthorization(Permissions.Integrations.Manage);
 
         group.MapGet("", async (ListWebhooksHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.Handle(ct)));
+            (await handler.Handle(ct)).ToHttp());
 
         group.MapGet("event-types", (ListWebhookEventTypesHandler handler) => TypedResults.Ok(handler.Handle()));
 

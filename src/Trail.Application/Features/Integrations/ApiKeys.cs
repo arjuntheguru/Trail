@@ -65,19 +65,23 @@ public sealed class CreateApiKeyHandler(IAppDbContext db, ISiteAccess access, Ti
     }
 }
 
-public sealed class ListApiKeysHandler(IAppDbContext db)
+public sealed class ListApiKeysHandler(IAppDbContext db, ISiteAccess access)
 {
-    public async Task<IReadOnlyList<ApiKeyResponse>> Handle(CancellationToken ct) =>
-        await db.ApiKeys.AsNoTracking()
+    public async Task<Result<IReadOnlyList<ApiKeyResponse>>> Handle(CancellationToken ct)
+    {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
+        return await db.ApiKeys.AsNoTracking()
             .OrderByDescending(k => k.CreatedAt).ThenBy(k => k.Id)
             .Select(IntegrationMapping.ApiKeyProjection)
             .ToListAsync(ct);
+    }
 }
 
-public sealed class RevokeApiKeyHandler(IAppDbContext db, TimeProvider clock)
+public sealed class RevokeApiKeyHandler(IAppDbContext db, ISiteAccess access, TimeProvider clock)
 {
     public async Task<Result> Handle(Guid id, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var key = await db.ApiKeys.FirstOrDefaultAsync(k => k.Id == id, ct);
         if (key is null) return Error.NotFound("api_key.not_found", "API key not found.");
 

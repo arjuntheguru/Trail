@@ -14,10 +14,11 @@ internal sealed class UpdateWebhookValidator : AbstractValidator<UpdateWebhookCo
         WebhookRules.AddCommonRules(this, x => x.Url, x => x.Description, x => x.EventTypes, options.Value.AllowInsecureTargets);
 }
 
-public sealed class UpdateWebhookHandler(IAppDbContext db)
+public sealed class UpdateWebhookHandler(IAppDbContext db, ISiteAccess access)
 {
     public async Task<Result<WebhookResponse>> Handle(Guid id, UpdateWebhookCommand command, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var webhook = await db.WebhookSubscriptions.FirstOrDefaultAsync(w => w.Id == id, ct);
         if (webhook is null) return WebhookRules.NotFound;
 

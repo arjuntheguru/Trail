@@ -18,4 +18,8 @@ public sealed class WebhookOptions
     /// default; with it off, targets must be https and resolve to public addresses.
     /// </summary>
     public bool AllowInsecureTargets { get; set; }
+
+    /// <summary>Whether <see cref="AllowInsecureTargets"/> may be on in the named hosting environment.</summary>
+    public static bool InsecureTargetsAllowedIn(string environmentName) =>
+        environmentName is "Development" or "Testing";
 }

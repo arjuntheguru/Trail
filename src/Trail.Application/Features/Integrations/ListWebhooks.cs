@@ -5,19 +5,23 @@ using Trail.Domain.Integrations;
 
 namespace Trail.Application.Features.Integrations;
 
-public sealed class ListWebhooksHandler(IAppDbContext db)
+public sealed class ListWebhooksHandler(IAppDbContext db, ISiteAccess access)
 {
-    public async Task<IReadOnlyList<WebhookResponse>> Handle(CancellationToken ct) =>
-        await db.WebhookSubscriptions.AsNoTracking()
+    public async Task<Result<IReadOnlyList<WebhookResponse>>> Handle(CancellationToken ct)
+    {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
+        return await db.WebhookSubscriptions.AsNoTracking()
             .OrderBy(w => w.CreatedAt).ThenBy(w => w.Id)
             .Select(IntegrationMapping.WebhookProjection)
             .ToListAsync(ct);
+    }
 }
 
-public sealed class GetWebhookHandler(IAppDbContext db)
+public sealed class GetWebhookHandler(IAppDbContext db, ISiteAccess access)
 {
     public async Task<Result<WebhookResponse>> Handle(Guid id, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var webhook = await db.WebhookSubscriptions.AsNoTracking()
             .Where(w => w.Id == id)
             .Select(IntegrationMapping.WebhookProjection)

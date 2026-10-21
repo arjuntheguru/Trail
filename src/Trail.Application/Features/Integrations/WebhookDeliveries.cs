@@ -6,10 +6,11 @@ using Trail.Domain.Integrations;
 
 namespace Trail.Application.Features.Integrations;
 
-public sealed class ListWebhookDeliveriesHandler(IAppDbContext db)
+public sealed class ListWebhookDeliveriesHandler(IAppDbContext db, ISiteAccess access)
 {
     public async Task<Result<PagedResult<WebhookDeliveryResponse>>> Handle(Guid webhookId, PageRequest page, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         if (!await db.WebhookSubscriptions.AnyAsync(w => w.Id == webhookId, ct)) return WebhookRules.NotFound;
 
         return await db.WebhookDeliveries.AsNoTracking()
@@ -21,10 +22,11 @@ public sealed class ListWebhookDeliveriesHandler(IAppDbContext db)
 }
 
 /// <summary>Queues a signed "ping" so an owner can check their endpoint and secret handling.</summary>
-public sealed class TestWebhookHandler(IAppDbContext db, ITenantContext tenant, TimeProvider clock)
+public sealed class TestWebhookHandler(IAppDbContext db, ISiteAccess access, ITenantContext tenant, TimeProvider clock)
 {
     public async Task<Result<WebhookDeliveryResponse>> Handle(Guid id, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var webhook = await db.WebhookSubscriptions.AsNoTracking().FirstOrDefaultAsync(w => w.Id == id, ct);
         if (webhook is null) return WebhookRules.NotFound;
         if (!webhook.IsActive) return Error.Conflict("webhook.inactive", "The webhook is switched off.");
@@ -47,10 +49,11 @@ public sealed class TestWebhookHandler(IAppDbContext db, ITenantContext tenant, 
 }
 
 /// <summary>Sends a finished (succeeded or failed) delivery again with a fresh set of attempts.</summary>
-public sealed class RedeliverWebhookHandler(IAppDbContext db, TimeProvider clock)
+public sealed class RedeliverWebhookHandler(IAppDbContext db, ISiteAccess access, TimeProvider clock)
 {
     public async Task<Result<WebhookDeliveryResponse>> Handle(Guid deliveryId, CancellationToken ct)
     {
+        if (await IntegrationAccess.RequireAllSitesAsync(access, ct) is { } denied) return denied;
         var delivery = await db.WebhookDeliveries.FirstOrDefaultAsync(d => d.Id == deliveryId, ct);
         if (delivery is null) return Error.NotFound("webhook.delivery_not_found", "Delivery not found.");
 

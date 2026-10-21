@@ -23,10 +23,11 @@ public sealed class IssueRaiser(IAppDbContext db, ISequenceAllocator sequences)
         if (failures.Count == 0) return [];
 
         var keys = failures.Select(f => f.FieldKey).ToList();
-        var active = await db.Issues
+        var persisted = await db.Issues
             .Where(i => i.SiteTaskId == task.Id && i.FieldKey != null && keys.Contains(i.FieldKey)
                         && (i.Status == IssueStatus.Open || i.Status == IssueStatus.InProgress))
             .ToListAsync(ct);
+        var active = WithUnsaved(persisted, db.Issues.Local, task.Id, keys);
 
         var raised = new List<Issue>();
         foreach (var failure in failures)
@@ -69,6 +70,16 @@ public sealed class IssueRaiser(IAppDbContext db, ISequenceAllocator sequences)
         }
         return raised;
     }
+
+    /// <summary>
+    /// The active issues of the given fields: the saved ones plus any added earlier in this unit of work, which a query
+    /// cannot see yet (otherwise several failing readings of one field in a request would each raise an issue).
+    /// </summary>
+    public static IReadOnlyList<Issue> WithUnsaved(
+        IEnumerable<Issue> persisted, IEnumerable<Issue> tracked, Guid taskId, IReadOnlyCollection<string> fieldKeys) =>
+        [.. persisted.Concat(tracked.Where(i => i.SiteTaskId == taskId && i.FieldKey != null && fieldKeys.Contains(i.FieldKey)
+                                                  && i.Status is IssueStatus.Open or IssueStatus.InProgress))
+            .Distinct()];
 
     private static string Describe(FieldFailure failure, FieldAnswer? answer) =>
         IssuePolicy.Truncate(

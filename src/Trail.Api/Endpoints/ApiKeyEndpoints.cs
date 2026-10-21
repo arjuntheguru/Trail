@@ -11,7 +11,7 @@ internal sealed class ApiKeyEndpoints : IEndpointGroup
         var group = app.MapGroup("api-keys").WithTags("API keys").RequireAuthorization(Permissions.Integrations.Manage);
 
         group.MapGet("", async (ListApiKeysHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.Handle(ct)));
+            (await handler.Handle(ct)).ToHttp());
 
         // The response carries the full key; it is shown this once and only its hash is stored.
         group.MapPost("", async (CreateApiKeyCommand command, CreateApiKeyHandler handler, CancellationToken ct) =>
