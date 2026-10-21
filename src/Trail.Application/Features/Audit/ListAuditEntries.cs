@@ -36,20 +36,7 @@ public sealed class ListAuditEntriesHandler(IAppDbContext db, ISiteAccess access
     public async Task<PagedResult<AuditEntryResponse>> Handle(ListAuditEntriesQuery query, PageRequest page, CancellationToken ct)
     {
         var scope = await access.GetScopeAsync(ct);
-        var entries = db.AuditEntries.AsNoTracking();
-        if (!scope.AllSites)
-        {
-            var siteIds = scope.SiteIds.ToList();
-            entries = entries.Where(a => a.SiteId != null && siteIds.Contains(a.SiteId.Value));
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.EntityType)) entries = entries.Where(a => a.EntityType == query.EntityType.Trim());
-        if (query.EntityId is { } entityId) entries = entries.Where(a => a.EntityId == entityId);
-        if (query.ActorId is { } actorId) entries = entries.Where(a => a.ActorId == actorId);
-        if (query.SiteId is { } siteId) entries = entries.Where(a => a.SiteId == siteId);
-        if (query.Action is { } action) entries = entries.Where(a => a.Action == action);
-        if (query.From is { } from) entries = entries.Where(a => a.OccurredAt >= from.ToUniversalTime());
-        if (query.To is { } to) entries = entries.Where(a => a.OccurredAt < to.ToUniversalTime());
+        var entries = AuditEntryQueries.Filter(db.AuditEntries.AsNoTracking(), scope, query);
 
         var paged = await entries
             .OrderByDescending(a => a.OccurredAt).ThenByDescending(a => a.Id)
@@ -67,5 +54,39 @@ public sealed class ListAuditEntriesHandler(IAppDbContext db, ISiteAccess access
                 a.ActorId is { } id && names.TryGetValue(id, out var name) ? name : null,
                 a.SiteId, a.IpAddress, a.TraceId)).ToList(),
             paged.Page, paged.PageSize, paged.TotalCount);
+    }
+}
+
+/// <summary>The scoping and filters shared by the audit list and the audit CSV export.</summary>
+internal static class AuditEntryQueries
+{
+    public static IQueryable<AuditEntry> Filter(IQueryable<AuditEntry> entries, SiteScope scope, ListAuditEntriesQuery query)
+    {
+        if (!scope.AllSites)
+        {
+            var siteIds = scope.SiteIds.ToList();
+            entries = entries.Where(a => a.SiteId != null && siteIds.Contains(a.SiteId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.EntityType))
+        {
+            var entityType = query.EntityType.Trim();
+            entries = entries.Where(a => a.EntityType == entityType);
+        }
+        if (query.EntityId is { } entityId) entries = entries.Where(a => a.EntityId == entityId);
+        if (query.ActorId is { } actorId) entries = entries.Where(a => a.ActorId == actorId);
+        if (query.SiteId is { } siteId) entries = entries.Where(a => a.SiteId == siteId);
+        if (query.Action is { } action) entries = entries.Where(a => a.Action == action);
+        if (query.From is { } from)
+        {
+            var fromUtc = from.ToUniversalTime();
+            entries = entries.Where(a => a.OccurredAt >= fromUtc);
+        }
+        if (query.To is { } to)
+        {
+            var toUtc = to.ToUniversalTime();
+            entries = entries.Where(a => a.OccurredAt < toUtc);
+        }
+        return entries;
     }
 }
