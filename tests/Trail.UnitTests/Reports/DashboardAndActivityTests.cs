@@ -134,6 +134,26 @@ public sealed class ActivityMergerTests
     }
 
     [Fact]
+    public void A_tie_straddling_the_limit_moves_to_the_next_page_whole()
+    {
+        // A task completed with failures: the completion and its raised issues share one timestamp.
+        var (items, next) = ActivityMerger.Merge(
+            [R(1), R(2), R(2, ActivityKinds.IssueRaised), R(2, ActivityKinds.IssueRaised), R(3)], 2);
+
+        items.Select(i => i.OccurredAt).ShouldBe([Base.AddMinutes(-1)]);
+        next.ShouldBe(Base.AddMinutes(-2).AddMicroseconds(1));
+    }
+
+    [Fact]
+    public void A_page_that_is_all_one_tie_returns_every_tied_row()
+    {
+        var (items, next) = ActivityMerger.Merge([R(2), R(2), R(2), R(3)], 2);
+
+        items.Count.ShouldBe(3);
+        next.ShouldBe(Base.AddMinutes(-2));
+    }
+
+    [Fact]
     public void No_next_before_when_the_page_is_exactly_full()
     {
         var (items, next) = ActivityMerger.Merge([R(1), R(2)], 2);

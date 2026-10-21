@@ -34,7 +34,8 @@ internal static class ActivityMerger
 
     /// <summary>
     /// Newest first across all sources. More than <paramref name="limit"/> rows means another page exists, and
-    /// NextBefore is then the timestamp of the last row returned (null otherwise).
+    /// NextBefore is then an exclusive bound for the next page (null otherwise). A page never splits rows that
+    /// share a timestamp, because the exclusive bound would skip the rest of them; it ends early instead.
     /// </summary>
     public static (IReadOnlyList<ActivityRow> Items, DateTime? NextBefore) Merge(IEnumerable<ActivityRow> rows, int limit)
     {
@@ -44,6 +45,17 @@ internal static class ActivityMerger
             .ThenBy(r => r.SubjectId)
             .ToList();
         var page = ordered.Take(limit).ToList();
-        return (page, ordered.Count > limit ? page[^1].OccurredAt : null);
+        if (ordered.Count <= limit) return (page, null);
+
+        var boundary = ordered[limit].OccurredAt;
+        if (page[^1].OccurredAt != boundary) return (page, page[^1].OccurredAt);
+
+        // The first row left out ties with the page's last one. Stop before the tie so the next page starts with
+        // all of it (timestamps are stored to the microsecond).
+        var newer = page.Where(r => r.OccurredAt > boundary).ToList();
+        if (newer.Count > 0) return (newer, boundary.AddMicroseconds(1));
+
+        // The whole page is one tie: return every tied row fetched, even past the limit.
+        return (ordered.Where(r => r.OccurredAt == boundary).ToList(), boundary);
     }
 }
