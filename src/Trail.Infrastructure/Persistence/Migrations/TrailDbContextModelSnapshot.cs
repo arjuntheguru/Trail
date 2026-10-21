@@ -19,10 +19,64 @@ namespace Trail.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("Trail.Domain.Auditing.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Changes")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("SiteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("TraceId")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.HasIndex("OrganizationId", "OccurredAt");
+
+                    b.HasIndex("SiteId", "OccurredAt");
+
+                    b.ToTable("audit_entries", (string)null);
+                });
+
             modelBuilder.Entity("Trail.Domain.Files.Attachment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -88,7 +142,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.Membership", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<bool>("AllSites")
@@ -144,7 +197,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.MembershipDepartment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -187,7 +239,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.MembershipRegion", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -230,7 +281,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.MembershipSite", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -273,7 +323,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -331,7 +380,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -382,7 +430,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<int>("AccessFailedCount")
@@ -460,7 +507,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Identity.UserToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -504,7 +550,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Issues.Issue", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid?>("AssigneeId")
@@ -618,7 +663,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Issues.IssueEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid?>("ActorId")
@@ -682,7 +726,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Organizations.Department", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -725,7 +768,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Organizations.Organization", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -796,7 +838,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Organizations.Region", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -843,7 +884,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Organizations.Site", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Address")
@@ -920,7 +960,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Organizations.Tag", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Color")
@@ -964,7 +1003,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.SiteTask", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<string>("ApprovalNote")
@@ -1093,7 +1131,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Answers")
@@ -1152,7 +1189,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskSchedule", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<bool>("AllSites")
@@ -1233,7 +1269,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskScheduleRegion", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -1276,7 +1311,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskScheduleSite", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -1319,7 +1353,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskTemplate", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")
@@ -1393,7 +1426,6 @@ namespace Trail.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Trail.Domain.Tasks.TaskTemplateTag", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ConcurrencyStamp")

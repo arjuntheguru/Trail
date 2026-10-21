@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Trail.Application.Common.Abstractions;
+using Trail.Domain.Auditing;
 using Trail.Domain.Common;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
@@ -34,6 +35,7 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
 
     public DbSet<Issue> Issues => Set<Issue>();
     public DbSet<IssueEvent> IssueEvents => Set<IssueEvent>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Membership> Memberships => Set<Membership>();
@@ -57,6 +59,9 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TrailDbContext).Assembly);
+        // Audit rows carry a nullable organization (platform-level rows have none), so they are filtered here
+        // rather than through ITenantOwned.
+        ApplyAuditFilter(modelBuilder);
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => t.BaseType is null).ToList())
         {
@@ -86,6 +91,9 @@ public sealed class TrailDbContext(DbContextOptions<TrailDbContext> options, ITe
                 Invoke(nameof(ApplySoftDeleteFilter), clrType, modelBuilder);
         }
     }
+
+    private void ApplyAuditFilter(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<AuditEntry>().HasQueryFilter(QueryFilters.Tenant, e => e.OrganizationId == CurrentOrganizationId);
 
     private void ApplyTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantOwned =>
         modelBuilder.Entity<TEntity>().HasQueryFilter(

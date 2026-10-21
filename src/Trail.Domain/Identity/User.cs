@@ -22,22 +22,28 @@ public sealed class User : AuditableEntity
     public required string LastName { get; set; }
 
     /// <summary>ASP.NET Core Identity v3 hash (PBKDF2-HMAC-SHA512). Null until an invited user sets a password.</summary>
+    [NotAudited]
     public string? PasswordHash { get; set; }
 
     public DateTime? EmailConfirmedAt { get; set; }
 
     /// <summary>Changes whenever credentials change; refresh tokens issued under an older stamp stop working.</summary>
+    [NotAudited]
     public Guid SecurityStamp { get; set; } = Guid.NewGuid();
 
+    [NotAudited]
     public int AccessFailedCount { get; set; }
+    [NotAudited]
     public DateTime? LockoutEndsAt { get; set; }
 
     public bool IsActive { get; set; } = true;
     public bool IsPlatformAdmin { get; set; }
 
+    [NotAudited]
     public DateTime? LastLoginAt { get; set; }
 
     /// <summary>Organization selected at the last sign-in, used as the default next time.</summary>
+    [NotAudited]
     public Guid? LastOrganizationId { get; set; }
 
     public string FullName => $"{FirstName} {LastName}".Trim();

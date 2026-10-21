@@ -10,6 +10,7 @@ public enum UserTokenPurpose
 }
 
 /// <summary>Single-use emailed token (confirmation, reset, invitation). Only its SHA-256 hash is stored.</summary>
+[NotAudited]
 public sealed class UserToken : Entity
 {
     public static readonly TimeSpan PasswordResetLifetime = TimeSpan.FromHours(1);

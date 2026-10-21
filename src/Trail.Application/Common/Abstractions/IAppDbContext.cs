@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Trail.Domain.Auditing;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;
 using Trail.Domain.Issues;
@@ -33,6 +34,7 @@ public interface IAppDbContext
 
     DbSet<Issue> Issues { get; }
     DbSet<IssueEvent> IssueEvents { get; }
+    DbSet<AuditEntry> AuditEntries { get; }
 
     DbSet<User> Users { get; }
     DbSet<Membership> Memberships { get; }
