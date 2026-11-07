@@ -114,6 +114,9 @@ describe('login form', () => {
       http.get(`${API}/api/v1/sites`, () =>
         HttpResponse.json({ items: [], page: 1, pageSize: 100, totalCount: 0 }),
       ),
+      http.get(`${API}/api/v1/organizations/current`, () =>
+        HttpResponse.json({ id: 'o1', name: 'Acme', slug: 'acme', defaultTimeZone: 'UTC' }),
+      ),
     )
     const { user, router } = await openLogin('/login?redirect=%2Fsettings')
 
@@ -124,8 +127,9 @@ describe('login form', () => {
     expect(await screen.findByRole('button', { name: /Signing in/ })).toBeDisabled()
     release()
 
-    expect(await screen.findByText('Coming soon.')).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/settings')
+    expect(await screen.findByRole('heading', { name: 'Settings' })).toBeInTheDocument()
+    // /settings lands on its first section.
+    expect(router.state.location.pathname).toBe('/settings/organization')
   })
 
   it('ignores an off-site redirect target', async () => {

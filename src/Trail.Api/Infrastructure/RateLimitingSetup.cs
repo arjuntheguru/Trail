@@ -63,5 +63,8 @@ internal sealed class CorsSetup(IOptions<FrontendCorsOptions> options) : IConfig
             .WithOrigins(options.Value.AllowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials());
+            .AllowCredentials()
+            // Browsers hide these from scripts on cross-origin responses unless exposed: CSV export file names,
+            // the request id for support, and 429 back-off.
+            .WithExposedHeaders("Content-Disposition", RequestIdMiddleware.HeaderName, "Retry-After"));
 }
