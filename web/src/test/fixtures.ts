@@ -47,3 +47,76 @@ export function sessionResponse(
 export function problem(status: number, code: string, detail: string, extra: object = {}) {
   return { type: 'about:blank', title: code, status, detail, code, ...extra }
 }
+
+type TaskDetail = components['schemas']['TaskDetailResponse']
+type TemplateField = components['schemas']['TemplateField']
+type TaskEntry = components['schemas']['TaskEntryResponse']
+
+export const SESSION_USER_ID = 'cccccccc-0000-0000-0000-000000000001'
+
+export function field(
+  overrides: Partial<TemplateField> & Pick<TemplateField, 'key' | 'type'>,
+): TemplateField {
+  return {
+    label: overrides.key,
+    required: true,
+    options: [],
+    photoRequiredOnFailure: false,
+    commentRequiredOnFailure: true,
+    raiseIssueOnFailure: true,
+    isAnswerable: overrides.type !== 'Instruction',
+    ...overrides,
+  }
+}
+
+export function entry(overrides: Partial<TaskEntry> = {}): TaskEntry {
+  return {
+    id: crypto.randomUUID(),
+    answers: {},
+    photoIds: [],
+    note: null,
+    failures: [],
+    hasFailures: false,
+    submittedAt: null,
+    submittedById: null,
+    submittedBy: null,
+    ...overrides,
+  }
+}
+
+/** A task as GET /tasks/{id} returns it: an open checklist due today with no fields unless given. */
+export function taskDetail(overrides: Partial<TaskDetail> = {}): TaskDetail {
+  return {
+    id: '99999999-0000-0000-0000-000000000001',
+    siteId: '55555555-0000-0000-0000-000000000001',
+    siteName: 'Harbour Cafe',
+    timeZone: 'Europe/London',
+    title: 'Opening checks',
+    description: null,
+    kind: 'Checklist',
+    status: 'Open',
+    source: 'Scheduled',
+    fields: [],
+    requiresApproval: false,
+    requiresPhoto: false,
+    departmentId: null,
+    dueDate: '2026-11-07',
+    dueAt: '2026-11-07T12:00:00Z',
+    availableAt: null,
+    isOverdue: false,
+    isAwaitingApproval: false,
+    canCompleteLate: false,
+    snoozeCount: 0,
+    completedAt: null,
+    completedById: null,
+    completedBy: null,
+    completedLate: false,
+    hasFailures: false,
+    approvedAt: null,
+    approvedById: null,
+    approvedBy: null,
+    approvalNote: null,
+    entries: [],
+    ...overrides,
+  }
+}
