@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { ComingSoon } from '@/components/ComingSoon'
+import { SettingsLayout } from '@/features/settings/SettingsLayout'
 
 export const Route = createFileRoute('/_authenticated/settings')({
-  component: () => <ComingSoon title="Settings" />,
+  component: SettingsLayout,
 })

@@ -2,7 +2,9 @@
 export const Permissions = {
   Organization: { Manage: 'organization.manage' },
   Members: { View: 'members.view', Manage: 'members.manage' },
+  Roles: { Manage: 'roles.manage' },
   Sites: { View: 'sites.view', Manage: 'sites.manage' },
+  Tags: { Manage: 'tags.manage' },
   Templates: { View: 'templates.view', Manage: 'templates.manage' },
   Tasks: {
     View: 'tasks.view',
