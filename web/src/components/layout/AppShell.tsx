@@ -2,6 +2,7 @@ import { Link, Outlet } from '@tanstack/react-router'
 
 import { hasPermission } from '@/auth/permissions'
 import { useAuthState } from '@/auth/context'
+import { IssuesNavBadge } from '@/features/issues/NavBadge'
 import { cn } from '@/lib/utils'
 
 import { EmailBanner } from './EmailBanner'
@@ -40,6 +41,7 @@ export function AppShell() {
             >
               <Icon className="size-5" aria-hidden />
               {label}
+              {to === '/issues' && <IssuesNavBadge className="ml-auto" />}
             </Link>
           ))}
         </nav>
@@ -70,7 +72,12 @@ export function AppShell() {
             className="flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground"
             activeProps={{ className: 'text-primary' }}
           >
-            <Icon className="size-6" aria-hidden />
+            <span className="relative">
+              <Icon className="size-6" aria-hidden />
+              {to === '/issues' && (
+                <IssuesNavBadge className="absolute -top-1.5 left-3.5 min-w-4 text-[10px] leading-4" />
+              )}
+            </span>
             {label}
           </Link>
         ))}

@@ -22,6 +22,8 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
+import { Route as AuthenticatedIssuesIssueIdRouteImport } from './routes/_authenticated/issues_.$issueId'
+import { Route as AuthenticatedIssuesNewRouteImport } from './routes/_authenticated/issues_.new'
 import { Route as AuthenticatedTasksTaskIdRouteImport } from './routes/_authenticated/tasks_.$taskId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -88,6 +90,17 @@ const AuthenticatedTodayRoute = AuthenticatedTodayRouteImport.update({
   path: '/today',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedIssuesIssueIdRoute =
+  AuthenticatedIssuesIssueIdRouteImport.update({
+    id: '/issues_/$issueId',
+    path: '/issues/$issueId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedIssuesNewRoute = AuthenticatedIssuesNewRouteImport.update({
+  id: '/issues_/new',
+  path: '/issues/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedTasksTaskIdRoute =
   AuthenticatedTasksTaskIdRouteImport.update({
     id: '/tasks_/$taskId',
@@ -108,6 +121,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/today': typeof AuthenticatedTodayRoute
+  '/issues/$issueId': typeof AuthenticatedIssuesIssueIdRoute
+  '/issues/new': typeof AuthenticatedIssuesNewRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
 }
 export interface FileRoutesByTo {
@@ -123,6 +138,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/today': typeof AuthenticatedTodayRoute
+  '/issues/$issueId': typeof AuthenticatedIssuesIssueIdRoute
+  '/issues/new': typeof AuthenticatedIssuesNewRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
 }
 export interface FileRoutesById {
@@ -140,6 +157,8 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/today': typeof AuthenticatedTodayRoute
+  '/_authenticated/issues_/$issueId': typeof AuthenticatedIssuesIssueIdRoute
+  '/_authenticated/issues_/new': typeof AuthenticatedIssuesNewRoute
   '/_authenticated/tasks_/$taskId': typeof AuthenticatedTasksTaskIdRoute
 }
 export interface FileRouteTypes {
@@ -157,6 +176,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/today'
+    | '/issues/$issueId'
+    | '/issues/new'
     | '/tasks/$taskId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -172,6 +193,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/today'
+    | '/issues/$issueId'
+    | '/issues/new'
     | '/tasks/$taskId'
   id:
     | '__root__'
@@ -188,6 +211,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
     | '/_authenticated/today'
+    | '/_authenticated/issues_/$issueId'
+    | '/_authenticated/issues_/new'
     | '/_authenticated/tasks_/$taskId'
   fileRoutesById: FileRoutesById
 }
@@ -295,6 +320,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTodayRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/issues_/$issueId': {
+      id: '/_authenticated/issues_/$issueId'
+      path: '/issues/$issueId'
+      fullPath: '/issues/$issueId'
+      preLoaderRoute: typeof AuthenticatedIssuesIssueIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/issues_/new': {
+      id: '/_authenticated/issues_/new'
+      path: '/issues/new'
+      fullPath: '/issues/new'
+      preLoaderRoute: typeof AuthenticatedIssuesNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tasks_/$taskId': {
       id: '/_authenticated/tasks_/$taskId'
       path: '/tasks/$taskId'
@@ -311,6 +350,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
+  AuthenticatedIssuesIssueIdRoute: typeof AuthenticatedIssuesIssueIdRoute
+  AuthenticatedIssuesNewRoute: typeof AuthenticatedIssuesNewRoute
   AuthenticatedTasksTaskIdRoute: typeof AuthenticatedTasksTaskIdRoute
 }
 
@@ -320,6 +361,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
+  AuthenticatedIssuesIssueIdRoute: AuthenticatedIssuesIssueIdRoute,
+  AuthenticatedIssuesNewRoute: AuthenticatedIssuesNewRoute,
   AuthenticatedTasksTaskIdRoute: AuthenticatedTasksTaskIdRoute,
 }
 
