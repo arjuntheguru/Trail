@@ -18,7 +18,8 @@ public sealed record RaiseIssueCommand(
     IssuePriority? Priority,
     DateTime? DueAt,
     Guid? AssigneeId,
-    IReadOnlyList<Guid>? PhotoIds);
+    IReadOnlyList<Guid>? PhotoIds,
+    Guid? SiteTaskId = null);
 
 internal sealed class RaiseIssueValidator : AbstractValidator<RaiseIssueCommand>
 {
@@ -47,6 +48,10 @@ public sealed class RaiseIssueHandler(
         if (command.DepartmentId is { } departmentId && !await db.Departments.AnyAsync(d => d.Id == departmentId, ct))
             return Error.Validation("issue.unknown_department", "The department does not exist.");
 
+        if (command.SiteTaskId is { } taskId
+            && await IssueRules.ValidateTaskAsync(db, access, taskId, site.Id, ct) is { } taskError)
+            return taskError;
+
         var priority = command.Priority ?? IssuePriority.Medium;
         DateTime? dueAt;
         if (command.DueAt is { } requested)
@@ -73,6 +78,7 @@ public sealed class RaiseIssueHandler(
             DepartmentId = command.DepartmentId,
             Priority = priority,
             Source = IssueSource.Manual,
+            SiteTaskId = command.SiteTaskId,
             PhotoIds = photoIds,
         };
         issue.Raised(now, caller.UserId, dueAt);
