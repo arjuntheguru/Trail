@@ -14,6 +14,21 @@ dotnet tool restore                 # dotnet-ef
 dotnet run --project src/Trail.Api  # applies migrations in Development, docs at /scalar
 ```
 
+## Web app
+The React + Vite + TypeScript client lives in `web/` (Node 24).
+```bash
+docker compose up -d mysql
+dotnet run --project src/Trail.Api  # http://localhost:5241
+cd web && npm install && npm run dev  # http://localhost:5173, proxies /api to the API
+```
+- `npm run gen:api` regenerates `src/api/schema.d.ts` from `web/openapi/Trail.Api.json`, which `dotnet build src/Trail.Api`
+  rewrites. Commit both; CI fails when the generated types are stale. Other scripts: `test`, `lint`, `typecheck`, `format`, `build`.
+- Set `VITE_API_BASE_URL` (default `/api/v1`) for production builds and `VITE_DEV_API_TARGET` to point the dev proxy elsewhere.
+- Auth: the web app sends `X-Refresh-Token-Transport: cookie`, so the API keeps the refresh token in an httpOnly,
+  `SameSite=Strict` cookie scoped to `/api/v1/auth` and the page holds only the 15-minute access token in memory.
+  On load it restores the session with `POST /auth/refresh`, refreshes shortly before expiry or on a 401 (single flight,
+  serialized across tabs with the Web Locks API), and serves the app same-origin (dev proxy or reverse proxy) so no CORS is needed.
+
 ## Tests
 ```bash
 dotnet test --solution Trail.slnx   # integration tests start their own MySQL container

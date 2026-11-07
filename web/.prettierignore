@@ -1,0 +1,7 @@
+dist
+coverage
+node_modules
+package-lock.json
+openapi
+src/api/schema.d.ts
+src/routeTree.gen.ts
