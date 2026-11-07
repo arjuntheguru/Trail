@@ -762,6 +762,8 @@ namespace Trail.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrganizationId");
 
+                    b.HasIndex("Status", "ClaimedAt");
+
                     b.HasIndex("Status", "NextAttemptAt");
 
                     b.HasIndex("SubscriptionId", "CreatedAt");
@@ -958,6 +960,8 @@ namespace Trail.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SiteTaskId", "FieldKey");
 
+                    b.HasIndex("OrganizationId", "Status", "DueAt");
+
                     b.ToTable("issues", (string)null);
                 });
 
@@ -1098,11 +1102,11 @@ namespace Trail.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EmailClaimToken");
 
-                    b.HasIndex("EmailStatus");
-
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("SiteId");
+
+                    b.HasIndex("EmailStatus", "CreatedAt");
 
                     b.HasIndex("SubjectType", "SubjectId");
 
@@ -1555,6 +1559,8 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("TemplateId");
+
+                    b.HasIndex("OrganizationId", "DueDate");
 
                     b.HasIndex("SiteId", "DueDate");
 
