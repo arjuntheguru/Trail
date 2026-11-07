@@ -12,11 +12,13 @@ internal sealed class OrganizationEndpoints : IEndpointGroup
 
         group.MapGet("", async (GetCurrentOrganizationHandler handler, CancellationToken ct) =>
                 (await handler.Handle(ct)).ToHttp())
-            .RequireAuthorization(AuthPolicies.OrganizationMember);
+            .RequireAuthorization(AuthPolicies.OrganizationMember)
+            .Returns<OrganizationResponse>();
 
         group.MapPut("", async (UpdateCurrentOrganizationCommand command, UpdateCurrentOrganizationHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp())
             .Validate<UpdateCurrentOrganizationCommand>()
-            .RequireAuthorization(Permissions.Organization.Manage);
+            .RequireAuthorization(Permissions.Organization.Manage)
+            .Returns<OrganizationResponse>();
     }
 }

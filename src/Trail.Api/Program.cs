@@ -16,7 +16,14 @@ using Trail.Infrastructure.Security;
 
 using HttpOptions = Trail.Api.Infrastructure.HttpOptions;
 
-var builder = WebApplication.CreateBuilder(args);
+// The build-time OpenAPI generator (web/openapi) boots the host; it gets placeholder settings and no jobs or DB work.
+var generatingOpenApi = OpenApiBuild.IsRunning;
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName = generatingOpenApi ? Environments.Development : null,
+});
+if (generatingOpenApi) builder.Configuration.AddInMemoryCollection(OpenApiBuild.Settings);
 
 builder.Services.AddSerilog((services, logger) =>
 {
@@ -40,7 +47,11 @@ builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<IRequestContext, RequestContext>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    // Numbers are numbers: the web default also accepts "42", which makes every number `number | string` in OpenAPI.
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
@@ -93,9 +104,12 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
     .AllowAnonymous().DisableRateLimiting();
 app.MapEndpointGroups(typeof(Program).Assembly);
 
-if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
-    await app.Services.MigrateDatabaseAsync();
-await app.Services.EnsurePlatformAdminAsync();
+if (!generatingOpenApi)
+{
+    if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+        await app.Services.MigrateDatabaseAsync();
+    await app.Services.EnsurePlatformAdminAsync();
+}
 
 await app.RunAsync();
 

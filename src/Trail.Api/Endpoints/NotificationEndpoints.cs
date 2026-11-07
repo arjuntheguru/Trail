@@ -15,23 +15,30 @@ internal sealed class NotificationEndpoints : IEndpointGroup
         group.MapGet("", async (
                 [AsParameters] ListNotificationsQuery query, [AsParameters] PageRequest page,
                 ListNotificationsHandler handler, CancellationToken ct) =>
-                TypedResults.Ok(await handler.Handle(query, page, ct)));
+                TypedResults.Ok(await handler.Handle(query, page, ct)))
+            .Returns<PagedResult<NotificationResponse>>();
 
         group.MapGet("unread-count", async (GetUnreadCountHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.Handle(ct)));
+            TypedResults.Ok(await handler.Handle(ct)))
+            .Returns<UnreadCountResponse>();
 
         group.MapPost("{id:guid}/read", async (Guid id, MarkNotificationsReadHandler handler, CancellationToken ct) =>
-            (await handler.MarkRead(id, ct)).ToHttp());
+            (await handler.MarkRead(id, ct)).ToHttp())
+            .ReturnsNoContent();
 
         group.MapPost("read-all", async (MarkNotificationsReadHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.MarkAllRead(ct)));
+            TypedResults.Ok(await handler.MarkAllRead(ct)))
+            .Returns<MarkedReadResponse>();
 
         group.MapGet("preferences", async (NotificationPreferencesHandler handler, CancellationToken ct) =>
-            (await handler.Get(ct)).ToHttp());
+            (await handler.Get(ct)).ToHttp())
+            .Returns<NotificationPreferencesResponse>();
 
         group.MapPut("preferences", async (
                 UpdateNotificationPreferencesCommand command, NotificationPreferencesHandler handler, CancellationToken ct) =>
                 (await handler.Update(command, ct)).ToHttp())
-            .Validate<UpdateNotificationPreferencesCommand>();
+            .Validate<UpdateNotificationPreferencesCommand>()
+            .Returns<NotificationPreferencesResponse>()
+            .ReturnsConflict();
     }
 }

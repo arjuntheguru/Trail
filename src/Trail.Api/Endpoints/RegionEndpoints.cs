@@ -12,20 +12,27 @@ internal sealed class RegionEndpoints : IEndpointGroup
 
         group.MapGet("", async (ListRegionsHandler handler, CancellationToken ct) =>
                 TypedResults.Ok(await handler.Handle(ct)))
-            .RequireAuthorization(Permissions.Sites.View);
+            .RequireAuthorization(Permissions.Sites.View)
+            .Returns<IReadOnlyList<RegionResponse>>();
 
         group.MapPost("", async (CreateRegionCommand command, CreateRegionHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp(region => TypedResults.Created($"/api/v1/regions/{region.Id}", region)))
             .Validate<CreateRegionCommand>()
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .Creates<RegionResponse>()
+            .ReturnsConflict();
 
         group.MapPut("{id:guid}", async (Guid id, UpdateRegionCommand command, UpdateRegionHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, command, ct)).ToHttp())
             .Validate<UpdateRegionCommand>()
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .Returns<RegionResponse>()
+            .ReturnsConflict();
 
         group.MapDelete("{id:guid}", async (Guid id, DeleteRegionHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .ReturnsNoContent()
+            .ReturnsConflict();
     }
 }
