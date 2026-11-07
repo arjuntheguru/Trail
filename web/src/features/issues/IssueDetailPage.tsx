@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDay } from '@/lib/dates'
 
-import { DueIndicator, PriorityBadge, StatusBadge } from './Badges'
+import { DueIndicator, EscalatedBadge, PriorityBadge, StatusBadge } from './Badges'
 import { CommentBox } from './CommentBox'
 import { IssueActions, ManageIssue } from './IssueActions'
 import { issueQuery } from './queries'
@@ -85,6 +85,9 @@ function IssueView({ issue }: { issue: IssueDetail }) {
           <StatusBadge status={issue.status} />
           <PriorityBadge priority={issue.priority} />
           {issue.isOverdue && <Badge variant="destructive">Overdue</Badge>}
+          {issue.escalatedAt && (
+            <EscalatedBadge escalatedAt={issue.escalatedAt} timeZone={issue.timeZone} />
+          )}
           {issue.source === 'TaskFailure' && (
             <Badge variant="outline">
               <ClipboardX aria-hidden />
@@ -102,7 +105,13 @@ function IssueView({ issue }: { issue: IssueDetail }) {
             <User className="size-4" aria-hidden />
             {issue.assignee ? (issue.assignee.name ?? 'Assigned') : 'Unassigned'}
           </p>
-          {active && <DueIndicator dueAt={issue.dueAt} isOverdue={issue.isOverdue} />}
+          {active && (
+            <DueIndicator
+              dueAt={issue.dueAt}
+              isOverdue={issue.isOverdue}
+              timeZone={issue.timeZone}
+            />
+          )}
         </div>
       </header>
 
@@ -143,7 +152,7 @@ function IssueView({ issue }: { issue: IssueDetail }) {
         <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
           History
         </h2>
-        <Timeline events={issue.timeline} />
+        <Timeline events={issue.timeline} timeZone={issue.timeZone} />
       </section>
 
       <CommentBox issue={issue} />

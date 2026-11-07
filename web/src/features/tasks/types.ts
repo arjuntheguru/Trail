@@ -27,3 +27,6 @@ export interface TaskFormValues {
   /** Task-level photos, required when the task has `requiresPhoto`. */
   photoIds: string[]
 }
+
+export type TaskStatus = NonNullable<Schemas['SiteTaskStatus']>
+export type TaskListItem = Schemas['TaskListItemResponse']

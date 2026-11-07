@@ -23,6 +23,12 @@ internal sealed class IssueEndpoints : IEndpointGroup
             .RequireAuthorization(Permissions.Issues.View)
             .Returns<IssueSummaryResponse>();
 
+        // Registered before the id route for clarity; the guid constraint keeps them apart anyway.
+        group.MapGet("assignee-candidates", async ([AsParameters] ListAssigneeCandidatesQuery query, ListAssigneeCandidatesHandler handler, CancellationToken ct) =>
+                (await handler.Handle(query, ct)).ToHttp())
+            .RequireAuthorization(Permissions.Issues.Manage)
+            .Returns<IReadOnlyList<AssigneeCandidateResponse>>();
+
         group.MapGet("{id:guid}", async (Guid id, GetIssueHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, ct)).ToHttp())
             .RequireAuthorization(Permissions.Issues.View)

@@ -13,7 +13,13 @@ function noteLabel(event: IssueEvent): string | null {
 }
 
 /** The history of an issue, oldest first, as the API returns it. */
-export function Timeline({ events }: { events: readonly IssueEvent[] }) {
+export function Timeline({
+  events,
+  timeZone,
+}: {
+  events: readonly IssueEvent[]
+  timeZone?: string
+}) {
   return (
     <ol aria-label="Timeline" className="flex flex-col gap-4 border-l pl-4">
       {events.map((event) => {
@@ -26,9 +32,11 @@ export function Timeline({ events }: { events: readonly IssueEvent[] }) {
             />
             <p className="text-sm">
               <span className="font-medium">{event.actorName ?? 'Someone'}</span>{' '}
-              {describeEvent(event)}
+              {describeEvent(event, timeZone)}
             </p>
-            <p className="text-xs text-muted-foreground">{formatDateTime(event.occurredAt)}</p>
+            <p className="text-xs text-muted-foreground">
+              {formatDateTime(event.occurredAt, timeZone)}
+            </p>
             {event.note && (
               <p className="rounded-lg bg-muted px-3 py-2 text-base whitespace-pre-wrap">
                 {label && <span className="font-medium">{label}: </span>}

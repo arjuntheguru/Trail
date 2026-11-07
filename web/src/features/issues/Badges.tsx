@@ -1,4 +1,4 @@
-import { AlarmClock, Clock } from 'lucide-react'
+import { AlarmClock, ArrowUpCircle, Clock } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { formatDateTime } from '@/lib/dates'
@@ -23,14 +23,31 @@ export function PriorityBadge({ priority }: { priority: IssuePriority }) {
   )
 }
 
+export function EscalatedBadge({
+  escalatedAt,
+  timeZone,
+}: {
+  escalatedAt?: string | null
+  timeZone?: string
+}) {
+  return (
+    <Badge variant="destructive" data-testid="escalated-badge">
+      <ArrowUpCircle aria-hidden />
+      Escalated{escalatedAt ? ` ${formatDateTime(escalatedAt, timeZone)}` : ''}
+    </Badge>
+  )
+}
+
 /** "Due 8 Nov, 9:00 AM", in red with "Overdue" once an active issue is past its deadline. */
 export function DueIndicator({
   dueAt,
   isOverdue,
+  timeZone,
   className,
 }: {
   dueAt: string | null
   isOverdue: boolean
+  timeZone?: string
   className?: string
 }) {
   if (!dueAt) return null
@@ -46,7 +63,7 @@ export function DueIndicator({
     >
       <Icon className="size-4" aria-hidden />
       {isOverdue ? 'Overdue · ' : 'Due '}
-      {formatDateTime(dueAt)}
+      {formatDateTime(dueAt, timeZone)}
     </span>
   )
 }

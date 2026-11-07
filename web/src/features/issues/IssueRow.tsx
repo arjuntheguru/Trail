@@ -3,7 +3,7 @@ import { Camera, ClipboardX, MapPin, PenLine, User } from 'lucide-react'
 
 import { Card } from '@/components/ui/card'
 
-import { DueIndicator, PriorityBadge, StatusBadge } from './Badges'
+import { DueIndicator, EscalatedBadge, PriorityBadge, StatusBadge } from './Badges'
 import type { IssueListItem } from './types'
 
 export function IssueRow({ issue }: { issue: IssueListItem }) {
@@ -30,6 +30,7 @@ export function IssueRow({ issue }: { issue: IssueListItem }) {
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <StatusBadge status={issue.status} />
+          {issue.isEscalated && <EscalatedBadge />}
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-4" aria-hidden />
             {issue.siteName ?? 'Unknown site'}
@@ -38,7 +39,7 @@ export function IssueRow({ issue }: { issue: IssueListItem }) {
             <User className="size-4" aria-hidden />
             {issue.assignee ? (issue.assignee.name ?? 'Assigned') : 'Unassigned'}
           </span>
-          <DueIndicator dueAt={issue.dueAt} isOverdue={issue.isOverdue} />
+          <DueIndicator dueAt={issue.dueAt} isOverdue={issue.isOverdue} timeZone={issue.timeZone} />
           {issue.photoCount > 0 && (
             <span className="inline-flex items-center gap-1">
               <Camera className="size-4" aria-hidden />

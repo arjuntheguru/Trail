@@ -21,26 +21,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { sitesQuery } from '@/features/today/queries'
 import { useSelectedSite } from '@/features/today/useSelectedSite'
-import { fromLocalInput } from '@/lib/dates'
+import { fromLocalInput, isPastLocalInput } from '@/lib/dates'
+
+import { taskQuery } from '@/features/tasks/queries'
 
 import { PRIORITY_LABEL } from './labels'
 import { applyIssueUpdate } from './queries'
 import { PRIORITIES } from './types'
 
 // Mirrors the API's limits (Issue.TitleMaxLength / DescriptionMaxLength); the server stays the authority.
-const raiseSchema = z
-  .object({
-    siteId: z.string().min(1, 'Choose a site.'),
-    title: z.string().trim().min(1, 'Enter a title.').max(200, 'The title is too long.'),
-    description: z.string().trim().max(5000, 'The description is too long.'),
-    priority: z.enum(PRIORITIES),
-    dueAt: z.string(),
-  })
-  .superRefine((v, ctx) => {
-    if (v.dueAt && new Date(v.dueAt).getTime() <= Date.now()) {
-      ctx.addIssue({ code: 'custom', path: ['dueAt'], message: 'Pick a time in the future.' })
-    }
-  })
+const raiseSchema = z.object({
+  siteId: z.string().min(1, 'Choose a site.'),
+  title: z.string().trim().min(1, 'Enter a title.').max(200, 'The title is too long.'),
+  description: z.string().trim().max(5000, 'The description is too long.'),
+  priority: z.enum(PRIORITIES),
+  dueAt: z.string(),
+})
 type RaiseValues = z.infer<typeof raiseSchema>
 type RaiseField = keyof RaiseValues
 
@@ -53,14 +49,34 @@ const CODE_FIELD: Record<string, RaiseField> = {
   'issue.due_in_past': 'dueAt',
 }
 
+/** Failures about the linked task are shown as a banner with what to do about them. */
+const CODE_MESSAGE: Record<string, string> = {
+  'issue.unknown_task':
+    'The linked task could not be found. Remove the link to raise the issue without it.',
+  'issue.task_site_mismatch':
+    "The linked task belongs to a different site. Remove the link or choose the task's site.",
+}
+
 const selectClass = 'h-12 w-full rounded-lg border border-input bg-card px-3 text-base'
 
-export function RaiseIssuePage({ initialSiteId }: { initialSiteId?: string }) {
+export function RaiseIssuePage({
+  initialSiteId,
+  taskId,
+}: {
+  initialSiteId?: string
+  taskId?: string
+}) {
   const { client } = useAuthService()
   const organizationId = useSession().organization?.id
   const canRaise = usePermission(Permissions.Issues.Raise)
   const sites = useQuery({ ...sitesQuery(client, organizationId), enabled: canRaise })
   const siteList = useMemo(() => sites.data?.items ?? [], [sites.data])
+  // A linked task decides the site and is shown on the form; it is optional, so a failure only drops the link.
+  const task = useQuery({
+    ...taskQuery(client, organizationId, taskId ?? ''),
+    enabled: canRaise && !!taskId,
+    retry: false,
+  })
   const [remembered] = useSelectedSite(
     organizationId ?? '',
     siteList.map((s) => s.id),
@@ -94,6 +110,14 @@ export function RaiseIssuePage({ initialSiteId }: { initialSiteId?: string }) {
       </div>
     )
   }
+  if (taskId && task.isPending) {
+    return (
+      <div className="flex flex-col gap-4" role="status" aria-label="Loading">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-12 w-full" />
+      </div>
+    )
+  }
   if (siteList.length === 0) {
     return (
       <section className="flex flex-col gap-2 py-12 text-center">
@@ -103,17 +127,35 @@ export function RaiseIssuePage({ initialSiteId }: { initialSiteId?: string }) {
     )
   }
 
+  const linked =
+    task.data && siteList.some((s) => s.id === task.data.siteId) ? task.data : undefined
   const preselected =
-    initialSiteId && siteList.some((s) => s.id === initialSiteId) ? initialSiteId : remembered
-  return <RaiseForm sites={siteList} initialSiteId={preselected ?? ''} />
+    linked?.siteId ??
+    (initialSiteId && siteList.some((s) => s.id === initialSiteId) ? initialSiteId : remembered)
+  return (
+    <RaiseForm
+      sites={siteList}
+      initialSiteId={preselected ?? ''}
+      linkedTask={linked ? { id: linked.id, title: linked.title } : undefined}
+      linkProblem={
+        taskId && !linked
+          ? 'The linked task could not be loaded, so it was not attached.'
+          : undefined
+      }
+    />
+  )
 }
 
 function RaiseForm({
   sites,
   initialSiteId,
+  linkedTask,
+  linkProblem,
 }: {
-  sites: { id: string; name: string }[]
+  sites: { id: string; name: string; timeZone?: string | null }[]
   initialSiteId: string
+  linkedTask?: { id: string; title: string }
+  linkProblem?: string
 }) {
   const { client } = useAuthService()
   const organizationId = useSession().organization?.id
@@ -121,7 +163,8 @@ function RaiseForm({
   const navigate = useNavigate()
   const uploads = useUploadTracker()
   const [photoIds, setPhotoIds] = useState<string[]>([])
-  const [formErrors, setFormErrors] = useState<string[]>([])
+  const [formErrors, setFormErrors] = useState<string[]>(linkProblem ? [linkProblem] : [])
+  const [taskLink, setTaskLink] = useState(linkedTask)
 
   const {
     register,
@@ -140,6 +183,7 @@ function RaiseForm({
     },
   })
   const siteId = useWatch({ control, name: 'siteId' })
+  const timeZone = sites.find((s) => s.id === siteId)?.timeZone ?? undefined
 
   const raise = useMutation({
     mutationFn: (values: RaiseValues) =>
@@ -151,7 +195,8 @@ function RaiseForm({
             siteId: values.siteId,
             departmentId: null,
             priority: values.priority,
-            dueAt: values.dueAt ? fromLocalInput(values.dueAt) : null,
+            dueAt: values.dueAt ? fromLocalInput(values.dueAt, timeZone) : null,
+            siteTaskId: taskLink?.id ?? null,
             assigneeId: null,
             photoIds,
           },
@@ -164,7 +209,9 @@ function RaiseForm({
     },
     onError: (error) => {
       const general: string[] = []
-      if (error instanceof ApiError && error.code && CODE_FIELD[error.code]) {
+      if (error instanceof ApiError && error.code && CODE_MESSAGE[error.code]) {
+        general.push(CODE_MESSAGE[error.code]!)
+      } else if (error instanceof ApiError && error.code && CODE_FIELD[error.code]) {
         setError(CODE_FIELD[error.code]!, { type: 'server', message: errorMessage(error) })
       } else if (error instanceof ApiError && Object.keys(error.errors).length > 0) {
         for (const [key, messages] of Object.entries(error.errors)) {
@@ -181,6 +228,10 @@ function RaiseForm({
 
   const submit = handleSubmit((values) => {
     setFormErrors([])
+    if (values.dueAt && isPastLocalInput(values.dueAt, timeZone)) {
+      setError('dueAt', { type: 'validate', message: 'Pick a time in the future.' })
+      return
+    }
     raise.mutate(values)
   })
 
@@ -200,24 +251,40 @@ function RaiseForm({
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <FormAlert messages={formErrors} />
 
-        <Field label="Site" htmlFor="issue-site" error={errors.siteId?.message}>
-          <select
-            id="issue-site"
-            className={selectClass}
-            aria-invalid={errors.siteId ? true : undefined}
-            {...register('siteId', {
-              // Photos belong to one site, so a different site starts with none.
-              onChange: () => setPhotoIds([]),
-            })}
-          >
-            <option value="">Choose a site…</option>
-            {sites.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {taskLink && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3">
+            <p className="text-sm">
+              Linked task: <span className="font-medium">{taskLink.title}</span>
+              <span className="block text-muted-foreground">
+                Site: {sites.find((s) => s.id === siteId)?.name}
+              </span>
+            </p>
+            <Button type="button" variant="ghost" size="lg" onClick={() => setTaskLink(undefined)}>
+              Remove link
+            </Button>
+          </div>
+        )}
+
+        {!taskLink && (
+          <Field label="Site" htmlFor="issue-site" error={errors.siteId?.message}>
+            <select
+              id="issue-site"
+              className={selectClass}
+              aria-invalid={errors.siteId ? true : undefined}
+              {...register('siteId', {
+                // Photos belong to one site, so a different site starts with none.
+                onChange: () => setPhotoIds([]),
+              })}
+            >
+              <option value="">Choose a site…</option>
+              {sites.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Title" htmlFor="issue-title" error={errors.title?.message}>
           <Input
@@ -253,7 +320,7 @@ function RaiseForm({
         </Field>
 
         <Field
-          label="Due (optional)"
+          label={`Due (optional, ${timeZone ? 'site time' : 'your time'})`}
           htmlFor="issue-due"
           error={errors.dueAt?.message}
           hint="Leave blank to use the default response time for the priority."

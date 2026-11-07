@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { CircleCheck, Lock, Play, RotateCcw, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -13,9 +13,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { fromLocalInput, toLocalInput } from '@/lib/dates'
+import { fromLocalInput, isPastLocalInput, toLocalInput } from '@/lib/dates'
 
 import { PRIORITY_LABEL } from './labels'
+import { useDebounced } from './useDebounced'
 import { assigneeCandidatesQuery } from './queries'
 import { useIssueAction, splitError } from './useIssueAction'
 import { PRIORITIES, type IssueDetail, type IssuePriority } from './types'
@@ -289,10 +290,12 @@ function AssigneeEditor({ issue }: { issue: IssueDetail }) {
   const session = useSession()
   const organizationId = session.organization?.id
   const myMembershipId = session.organization?.membershipId
-  const canListMembers = usePermission(Permissions.Members.View)
-  const members = useQuery({
-    ...assigneeCandidatesQuery(client, organizationId),
-    enabled: canListMembers,
+  const [text, setText] = useState('')
+  const search = useDebounced(text.trim(), 300)
+  // The server returns only people it would accept for this site, so a pick is not refused afterwards.
+  const candidates = useQuery({
+    ...assigneeCandidatesQuery(client, organizationId, issue.siteId, search),
+    placeholderData: keepPreviousData,
   })
   const { mutation, error } = useIssueAction(
     issue.id,
@@ -303,67 +306,76 @@ function AssigneeEditor({ issue }: { issue: IssueDetail }) {
           body: { assigneeId },
         }),
       ),
-    (updated) =>
+    (updated) => {
+      setText('')
       toast.success(
         updated.assignee ? `Assigned to ${updated.assignee.name ?? 'member'}.` : 'Unassigned.',
-      ),
+      )
+    },
   )
   const current = issue.assignee
-  const messages = splitError(error).general
-  // Without members.view (or if the list fails) the picker cannot be offered: show who has it and let the
-  // caller take it or drop it.
-  const candidates = members.data?.items
+  const people = candidates.data ?? []
 
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="assignee" className="text-sm">
         Assignee
       </Label>
-      {candidates ? (
-        <select
-          id="assignee"
-          className={selectClass}
-          value={current?.membershipId ?? ''}
-          disabled={mutation.isPending}
-          onChange={(e) => mutation.mutate(e.target.value || null)}
-        >
-          <option value="">Unassigned</option>
-          {current && !candidates.some((m) => m.id === current.membershipId) && (
-            <option value={current.membershipId}>{current.name ?? 'Former member'}</option>
-          )}
-          {candidates.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.firstName} {m.lastName}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-base">{current ? (current.name ?? 'Assigned') : 'Unassigned'}</span>
-          {myMembershipId && current?.membershipId !== myMembershipId && (
-            <Button
-              variant="outline"
-              size="lg"
-              disabled={mutation.isPending}
-              onClick={() => mutation.mutate(myMembershipId)}
-            >
-              <UserCheck aria-hidden />
-              Assign to me
-            </Button>
-          )}
-          {current && (
-            <Button
-              variant="ghost"
-              size="lg"
-              disabled={mutation.isPending}
-              onClick={() => mutation.mutate(null)}
-            >
-              Unassign
-            </Button>
-          )}
-        </div>
-      )}
-      <FormAlert messages={messages} />
+      <p className="text-base">{current ? (current.name ?? 'Assigned') : 'Unassigned'}</p>
+      <Input
+        type="search"
+        aria-label="Find a person"
+        placeholder="Find a person"
+        className="h-12"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <select
+        id="assignee"
+        className={selectClass}
+        value=""
+        disabled={mutation.isPending}
+        onChange={(e) => e.target.value && mutation.mutate(e.target.value)}
+      >
+        <option value="">
+          {candidates.isError
+            ? 'Could not load people'
+            : candidates.isPending
+              ? 'Loading…'
+              : people.length === 0
+                ? 'Nobody found'
+                : 'Choose someone…'}
+        </option>
+        {people.map((p) => (
+          <option key={p.membershipId} value={p.membershipId}>
+            {p.name} ({p.roleName})
+          </option>
+        ))}
+      </select>
+      <div className="flex flex-wrap items-center gap-2">
+        {myMembershipId && current?.membershipId !== myMembershipId && (
+          <Button
+            variant="outline"
+            size="lg"
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate(myMembershipId)}
+          >
+            <UserCheck aria-hidden />
+            Assign to me
+          </Button>
+        )}
+        {current && (
+          <Button
+            variant="ghost"
+            size="lg"
+            disabled={mutation.isPending}
+            onClick={() => mutation.mutate(null)}
+          >
+            Unassign
+          </Button>
+        )}
+      </div>
+      <FormAlert messages={splitError(error).general} />
     </div>
   )
 }
@@ -406,7 +418,7 @@ function PriorityEditor({ issue }: { issue: IssueDetail }) {
 
 function DueEditor({ issue }: { issue: IssueDetail }) {
   const { client } = useAuthService()
-  const [value, setValue] = useState(issue.dueAt ? toLocalInput(issue.dueAt) : '')
+  const [value, setValue] = useState(issue.dueAt ? toLocalInput(issue.dueAt, issue.timeZone) : '')
   const [past, setPast] = useState(false)
   const { mutation, error } = useIssueAction(
     issue.id,
@@ -424,7 +436,7 @@ function DueEditor({ issue }: { issue: IssueDetail }) {
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="due" className="text-sm">
-        Due
+        Due (site time)
       </Label>
       <div className="flex flex-wrap items-center gap-2">
         <Input
@@ -443,9 +455,9 @@ function DueEditor({ issue }: { issue: IssueDetail }) {
           size="lg"
           disabled={!value || mutation.isPending}
           onClick={() =>
-            new Date(value).getTime() <= Date.now()
+            isPastLocalInput(value, issue.timeZone)
               ? setPast(true)
-              : mutation.mutate(fromLocalInput(value))
+              : mutation.mutate(fromLocalInput(value, issue.timeZone))
           }
         >
           Save due time
