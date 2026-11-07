@@ -93,9 +93,14 @@ public static class DependencyInjection
     private static void AddSecurity(IServiceCollection services)
     {
         services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName).ValidateDataAnnotations();
+        services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName).ValidateDataAnnotations()
+            .Validate<IHostEnvironment>((o, env) => o.IsValidFor(env.EnvironmentName), AppOptions.InvalidForEnvironmentMessage)
+            .ValidateOnStart();
+        services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName).ValidateDataAnnotations()
+            .Validate(o => o.IsConsistent, BootstrapOptions.InconsistentMessage)
+            .ValidateOnStart();
         services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.SectionName).ValidateDataAnnotations()
+            .Validate<IHostEnvironment>((o, env) => o.IsProviderAllowedIn(env.EnvironmentName), EmailOptions.ProviderNotAllowedMessage)
             .Validate(o => o.Provider is "Log" or "Smtp", "Email:Provider must be 'Log' or 'Smtp'.")
             .Validate(o => o.Provider != "Smtp" || !string.IsNullOrWhiteSpace(o.SmtpHost), "Email:SmtpHost is required for SMTP.")
             .ValidateOnStart();
