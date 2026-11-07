@@ -77,17 +77,18 @@ public sealed partial class ListIssuesHandler(IAppDbContext db, ISiteAccess acce
             .Select(i => new Row(
                 i.Id, i.Number, i.Title, i.SiteId,
                 sites.Where(s => s.Id == i.SiteId).Select(s => s.Name).FirstOrDefault(),
+                sites.Where(s => s.Id == i.SiteId).Select(s => s.TimeZone).FirstOrDefault(),
                 i.Priority, i.Status, i.Source, i.AssigneeId,
                 db.Memberships.Where(m => m.Id == i.AssigneeId).Select(m => m.User.FirstName + " " + m.User.LastName).FirstOrDefault(),
-                i.DueAt, i.CreatedAt, i.PhotoIds))
+                i.DueAt, i.EscalatedAt, i.CreatedAt, i.PhotoIds))
             .ToPagedResultAsync(page, ct);
 
         var items = paged.Items.Select(r => new IssueListItemResponse(
-            r.Id, r.Number, r.Title, r.SiteId, r.SiteName, r.Priority, r.Status, r.Source,
+            r.Id, r.Number, r.Title, r.SiteId, r.SiteName, r.TimeZone ?? "UTC", r.Priority, r.Status, r.Source,
             r.AssigneeId is { } a ? new IssueAssigneeResponse(a, r.AssigneeName?.Trim()) : null,
             r.DueAt,
             r.DueAt is { } due && r.Status is IssueStatus.Open or IssueStatus.InProgress && now > due,
-            r.CreatedAt, r.PhotoIds.Count)).ToList();
+            r.EscalatedAt is not null, r.CreatedAt, r.PhotoIds.Count)).ToList();
         return new PagedResult<IssueListItemResponse>(items, paged.Page, paged.PageSize, paged.TotalCount);
     }
 
@@ -95,6 +96,7 @@ public sealed partial class ListIssuesHandler(IAppDbContext db, ISiteAccess acce
     private static partial Regex NumberPattern();
 
     private sealed record Row(
-        Guid Id, int Number, string Title, Guid SiteId, string? SiteName, IssuePriority Priority, IssueStatus Status,
-        IssueSource Source, Guid? AssigneeId, string? AssigneeName, DateTime? DueAt, DateTime CreatedAt, List<Guid> PhotoIds);
+        Guid Id, int Number, string Title, Guid SiteId, string? SiteName, string? TimeZone, IssuePriority Priority,
+        IssueStatus Status, IssueSource Source, Guid? AssigneeId, string? AssigneeName, DateTime? DueAt, DateTime? EscalatedAt,
+        DateTime CreatedAt, List<Guid> PhotoIds);
 }

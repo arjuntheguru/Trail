@@ -1,4 +1,4 @@
-import { Link, Outlet } from '@tanstack/react-router'
+import { Link, Outlet, useLocation } from '@tanstack/react-router'
 
 import { hasPermission } from '@/auth/permissions'
 import { useAuthState } from '@/auth/context'
@@ -14,6 +14,8 @@ const linkBase = 'flex items-center gap-3 rounded-lg px-3 text-base font-medium 
 
 export function AppShell() {
   const state = useAuthState()
+  // Settings has lists and forms that use the room a desktop gives them.
+  const wide = useLocation({ select: (l) => l.pathname.startsWith('/settings') })
   // The session ends before the redirect to /login lands; render nothing in between.
   if (state.status !== 'authenticated') return null
   const items = NAV_ITEMS.filter(
@@ -55,7 +57,12 @@ export function AppShell() {
           <UserMenu compact />
         </header>
         <EmailBanner />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-4 pb-28 md:pb-8">
+        <main
+          className={cn(
+            'mx-auto w-full flex-1 px-4 pt-4 pb-28 md:pb-8',
+            wide ? 'max-w-5xl' : 'max-w-3xl',
+          )}
+        >
           <Outlet />
         </main>
       </div>

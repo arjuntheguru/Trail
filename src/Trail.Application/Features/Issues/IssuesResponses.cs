@@ -10,12 +10,14 @@ public sealed record IssueListItemResponse(
     string Title,
     Guid SiteId,
     string? SiteName,
+    string TimeZone,
     IssuePriority Priority,
     IssueStatus Status,
     IssueSource Source,
     IssueAssigneeResponse? Assignee,
     DateTime? DueAt,
     bool IsOverdue,
+    bool IsEscalated,
     DateTime CreatedAt,
     int PhotoCount);
 
@@ -45,6 +47,7 @@ public sealed record IssueDetailResponse(
     string? Description,
     Guid SiteId,
     string? SiteName,
+    string TimeZone,
     Guid? DepartmentId,
     string? DepartmentName,
     IssuePriority Priority,
@@ -53,6 +56,8 @@ public sealed record IssueDetailResponse(
     IssueAssigneeResponse? Assignee,
     DateTime? DueAt,
     bool IsOverdue,
+    DateTime? OverdueNotifiedAt,
+    DateTime? EscalatedAt,
     Guid? SiteTaskId,
     string? TaskTitle,
     DateOnly? TaskDueDate,
@@ -65,3 +70,5 @@ public sealed record IssueDetailResponse(
     IReadOnlyList<Guid> PhotoIds,
     DateTime CreatedAt,
     IReadOnlyList<IssueEventResponse> Timeline);
+
+public sealed record AssigneeCandidateResponse(Guid MembershipId, Guid UserId, string Name, string Email, string RoleName);

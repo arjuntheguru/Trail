@@ -1593,6 +1593,67 @@
         }
       }
     },
+    "/api/v1/issues/assignee-candidates": {
+      "get": {
+        "tags": [
+          "Issues"
+        ],
+        "operationId": "getIssuesAssigneeCandidates",
+        "parameters": [
+          {
+            "name": "SiteId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssigneeCandidateResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/issues/{id}": {
       "get": {
         "tags": [
@@ -8659,6 +8720,35 @@
           }
         }
       },
+      "AssigneeCandidateResponse": {
+        "required": [
+          "membershipId",
+          "userId",
+          "name",
+          "email",
+          "roleName"
+        ],
+        "type": "object",
+        "properties": {
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "roleName": {
+            "type": "string"
+          }
+        }
+      },
       "AssignIssueCommand": {
         "required": [
           "assigneeId"
@@ -9896,6 +9986,7 @@
           "description",
           "siteId",
           "siteName",
+          "timeZone",
           "departmentId",
           "departmentName",
           "priority",
@@ -9904,6 +9995,8 @@
           "assignee",
           "dueAt",
           "isOverdue",
+          "overdueNotifiedAt",
+          "escalatedAt",
           "siteTaskId",
           "taskTitle",
           "taskDueDate",
@@ -9946,6 +10039,9 @@
               "string"
             ]
           },
+          "timeZone": {
+            "type": "string"
+          },
           "departmentId": {
             "type": [
               "null",
@@ -9987,6 +10083,20 @@
           },
           "isOverdue": {
             "type": "boolean"
+          },
+          "overdueNotifiedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "escalatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "siteTaskId": {
             "type": [
@@ -10161,12 +10271,14 @@
           "title",
           "siteId",
           "siteName",
+          "timeZone",
           "priority",
           "status",
           "source",
           "assignee",
           "dueAt",
           "isOverdue",
+          "isEscalated",
           "createdAt",
           "photoCount"
         ],
@@ -10192,6 +10304,9 @@
               "null",
               "string"
             ]
+          },
+          "timeZone": {
+            "type": "string"
           },
           "priority": {
             "$ref": "#/components/schemas/IssuePriority"
@@ -10220,6 +10335,9 @@
             "format": "date-time"
           },
           "isOverdue": {
+            "type": "boolean"
+          },
+          "isEscalated": {
             "type": "boolean"
           },
           "createdAt": {
@@ -11260,6 +11378,13 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "siteTaskId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

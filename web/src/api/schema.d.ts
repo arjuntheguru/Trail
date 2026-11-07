@@ -372,6 +372,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/issues/assignee-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getIssuesAssigneeCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/issues/{id}": {
         parameters: {
             query?: never;
@@ -1609,6 +1625,15 @@ export interface components {
         ApproveTaskCommand: {
             note?: null | string;
         };
+        AssigneeCandidateResponse: {
+            /** Format: uuid */
+            membershipId: string;
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            email: string;
+            roleName: string;
+        };
         AssignIssueCommand: {
             /** Format: uuid */
             assigneeId: null | string;
@@ -1940,6 +1965,7 @@ export interface components {
             /** Format: uuid */
             siteId: string;
             siteName: null | string;
+            timeZone: string;
             /** Format: uuid */
             departmentId: null | string;
             departmentName: null | string;
@@ -1950,6 +1976,10 @@ export interface components {
             /** Format: date-time */
             dueAt: null | string;
             isOverdue: boolean;
+            /** Format: date-time */
+            overdueNotifiedAt: null | string;
+            /** Format: date-time */
+            escalatedAt: null | string;
             /** Format: uuid */
             siteTaskId: null | string;
             taskTitle: null | string;
@@ -1995,6 +2025,7 @@ export interface components {
             /** Format: uuid */
             siteId: string;
             siteName: null | string;
+            timeZone: string;
             priority: components["schemas"]["IssuePriority"];
             status: components["schemas"]["IssueStatus"];
             source: components["schemas"]["IssueSource"];
@@ -2002,6 +2033,7 @@ export interface components {
             /** Format: date-time */
             dueAt: null | string;
             isOverdue: boolean;
+            isEscalated: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: int32 */
@@ -2307,6 +2339,8 @@ export interface components {
             /** Format: uuid */
             assigneeId: null | string;
             photoIds: null | string[];
+            /** Format: uuid */
+            siteTaskId?: null | string;
         };
         RefreshTokenRequest: {
             refreshToken: null | string;
@@ -3983,6 +4017,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IssueSummaryResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    getIssuesAssigneeCandidates: {
+        parameters: {
+            query: {
+                SiteId: string;
+                Search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssigneeCandidateResponse"][];
                 };
             };
             /** @description Unauthorized */

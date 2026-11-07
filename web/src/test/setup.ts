@@ -33,3 +33,12 @@ if (!Blob.prototype.stream) {
     return streamOf(this) as ReturnType<Blob['stream']>
   }
 }
+
+// jsdom has no ResizeObserver; Radix form controls (checkbox) measure themselves with it.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}

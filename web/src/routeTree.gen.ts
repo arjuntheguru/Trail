@@ -24,7 +24,21 @@ import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTodayRouteImport } from './routes/_authenticated/today'
 import { Route as AuthenticatedIssuesIssueIdRouteImport } from './routes/_authenticated/issues_.$issueId'
 import { Route as AuthenticatedIssuesNewRouteImport } from './routes/_authenticated/issues_.new'
+import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authenticated/reports.index'
+import { Route as AuthenticatedReportsActivityRouteImport } from './routes/_authenticated/reports.activity'
+import { Route as AuthenticatedReportsComplianceRouteImport } from './routes/_authenticated/reports.compliance'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
+import { Route as AuthenticatedSettingsMembersRouteImport } from './routes/_authenticated/settings.members'
+import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings.organization'
+import { Route as AuthenticatedSettingsRegionsRouteImport } from './routes/_authenticated/settings.regions'
+import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings.roles'
+import { Route as AuthenticatedSettingsSitesRouteImport } from './routes/_authenticated/settings.sites'
+import { Route as AuthenticatedSettingsTagsRouteImport } from './routes/_authenticated/settings.tags'
 import { Route as AuthenticatedTasksTaskIdRouteImport } from './routes/_authenticated/tasks_.$taskId'
+import { Route as AuthenticatedSettingsMembersMembershipIdRouteImport } from './routes/_authenticated/settings.members_.$membershipId'
+import { Route as AuthenticatedSettingsSitesSiteIdRouteImport } from './routes/_authenticated/settings.sites_.$siteId'
+import { Route as AuthenticatedSettingsSitesNewRouteImport } from './routes/_authenticated/settings.sites_.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -101,11 +115,95 @@ const AuthenticatedIssuesNewRoute = AuthenticatedIssuesNewRouteImport.update({
   path: '/issues/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedReportsIndexRoute =
+  AuthenticatedReportsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedReportsRoute,
+  } as any)
+const AuthenticatedReportsActivityRoute =
+  AuthenticatedReportsActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedReportsRoute,
+  } as any)
+const AuthenticatedReportsComplianceRoute =
+  AuthenticatedReportsComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => AuthenticatedReportsRoute,
+  } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsDepartmentsRoute =
+  AuthenticatedSettingsDepartmentsRouteImport.update({
+    id: '/departments',
+    path: '/departments',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsMembersRoute =
+  AuthenticatedSettingsMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsOrganizationRoute =
+  AuthenticatedSettingsOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsRegionsRoute =
+  AuthenticatedSettingsRegionsRouteImport.update({
+    id: '/regions',
+    path: '/regions',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsRolesRoute =
+  AuthenticatedSettingsRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsSitesRoute =
+  AuthenticatedSettingsSitesRouteImport.update({
+    id: '/sites',
+    path: '/sites',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsTagsRoute =
+  AuthenticatedSettingsTagsRouteImport.update({
+    id: '/tags',
+    path: '/tags',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedTasksTaskIdRoute =
   AuthenticatedTasksTaskIdRouteImport.update({
     id: '/tasks_/$taskId',
     path: '/tasks/$taskId',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsMembersMembershipIdRoute =
+  AuthenticatedSettingsMembersMembershipIdRouteImport.update({
+    id: '/members_/$membershipId',
+    path: '/members/$membershipId',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsSitesSiteIdRoute =
+  AuthenticatedSettingsSitesSiteIdRouteImport.update({
+    id: '/sites_/$siteId',
+    path: '/sites/$siteId',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsSitesNewRoute =
+  AuthenticatedSettingsSitesNewRouteImport.update({
+    id: '/sites_/new',
+    path: '/sites/new',
+    getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -117,13 +215,27 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/issues': typeof AuthenticatedIssuesRoute
-  '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
+  '/reports': typeof AuthenticatedReportsRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/tasks': typeof AuthenticatedTasksRoute
   '/today': typeof AuthenticatedTodayRoute
   '/issues/$issueId': typeof AuthenticatedIssuesIssueIdRoute
   '/issues/new': typeof AuthenticatedIssuesNewRoute
+  '/reports/activity': typeof AuthenticatedReportsActivityRoute
+  '/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/settings/regions': typeof AuthenticatedSettingsRegionsRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/settings/sites': typeof AuthenticatedSettingsSitesRoute
+  '/settings/tags': typeof AuthenticatedSettingsTagsRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
+  '/reports/': typeof AuthenticatedReportsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/settings/members/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/settings/sites/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
+  '/settings/sites/new': typeof AuthenticatedSettingsSitesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,13 +246,25 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/issues': typeof AuthenticatedIssuesRoute
-  '/reports': typeof AuthenticatedReportsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/today': typeof AuthenticatedTodayRoute
   '/issues/$issueId': typeof AuthenticatedIssuesIssueIdRoute
   '/issues/new': typeof AuthenticatedIssuesNewRoute
+  '/reports/activity': typeof AuthenticatedReportsActivityRoute
+  '/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/settings/regions': typeof AuthenticatedSettingsRegionsRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/settings/sites': typeof AuthenticatedSettingsSitesRoute
+  '/settings/tags': typeof AuthenticatedSettingsTagsRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
+  '/reports': typeof AuthenticatedReportsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/settings/members/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/settings/sites/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
+  '/settings/sites/new': typeof AuthenticatedSettingsSitesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -153,13 +277,27 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/issues': typeof AuthenticatedIssuesRoute
-  '/_authenticated/reports': typeof AuthenticatedReportsRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/today': typeof AuthenticatedTodayRoute
   '/_authenticated/issues_/$issueId': typeof AuthenticatedIssuesIssueIdRoute
   '/_authenticated/issues_/new': typeof AuthenticatedIssuesNewRoute
+  '/_authenticated/reports/activity': typeof AuthenticatedReportsActivityRoute
+  '/_authenticated/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/_authenticated/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/_authenticated/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/_authenticated/settings/regions': typeof AuthenticatedSettingsRegionsRoute
+  '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/_authenticated/settings/sites': typeof AuthenticatedSettingsSitesRoute
+  '/_authenticated/settings/tags': typeof AuthenticatedSettingsTagsRoute
   '/_authenticated/tasks_/$taskId': typeof AuthenticatedTasksTaskIdRoute
+  '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/settings/members_/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/_authenticated/settings/sites_/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
+  '/_authenticated/settings/sites_/new': typeof AuthenticatedSettingsSitesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,7 +316,21 @@ export interface FileRouteTypes {
     | '/today'
     | '/issues/$issueId'
     | '/issues/new'
+    | '/reports/activity'
+    | '/reports/compliance'
+    | '/settings/departments'
+    | '/settings/members'
+    | '/settings/organization'
+    | '/settings/regions'
+    | '/settings/roles'
+    | '/settings/sites'
+    | '/settings/tags'
     | '/tasks/$taskId'
+    | '/reports/'
+    | '/settings/'
+    | '/settings/members/$membershipId'
+    | '/settings/sites/$siteId'
+    | '/settings/sites/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -189,13 +341,25 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/issues'
-    | '/reports'
-    | '/settings'
     | '/tasks'
     | '/today'
     | '/issues/$issueId'
     | '/issues/new'
+    | '/reports/activity'
+    | '/reports/compliance'
+    | '/settings/departments'
+    | '/settings/members'
+    | '/settings/organization'
+    | '/settings/regions'
+    | '/settings/roles'
+    | '/settings/sites'
+    | '/settings/tags'
     | '/tasks/$taskId'
+    | '/reports'
+    | '/settings'
+    | '/settings/members/$membershipId'
+    | '/settings/sites/$siteId'
+    | '/settings/sites/new'
   id:
     | '__root__'
     | '/'
@@ -213,7 +377,21 @@ export interface FileRouteTypes {
     | '/_authenticated/today'
     | '/_authenticated/issues_/$issueId'
     | '/_authenticated/issues_/new'
+    | '/_authenticated/reports/activity'
+    | '/_authenticated/reports/compliance'
+    | '/_authenticated/settings/departments'
+    | '/_authenticated/settings/members'
+    | '/_authenticated/settings/organization'
+    | '/_authenticated/settings/regions'
+    | '/_authenticated/settings/roles'
+    | '/_authenticated/settings/sites'
+    | '/_authenticated/settings/tags'
     | '/_authenticated/tasks_/$taskId'
+    | '/_authenticated/reports/'
+    | '/_authenticated/settings/'
+    | '/_authenticated/settings/members_/$membershipId'
+    | '/_authenticated/settings/sites_/$siteId'
+    | '/_authenticated/settings/sites_/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -334,6 +512,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIssuesNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/': {
+      id: '/_authenticated/reports/'
+      path: '/'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof AuthenticatedReportsIndexRouteImport
+      parentRoute: typeof AuthenticatedReportsRoute
+    }
+    '/_authenticated/reports/activity': {
+      id: '/_authenticated/reports/activity'
+      path: '/activity'
+      fullPath: '/reports/activity'
+      preLoaderRoute: typeof AuthenticatedReportsActivityRouteImport
+      parentRoute: typeof AuthenticatedReportsRoute
+    }
+    '/_authenticated/reports/compliance': {
+      id: '/_authenticated/reports/compliance'
+      path: '/compliance'
+      fullPath: '/reports/compliance'
+      preLoaderRoute: typeof AuthenticatedReportsComplianceRouteImport
+      parentRoute: typeof AuthenticatedReportsRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/departments': {
+      id: '/_authenticated/settings/departments'
+      path: '/departments'
+      fullPath: '/settings/departments'
+      preLoaderRoute: typeof AuthenticatedSettingsDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/members': {
+      id: '/_authenticated/settings/members'
+      path: '/members'
+      fullPath: '/settings/members'
+      preLoaderRoute: typeof AuthenticatedSettingsMembersRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/organization': {
+      id: '/_authenticated/settings/organization'
+      path: '/organization'
+      fullPath: '/settings/organization'
+      preLoaderRoute: typeof AuthenticatedSettingsOrganizationRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/regions': {
+      id: '/_authenticated/settings/regions'
+      path: '/regions'
+      fullPath: '/settings/regions'
+      preLoaderRoute: typeof AuthenticatedSettingsRegionsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/roles': {
+      id: '/_authenticated/settings/roles'
+      path: '/roles'
+      fullPath: '/settings/roles'
+      preLoaderRoute: typeof AuthenticatedSettingsRolesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/sites': {
+      id: '/_authenticated/settings/sites'
+      path: '/sites'
+      fullPath: '/settings/sites'
+      preLoaderRoute: typeof AuthenticatedSettingsSitesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/tags': {
+      id: '/_authenticated/settings/tags'
+      path: '/tags'
+      fullPath: '/settings/tags'
+      preLoaderRoute: typeof AuthenticatedSettingsTagsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/tasks_/$taskId': {
       id: '/_authenticated/tasks_/$taskId'
       path: '/tasks/$taskId'
@@ -341,13 +596,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTasksTaskIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/members_/$membershipId': {
+      id: '/_authenticated/settings/members_/$membershipId'
+      path: '/members/$membershipId'
+      fullPath: '/settings/members/$membershipId'
+      preLoaderRoute: typeof AuthenticatedSettingsMembersMembershipIdRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/sites_/$siteId': {
+      id: '/_authenticated/settings/sites_/$siteId'
+      path: '/sites/$siteId'
+      fullPath: '/settings/sites/$siteId'
+      preLoaderRoute: typeof AuthenticatedSettingsSitesSiteIdRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/sites_/new': {
+      id: '/_authenticated/settings/sites_/new'
+      path: '/sites/new'
+      fullPath: '/settings/sites/new'
+      preLoaderRoute: typeof AuthenticatedSettingsSitesNewRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
   }
 }
 
+interface AuthenticatedReportsRouteChildren {
+  AuthenticatedReportsActivityRoute: typeof AuthenticatedReportsActivityRoute
+  AuthenticatedReportsComplianceRoute: typeof AuthenticatedReportsComplianceRoute
+  AuthenticatedReportsIndexRoute: typeof AuthenticatedReportsIndexRoute
+}
+
+const AuthenticatedReportsRouteChildren: AuthenticatedReportsRouteChildren = {
+  AuthenticatedReportsActivityRoute: AuthenticatedReportsActivityRoute,
+  AuthenticatedReportsComplianceRoute: AuthenticatedReportsComplianceRoute,
+  AuthenticatedReportsIndexRoute: AuthenticatedReportsIndexRoute,
+}
+
+const AuthenticatedReportsRouteWithChildren =
+  AuthenticatedReportsRoute._addFileChildren(AuthenticatedReportsRouteChildren)
+
+interface AuthenticatedSettingsRouteChildren {
+  AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
+  AuthenticatedSettingsMembersRoute: typeof AuthenticatedSettingsMembersRoute
+  AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
+  AuthenticatedSettingsRegionsRoute: typeof AuthenticatedSettingsRegionsRoute
+  AuthenticatedSettingsRolesRoute: typeof AuthenticatedSettingsRolesRoute
+  AuthenticatedSettingsSitesRoute: typeof AuthenticatedSettingsSitesRoute
+  AuthenticatedSettingsTagsRoute: typeof AuthenticatedSettingsTagsRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedSettingsMembersMembershipIdRoute: typeof AuthenticatedSettingsMembersMembershipIdRoute
+  AuthenticatedSettingsSitesSiteIdRoute: typeof AuthenticatedSettingsSitesSiteIdRoute
+  AuthenticatedSettingsSitesNewRoute: typeof AuthenticatedSettingsSitesNewRoute
+}
+
+const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
+  AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
+  AuthenticatedSettingsMembersRoute: AuthenticatedSettingsMembersRoute,
+  AuthenticatedSettingsOrganizationRoute:
+    AuthenticatedSettingsOrganizationRoute,
+  AuthenticatedSettingsRegionsRoute: AuthenticatedSettingsRegionsRoute,
+  AuthenticatedSettingsRolesRoute: AuthenticatedSettingsRolesRoute,
+  AuthenticatedSettingsSitesRoute: AuthenticatedSettingsSitesRoute,
+  AuthenticatedSettingsTagsRoute: AuthenticatedSettingsTagsRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  AuthenticatedSettingsMembersMembershipIdRoute:
+    AuthenticatedSettingsMembersMembershipIdRoute,
+  AuthenticatedSettingsSitesSiteIdRoute: AuthenticatedSettingsSitesSiteIdRoute,
+  AuthenticatedSettingsSitesNewRoute: AuthenticatedSettingsSitesNewRoute,
+}
+
+const AuthenticatedSettingsRouteWithChildren =
+  AuthenticatedSettingsRoute._addFileChildren(
+    AuthenticatedSettingsRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedIssuesRoute: typeof AuthenticatedIssuesRoute
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTodayRoute: typeof AuthenticatedTodayRoute
   AuthenticatedIssuesIssueIdRoute: typeof AuthenticatedIssuesIssueIdRoute
@@ -357,8 +683,8 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIssuesRoute: AuthenticatedIssuesRoute,
-  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTodayRoute: AuthenticatedTodayRoute,
   AuthenticatedIssuesIssueIdRoute: AuthenticatedIssuesIssueIdRoute,

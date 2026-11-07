@@ -7,7 +7,7 @@ const status = (value: string | null) => STATUS_LABEL[value as IssueStatus] ?? v
 const priority = (value: string | null) => PRIORITY_LABEL[value as IssuePriority] ?? value ?? ''
 
 /** What happened, without the actor ("started work", "changed priority from Low to High"). */
-export function describeEvent(event: IssueEvent): string {
+export function describeEvent(event: IssueEvent, timeZone?: string): string {
   switch (event.kind) {
     case 'Raised':
       return event.to
@@ -34,6 +34,8 @@ export function describeEvent(event: IssueEvent): string {
     case 'PriorityChanged':
       return `changed the priority from ${priority(event.from)} to ${priority(event.to)}`
     case 'DueChanged':
-      return event.to ? `set the due time to ${formatDateTime(event.to)}` : 'removed the due time'
+      return event.to
+        ? `set the due time to ${formatDateTime(event.to, timeZone)}`
+        : 'removed the due time'
   }
 }

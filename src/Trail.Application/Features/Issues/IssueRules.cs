@@ -75,23 +75,47 @@ internal static class IssueRules
         return found == distinct.Count ? null : UnknownAttachments;
     }
 
-    public static async Task<Error?> ValidateAssigneeAsync(IAppDbContext db, Guid assigneeId, Guid siteId, CancellationToken ct)
-    {
-        var membership = await db.Memberships.AsNoTracking()
-            .Where(m => m.Id == assigneeId && m.Status == MembershipStatus.Active)
-            .Select(m => new { m.AllSites, Permissions = m.Role.Permissions })
-            .FirstOrDefaultAsync(ct);
-        if (membership is null || !membership.Permissions.Contains(Permissions.Issues.View)) return InvalidAssignee;
-        if (membership.AllSites) return null;
+    public static readonly Error UnknownTask = Error.NotFound("issue.unknown_task", "The task does not exist.");
 
-        // Sites may be soft-deleted while old issues still point at them; their region still counts.
-        var regionId = await db.Sites.IgnoreQueryFilters([QueryFilters.SoftDelete])
+    public static readonly Error TaskSiteMismatch =
+        Error.Validation("issue.task_site_mismatch", "The task belongs to a different site.");
+
+    /// <summary>The permission an assignee needs. Permissions sit in a json column, so this part is checked in memory.</summary>
+    public static bool CanViewIssues(IReadOnlyCollection<string> permissions) => permissions.Contains(Permissions.Issues.View);
+
+    /// <summary>The region of a site, which may be soft-deleted while old issues still point at it. Null when it has none.</summary>
+    public static Task<Guid?> RegionOfAsync(IAppDbContext db, Guid siteId, CancellationToken ct) =>
+        db.Sites.IgnoreQueryFilters([QueryFilters.SoftDelete])
             .Where(s => s.Id == siteId).Select(s => s.RegionId).FirstOrDefaultAsync(ct);
 
-        var reaches = await db.MembershipSites.AnyAsync(ms => ms.MembershipId == assigneeId && ms.SiteId == siteId, ct)
-            || (regionId is { } region
-                && await db.MembershipRegions.AnyAsync(mr => mr.MembershipId == assigneeId && mr.RegionId == region, ct));
-        return reaches ? null : InvalidAssignee;
+    /// <summary>
+    /// Active memberships that reach the site: all sites, the site itself, or its region. The single definition behind
+    /// both the assignee check and the candidate list; callers must still apply <see cref="CanViewIssues"/>.
+    /// </summary>
+    public static IQueryable<Membership> ReachingSite(IAppDbContext db, Guid siteId, Guid? regionId) =>
+        db.Memberships.AsNoTracking().Where(m => m.Status == MembershipStatus.Active
+            && (m.AllSites
+                || db.MembershipSites.Any(ms => ms.MembershipId == m.Id && ms.SiteId == siteId)
+                || (regionId != null && db.MembershipRegions.Any(mr => mr.MembershipId == m.Id && mr.RegionId == regionId))));
+
+    public static async Task<Error?> ValidateAssigneeAsync(IAppDbContext db, Guid assigneeId, Guid siteId, CancellationToken ct)
+    {
+        var regionId = await RegionOfAsync(db, siteId, ct);
+        var permissions = await ReachingSite(db, siteId, regionId)
+            .Where(m => m.Id == assigneeId)
+            .Select(m => m.Role.Permissions)
+            .FirstOrDefaultAsync(ct);
+        return permissions is not null && CanViewIssues(permissions) ? null : InvalidAssignee;
+    }
+
+    /// <summary>Null when the task is usable; <see cref="UnknownTask"/> when it is missing or outside the caller's scope.</summary>
+    public static async Task<Error?> ValidateTaskAsync(
+        IAppDbContext db, ISiteAccess access, Guid taskId, Guid siteId, CancellationToken ct)
+    {
+        var taskSiteId = await db.SiteTasks.AsNoTracking().Where(t => t.Id == taskId)
+            .Select(t => (Guid?)t.SiteId).FirstOrDefaultAsync(ct);
+        if (taskSiteId is not { } found || !(await access.GetScopeAsync(ct)).Includes(found)) return UnknownTask;
+        return found == siteId ? null : TaskSiteMismatch;
     }
 
     public static async Task<IssueDetailResponse> LoadDetailAsync(IAppDbContext db, Guid id, DateTime now, CancellationToken ct)
@@ -125,8 +149,8 @@ internal static class IssueRules
             key is { } k && names.TryGetValue(k, out var name) ? name : null;
         string? MembershipName(string? raw) => Guid.TryParse(raw, out var key) ? NameOf(membershipNames, key) : null;
 
-        var siteName = await db.Sites.IgnoreQueryFilters([QueryFilters.SoftDelete])
-            .Where(s => s.Id == issue.SiteId).Select(s => s.Name).FirstOrDefaultAsync(ct);
+        var site = await db.Sites.IgnoreQueryFilters([QueryFilters.SoftDelete])
+            .Where(s => s.Id == issue.SiteId).Select(s => new { s.Name, s.TimeZone }).FirstOrDefaultAsync(ct);
         var departmentName = issue.DepartmentId is { } departmentId
             ? await db.Departments.IgnoreQueryFilters([QueryFilters.SoftDelete])
                 .Where(d => d.Id == departmentId).Select(d => d.Name).FirstOrDefaultAsync(ct)
@@ -143,10 +167,10 @@ internal static class IssueRules
             e.Note, e.PhotoIds, e.OccurredAt, e.ActorId, NameOf(userNames, e.ActorId))).ToList();
 
         return new IssueDetailResponse(
-            issue.Id, issue.Number, issue.Title, issue.Description, issue.SiteId, siteName,
+            issue.Id, issue.Number, issue.Title, issue.Description, issue.SiteId, site?.Name, site?.TimeZone ?? "UTC",
             issue.DepartmentId, departmentName, issue.Priority, issue.Status, issue.Source,
             issue.AssigneeId is { } a ? new IssueAssigneeResponse(a, NameOf(membershipNames, a)) : null,
-            issue.DueAt, issue.IsOverdue(now), issue.SiteTaskId, task?.Title, task?.DueDate, issue.FieldKey,
+            issue.DueAt, issue.IsOverdue(now), issue.OverdueNotifiedAt, issue.EscalatedAt, issue.SiteTaskId, task?.Title, task?.DueDate, issue.FieldKey,
             issue.Resolution, issue.ResolvedAt, NameOf(userNames, issue.ResolvedById),
             issue.ClosedAt, NameOf(userNames, issue.ClosedById),
             issue.PhotoIds, issue.CreatedAt, timeline);

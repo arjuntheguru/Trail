@@ -111,7 +111,7 @@ describe('raise issue form', () => {
 
     await user.selectOptions(await screen.findByLabelText('Site'), 'Harbour Cafe')
     await user.type(screen.getByLabelText('Title'), 'Leak')
-    fireEvent.change(screen.getByLabelText('Due (optional)'), {
+    fireEvent.change(screen.getByLabelText(/^Due/), {
       target: { value: '2020-01-01T09:00' },
     })
     await user.click(screen.getByRole('button', { name: 'Raise issue' }))
@@ -131,7 +131,7 @@ describe('raise issue form', () => {
     await user.type(screen.getByLabelText('Title'), '  Leaking tap  ')
     await user.type(screen.getByLabelText('Description (optional)'), 'Dripping since lunch.')
     await user.selectOptions(screen.getByLabelText('Priority'), 'High')
-    fireEvent.change(screen.getByLabelText('Due (optional)'), {
+    fireEvent.change(screen.getByLabelText(/^Due/), {
       target: { value: '2099-03-04T09:30' },
     })
     await user.upload(
@@ -151,7 +151,9 @@ describe('raise issue form', () => {
         siteId: SITE_2,
         departmentId: null,
         priority: 'High',
-        dueAt: new Date('2099-03-04T09:30').toISOString(),
+        // March is GMT in London, so the site's wall clock equals UTC.
+        dueAt: '2099-03-04T09:30:00.000Z',
+        siteTaskId: null,
         assigneeId: null,
         photoIds: [PHOTO_ID],
       },

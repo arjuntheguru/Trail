@@ -56,16 +56,20 @@ export const issueQuery = (
     queryFn: () => unwrap(client.GET('/api/v1/issues/{id}', { params: { path: { id: issueId } } })),
   })
 
-/** Active members who can be picked as an assignee. Needs members.view. */
-export const assigneeCandidatesQuery = (client: ApiClient, organizationId: string | undefined) =>
+/** People the server would accept as assignee for a site (up to 50, optionally matching a search). Needs issues.manage. */
+export const assigneeCandidatesQuery = (
+  client: ApiClient,
+  organizationId: string | undefined,
+  siteId: string,
+  search: string,
+) =>
   queryOptions({
-    queryKey: ['org', organizationId, 'members', 'active'],
-    staleTime: 60_000,
-    retry: false,
+    queryKey: [...base(organizationId), 'assignee-candidates', siteId, search],
+    staleTime: 30_000,
     queryFn: () =>
       unwrap(
-        client.GET('/api/v1/members', {
-          params: { query: { status: 'Active', Page: 1, PageSize: 100 } },
+        client.GET('/api/v1/issues/assignee-candidates', {
+          params: { query: { SiteId: siteId, Search: search || undefined } },
         }),
       ),
   })

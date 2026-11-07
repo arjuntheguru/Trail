@@ -143,6 +143,8 @@ export function issueListItem(overrides: Partial<IssueListItem> = {}): IssueList
     isOverdue: false,
     createdAt: '2026-11-06T09:00:00Z',
     photoCount: 0,
+    timeZone: 'Europe/London',
+    isEscalated: false,
     ...overrides,
   }
 }
@@ -192,6 +194,9 @@ export function issueDetail(overrides: Partial<IssueDetail> = {}): IssueDetail {
     closedBy: null,
     photoIds: [],
     createdAt: '2026-11-06T09:00:00Z',
+    timeZone: 'Europe/London',
+    overdueNotifiedAt: null,
+    escalatedAt: null,
     timeline: [
       issueEvent({
         kind: 'Raised',
