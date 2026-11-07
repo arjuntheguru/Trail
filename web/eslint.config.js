@@ -20,7 +20,12 @@ export default tseslint.config(
   },
   {
     // shadcn components, TanStack route files and the auth context export non-components alongside components by design.
-    files: ['src/components/ui/**', 'src/routes/**', 'src/auth/context.tsx'],
+    files: [
+      'src/components/ui/**',
+      'src/routes/**',
+      'src/auth/context.tsx',
+      'src/features/tasks/form-context.tsx',
+    ],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
 )
