@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label'
 import { AccessPicker, type AccessValue } from './AccessPicker'
 import { applyServerError } from './formErrors'
 import { holdsAll } from './memberRules'
-import { rolesQuery } from './queries'
+import { callerAccessQuery, rolesQuery } from './queries'
 import { FormDialog, Hint } from './shared'
 import { useSettingsMutation } from './useSettingsMutation'
 import { useAccessOptions } from './useAccessOptions'
@@ -41,12 +41,17 @@ export function InviteDialog({ onClose }: { onClose: () => void }) {
   const session = useSession()
   const roles = useQuery(rolesQuery(client, session.organization?.id))
   const options = useAccessOptions()
-  const [access, setAccess] = useState<AccessValue>({
+  const [chosenAccess, setAccess] = useState<AccessValue>({
     allSites: true,
     siteIds: [],
     regionIds: [],
     departmentIds: [],
   })
+  const callerAccess = useQuery(callerAccessQuery(client, session.organization?.id))
+  const allSitesLocked = callerAccess.data?.allSites === false
+  // A caller limited to some sites cannot invite to all of them: they start from an explicit choice instead.
+  const access =
+    allSitesLocked && chosenAccess.allSites ? { ...chosenAccess, allSites: false } : chosenAccess
   const [accessError, setAccessError] = useState<string>()
   const [general, setGeneral] = useState<string[]>([])
   const form = useForm<InviteValues>({
@@ -56,9 +61,9 @@ export function InviteDialog({ onClose }: { onClose: () => void }) {
   const roleList = roles.data ?? []
 
   const mutation = useSettingsMutation({
-    // The invitation only carries "all sites"; chosen sites and regions are a second call on the new member.
-    run: async (values: InviteValues) => {
-      const member = await unwrap(
+    // One call: the invitation carries the chosen sites and regions, saved with the membership.
+    run: (values: InviteValues) =>
+      unwrap(
         client.POST('/api/v1/members/invitations', {
           body: {
             email: values.email,
@@ -66,36 +71,14 @@ export function InviteDialog({ onClose }: { onClose: () => void }) {
             firstName: values.firstName || null,
             lastName: values.lastName || null,
             allSites: access.allSites,
+            siteIds: access.allSites ? [] : access.siteIds,
+            regionIds: access.allSites ? [] : access.regionIds,
           },
         }),
-      )
-      if (access.allSites) return { member, accessFailure: undefined }
-      try {
-        await unwrap(
-          client.PUT('/api/v1/members/{membershipId}/access', {
-            params: { path: { membershipId: member.id } },
-            body: {
-              allSites: false,
-              siteIds: access.siteIds,
-              regionIds: access.regionIds,
-              departmentIds: [],
-            },
-          }),
-        )
-        return { member, accessFailure: undefined }
-      } catch (error) {
-        return { member, accessFailure: error }
-      }
-    },
+      ),
     areas: [['members']],
-    onSuccess: ({ accessFailure }) => {
-      if (accessFailure) {
-        toast.warning(
-          'Invitation sent, but the site access could not be saved. Open the member to set it.',
-        )
-      } else {
-        toast.success('Invitation sent.')
-      }
+    onSuccess: () => {
+      toast.success('Invitation sent.')
       onClose()
     },
   })
@@ -186,6 +169,7 @@ export function InviteDialog({ onClose }: { onClose: () => void }) {
             onChange={setAccess}
             sites={options.sites}
             regions={options.regions}
+            allSitesLocked={allSitesLocked}
           />
         )}
         {!options.available && (
