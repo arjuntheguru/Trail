@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Trail.Application\Trail.Application.csproj" />
     <ProjectReference Include="..\..\src\Trail.Infrastructure\Trail.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Trail.Api\Trail.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
