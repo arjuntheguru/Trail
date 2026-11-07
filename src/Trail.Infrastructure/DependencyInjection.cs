@@ -1,6 +1,8 @@
+using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
@@ -48,8 +50,7 @@ public static class DependencyInjection
         AddSecurity(services);
         services.AddNotifications();
 
-        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        AddStorage(services);
 
         services.AddOptions<TaskGenerationOptions>().BindConfiguration(TaskGenerationOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<TaskGenerationJob>();
@@ -58,6 +59,23 @@ public static class DependencyInjection
         AddIntegrations(services);
 
         return services;
+    }
+
+    private static void AddStorage(IServiceCollection services)
+    {
+        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName).ValidateOnStart();
+        services.AddSingleton<IValidateOptions<StorageOptions>, StorageOptionsValidator>();
+
+        services.AddSingleton<LocalFileStorage>();
+        services.AddSingleton<S3FileStorage>();
+        services.AddSingleton<IAmazonS3>(sp => S3ClientFactory.Create(
+            sp.GetRequiredService<IOptions<StorageOptions>>().Value.S3,
+            sp.GetRequiredService<ILoggerFactory>().CreateLogger("Trail.Infrastructure.Files.S3")));
+        services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<IOptions<StorageOptions>>().Value.IsS3
+            ? sp.GetRequiredService<S3FileStorage>()
+            : sp.GetRequiredService<LocalFileStorage>());
+
+        services.AddHealthChecks().AddCheck<StorageHealthCheck>("storage", tags: ["ready"]);
     }
 
     private static void AddIntegrations(IServiceCollection services)
