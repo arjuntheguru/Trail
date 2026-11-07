@@ -1,5 +1,7 @@
 using System.Net;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Issues;
@@ -202,8 +204,13 @@ public sealed class IssueApiTests(MySqlFixture mysql) : IAsyncLifetime
         {
             db.Attachments.Add(new Attachment
             {
-                Kind = AttachmentKind.Photo, FileName = "f.jpg", ContentType = "image/jpeg", SizeBytes = 1,
-                StorageKey = "foreign", Sha256 = new string('b', 64), SiteId = foreignSite.Id,
+                Kind = AttachmentKind.Photo,
+                FileName = "f.jpg",
+                ContentType = "image/jpeg",
+                SizeBytes = 1,
+                StorageKey = "foreign",
+                Sha256 = new string('b', 64),
+                SiteId = foreignSite.Id,
             });
             return await db.SaveChangesAsync();
         });

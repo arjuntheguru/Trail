@@ -6,6 +6,7 @@ using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.IntegrationTests.Infrastructure;
 using Trail.IntegrationTests.Tasks;
+
 using static Trail.IntegrationTests.Tasks.TaskTestKit;
 
 namespace Trail.IntegrationTests.Issues;

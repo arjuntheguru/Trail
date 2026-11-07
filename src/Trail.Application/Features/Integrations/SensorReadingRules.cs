@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Trail.Domain.Common;
 using Trail.Domain.Tasks;
 

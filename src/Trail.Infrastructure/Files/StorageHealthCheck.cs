@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using Trail.Application.Common.Abstractions;
 
 namespace Trail.Infrastructure.Files;

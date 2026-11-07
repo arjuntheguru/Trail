@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Audit;
@@ -32,10 +34,15 @@ public sealed class ExportAuditCsvHandler(IAppDbContext db, ISiteAccess access, 
             .OrderBy(a => a.OccurredAt).ThenBy(a => a.Id)
             .Select(a => new
             {
-                a.OccurredAt, a.EntityType, a.EntityId, a.Action,
+                a.OccurredAt,
+                a.EntityType,
+                a.EntityId,
+                a.Action,
                 Actor = db.Users.Where(u => u.Id == a.ActorId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
                 SiteName = sites.Where(s => s.Id == a.SiteId).Select(s => s.Name).FirstOrDefault(),
-                a.IpAddress, a.TraceId, a.Changes,
+                a.IpAddress,
+                a.TraceId,
+                a.Changes,
             });
 
         return new CsvExport($"audit-{range.Value.FileSuffix}.csv", async (stream, token) =>

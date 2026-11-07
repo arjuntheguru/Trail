@@ -1,5 +1,6 @@
 using Serilog;
 using Serilog.Events;
+
 using Trail.Application.Common.Security;
 
 namespace Trail.Api.Infrastructure;

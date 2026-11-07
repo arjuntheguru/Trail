@@ -1,7 +1,9 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 
 namespace Trail.Infrastructure.Files;

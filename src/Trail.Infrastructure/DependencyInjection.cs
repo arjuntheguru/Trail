@@ -1,14 +1,16 @@
 using Amazon.S3;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
 using Trail.Application.Features.Integrations;
-using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Files;
+using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Locking;
 using Trail.Infrastructure.Notifications;

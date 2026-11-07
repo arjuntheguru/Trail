@@ -1,7 +1,9 @@
 using FluentValidation;
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Exceptions;
 
 namespace Trail.Api.Infrastructure;

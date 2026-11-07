@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using Trail.Domain.Identity;
 
 namespace Trail.Application.Common.Validation;

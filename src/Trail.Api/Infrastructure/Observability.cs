@@ -3,6 +3,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
 using Trail.Infrastructure.Telemetry;
 
 namespace Trail.Api.Infrastructure;

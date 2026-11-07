@@ -1,14 +1,18 @@
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.RateLimiting;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using NSubstitute;
+
 using Serilog;
 using Serilog.Events;
+
 using Trail.Api.Infrastructure;
 using Trail.Application.Common.Security;
 

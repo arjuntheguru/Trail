@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Integrations;
 using Trail.Domain.Integrations;

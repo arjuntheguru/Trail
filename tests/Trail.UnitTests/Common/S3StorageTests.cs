@@ -1,9 +1,13 @@
 using System.Net;
+
 using Amazon.S3;
 using Amazon.S3.Model;
+
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+
 using NSubstitute;
+
 using Trail.Infrastructure.Files;
 
 namespace Trail.UnitTests.Common;
@@ -254,8 +258,12 @@ public sealed class S3ClientFactoryTests
     {
         var options = new Trail.Infrastructure.Files.S3StorageOptions
         {
-            Bucket = "trail", ServiceUrl = "http://minio:9000", Region = "us-east-1", ForcePathStyle = true,
-            AccessKeyId = "k", SecretAccessKey = "s",
+            Bucket = "trail",
+            ServiceUrl = "http://minio:9000",
+            Region = "us-east-1",
+            ForcePathStyle = true,
+            AccessKeyId = "k",
+            SecretAccessKey = "s",
         };
 
         using var client = (Amazon.S3.AmazonS3Client)Trail.Infrastructure.Files.S3ClientFactory.Create(

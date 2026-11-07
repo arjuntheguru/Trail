@@ -1,4 +1,5 @@
 using MySql.Data.MySqlClient;
+
 using Testcontainers.MySql;
 
 [assembly: AssemblyFixture(typeof(Trail.IntegrationTests.Infrastructure.MySqlFixture))]

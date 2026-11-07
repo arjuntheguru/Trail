@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Paging;
 using Trail.Domain.Issues;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Identity;
 using Trail.Domain.Issues;
 using Trail.Domain.Organizations;

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 

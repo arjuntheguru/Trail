@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Integrations;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+
 using Trail.Api.Infrastructure;
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Security;

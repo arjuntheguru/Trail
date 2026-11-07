@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+
 using Trail.Application.Features.Integrations;
 
 namespace Trail.Infrastructure.Integrations;

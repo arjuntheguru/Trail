@@ -1,5 +1,7 @@
 using System.Reflection;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;
 using Trail.Domain.Auditing;

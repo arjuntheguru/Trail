@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Tasks;
@@ -33,9 +34,15 @@ public sealed class ExportTasksCsvHandler(IAppDbContext db, ISiteAccess access, 
             .Select(t => new
             {
                 SiteName = sites.Where(s => s.Id == t.SiteId).Select(s => s.Name).FirstOrDefault(),
-                t.DueDate, t.Title, t.Status, t.DueAt, t.CompletedAt,
+                t.DueDate,
+                t.Title,
+                t.Status,
+                t.DueAt,
+                t.CompletedAt,
                 CompletedBy = db.Users.Where(u => u.Id == t.CompletedById).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
-                t.CompletedLate, t.HasFailures, t.ApprovedAt,
+                t.CompletedLate,
+                t.HasFailures,
+                t.ApprovedAt,
                 ApprovedBy = db.Users.Where(u => u.Id == t.ApprovedById).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault(),
             });
 

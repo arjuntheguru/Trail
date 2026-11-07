@@ -31,7 +31,10 @@ public sealed class RecurrenceTests
         // Start on Wednesday 4 March; the start week counts as week 0 (its Monday is 2 March).
         var r = new Recurrence
         {
-            Frequency = Frequency.Weekly, Interval = 2, StartDate = D("2026-03-04"), Days = WeekDays.Monday | WeekDays.Thursday,
+            Frequency = Frequency.Weekly,
+            Interval = 2,
+            StartDate = D("2026-03-04"),
+            Days = WeekDays.Monday | WeekDays.Thursday,
         };
 
         Dates(r, "2026-03-01", "2026-03-31").ShouldBe(["2026-03-05", "2026-03-16", "2026-03-19", "2026-03-30"]);

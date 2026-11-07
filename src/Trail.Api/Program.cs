@@ -1,15 +1,20 @@
 using System.Text.Json.Serialization;
+
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+
 using Scalar.AspNetCore;
-using HttpOptions = Trail.Api.Infrastructure.HttpOptions;
+
 using Serilog;
 using Serilog.Formatting.Compact;
+
 using Trail.Api.Infrastructure;
 using Trail.Application;
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure;
 using Trail.Infrastructure.Security;
+
+using HttpOptions = Trail.Api.Infrastructure.HttpOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,10 +86,10 @@ app.UseAuthorization();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false })
     .AllowAnonymous().DisableRateLimiting();
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
-    {
-        Predicate = check => check.Tags.Contains("ready"),
-        ResponseWriter = HealthResponseWriter.WriteAsync,
-    })
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthResponseWriter.WriteAsync,
+})
     .AllowAnonymous().DisableRateLimiting();
 app.MapEndpointGroups(typeof(Program).Assembly);
 

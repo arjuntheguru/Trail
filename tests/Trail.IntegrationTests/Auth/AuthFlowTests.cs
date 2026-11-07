@@ -1,5 +1,7 @@
 using System.Net;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Auth;
 using Trail.Application.Features.Me;
@@ -70,13 +72,22 @@ public sealed class AuthFlowTests(MySqlFixture mysql) : IAsyncLifetime
 
         var duplicate = await Anonymous.PostJsonAsync("/api/v1/auth/register", new
         {
-            organizationName = "Other", firstName = "A", lastName = "B", email, password = Password,
+            organizationName = "Other",
+            firstName = "A",
+            lastName = "B",
+            email,
+            password = Password,
         });
         await duplicate.ShouldBeAsync(HttpStatusCode.Conflict, "auth.email_taken");
 
         var weak = await Anonymous.PostJsonAsync("/api/v1/auth/register", new
         {
-            organizationName = "Other", firstName = "A", lastName = "B", email = "new@trail.test", password = "short", timeZone = "Mars/Base",
+            organizationName = "Other",
+            firstName = "A",
+            lastName = "B",
+            email = "new@trail.test",
+            password = "short",
+            timeZone = "Mars/Base",
         });
         await weak.ShouldBeAsync(HttpStatusCode.BadRequest);
         var body = await weak.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);

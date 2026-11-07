@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
+
 using Trail.Api.Infrastructure;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Attachments;

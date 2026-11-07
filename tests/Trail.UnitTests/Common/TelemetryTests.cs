@@ -1,6 +1,8 @@
 using System.Diagnostics.Metrics;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+
 using Trail.Api.Infrastructure;
 using Trail.Infrastructure.Telemetry;
 

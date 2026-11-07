@@ -1,6 +1,8 @@
 using System.Data;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Exceptions;
 

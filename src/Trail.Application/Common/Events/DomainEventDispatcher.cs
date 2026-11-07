@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Domain.Common;
 
 namespace Trail.Application.Common.Events;

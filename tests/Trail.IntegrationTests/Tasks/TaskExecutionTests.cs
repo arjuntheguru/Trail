@@ -1,10 +1,12 @@
 using System.Net;
+
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Tasks;
 using Trail.Domain.Files;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.IntegrationTests.Infrastructure;
+
 using static Trail.IntegrationTests.Tasks.TaskTestKit;
 
 namespace Trail.IntegrationTests.Tasks;
@@ -328,7 +330,7 @@ public sealed class TaskExecutionTests(MySqlFixture mysql) : IAsyncLifetime
         var signature = await _kit.AddAttachmentAsync(_site, AttachmentKind.Signature);
         var photo = await _kit.AddAttachmentAsync(_site);
 
-        object Body(string field, Guid id) => field == "sign"
+        static object Body(string field, Guid id) => field == "sign"
             ? Answers(("clean", Answer(true)), ("sign", Answer(id.ToString())))
             : Answers(("clean", Answer(true)), ("pic", Answer(null, null, id)));
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Issues;
@@ -33,11 +34,18 @@ public sealed class ExportIssuesCsvHandler(IAppDbContext db, ISiteAccess access,
             .OrderBy(i => i.CreatedAt).ThenBy(i => i.Number)
             .Select(i => new
             {
-                i.Number, i.Title,
+                i.Number,
+                i.Title,
                 SiteName = sites.Where(s => s.Id == i.SiteId).Select(s => s.Name).FirstOrDefault(),
-                i.Priority, i.Status, i.Source,
+                i.Priority,
+                i.Status,
+                i.Source,
                 Assignee = db.Memberships.Where(m => m.Id == i.AssigneeId).Select(m => m.User.FirstName + " " + m.User.LastName).FirstOrDefault(),
-                i.CreatedAt, i.DueAt, i.ResolvedAt, i.Resolution, i.ClosedAt,
+                i.CreatedAt,
+                i.DueAt,
+                i.ResolvedAt,
+                i.Resolution,
+                i.ClosedAt,
             });
 
         return new CsvExport($"issues-{range.Value.FileSuffix}.csv", async (stream, token) =>

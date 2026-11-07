@@ -1,5 +1,7 @@
 using System.Net;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Paging;
 using Trail.Application.Features.Sites;
 using Trail.IntegrationTests.Infrastructure;

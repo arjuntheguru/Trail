@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Issues;
@@ -33,7 +34,10 @@ public sealed class GetDashboardHandler(IAppDbContext db, ISiteAccess access, Ti
                         && t.Status != SiteTaskStatus.Cancelled)
             .GroupBy(t => new
             {
-                t.SiteId, t.DueDate, t.Status, t.CompletedLate,
+                t.SiteId,
+                t.DueDate,
+                t.Status,
+                t.CompletedLate,
                 Overdue = t.Status == SiteTaskStatus.Open && t.DueAt < now,
             })
             .Select(g => new { g.Key, Count = g.Count() })
