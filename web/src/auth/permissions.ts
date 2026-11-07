@@ -6,6 +6,7 @@ export const Permissions = {
   Sites: { View: 'sites.view', Manage: 'sites.manage' },
   Tags: { Manage: 'tags.manage' },
   Templates: { View: 'templates.view', Manage: 'templates.manage' },
+  Schedules: { Manage: 'schedules.manage' },
   Tasks: {
     View: 'tasks.view',
     Complete: 'tasks.complete',
@@ -15,6 +16,7 @@ export const Permissions = {
   Issues: { View: 'issues.view', Raise: 'issues.raise', Manage: 'issues.manage' },
   Reports: { View: 'reports.view', Export: 'reports.export' },
   Audit: { View: 'audit.view' },
+  Integrations: { Manage: 'integrations.manage' },
 } as const
 
 /** Pure check used by the hook and by route guards. */

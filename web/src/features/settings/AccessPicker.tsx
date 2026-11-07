@@ -63,6 +63,7 @@ export function AccessPicker({
   regions,
   departments,
   disabled,
+  allSitesLocked,
 }: {
   value: AccessValue
   onChange: (value: AccessValue) => void
@@ -71,15 +72,22 @@ export function AccessPicker({
   /** Omit to leave departments out (the invitation has no department field). */
   departments?: readonly Department[]
   disabled?: boolean
+  /** The caller does not hold every site, so cannot hand out all of them. */
+  allSitesLocked?: boolean
 }) {
   return (
     <div className="flex flex-col gap-4">
       <CheckRow
         label="Access to all sites"
         checked={value.allSites}
-        disabled={disabled}
+        disabled={disabled || (allSitesLocked && !value.allSites)}
         onChange={(allSites) => onChange({ ...value, allSites })}
       />
+      {allSitesLocked && (
+        <p className="text-sm text-muted-foreground">
+          You can only give access to the sites and regions you hold yourself.
+        </p>
+      )}
       {value.allSites ? (
         <p className="text-sm text-muted-foreground">
           This includes sites added later. Turn it off to choose regions or individual sites.

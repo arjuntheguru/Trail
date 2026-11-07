@@ -14,7 +14,23 @@ public sealed record MeResponse(
     UserSummary User,
     OrganizationSummary? Organization,
     IReadOnlyList<OrganizationSummary> Organizations,
-    IReadOnlyList<string> Permissions);
+    IReadOnlyList<string> Permissions,
+    CallerAccess? Access = null);
+
+/// <summary>
+/// The sites and regions the caller can reach in the active organization, i.e. what they may grant to others.
+/// <see cref="SiteIds"/> includes the sites of assigned regions. Both lists are empty with <see cref="AllSites"/>.
+/// </summary>
+public sealed record CallerAccess(bool AllSites, IReadOnlyList<Guid> SiteIds, IReadOnlyList<Guid> RegionIds)
+{
+    /// <summary>Null for platform admins without an active organization.</summary>
+    public static CallerAccess? From(SiteScope scope, bool platformAdminWithoutOrganization) =>
+        platformAdminWithoutOrganization
+            ? null
+            : scope.AllSites
+                ? new CallerAccess(true, [], [])
+                : new CallerAccess(false, scope.SiteIds.Order().ToList(), scope.RegionIds.Order().ToList());
+}
 
 public sealed record UpdateProfileCommand(string FirstName, string LastName);
 
@@ -41,6 +57,7 @@ internal sealed class ChangePasswordValidator : AbstractValidator<ChangePassword
 public sealed class MeHandler(
     IAppDbContext db,
     ICurrentUser caller,
+    ISiteAccess siteAccess,
     IPasswordHasher hasher,
     SessionIssuer sessions,
     EmailConfirmationSender confirmations)
@@ -54,8 +71,9 @@ public sealed class MeHandler(
 
         var memberships = await sessions.ActiveMembershipsAsync(user.Id, ct);
         var active = memberships.FirstOrDefault(m => m.MembershipId == caller.MembershipId);
+        var access = CallerAccess.From(await siteAccess.GetScopeAsync(ct), caller.IsPlatformAdmin && active is null);
         return new MeResponse(SessionIssuer.ToSummary(user), active?.ToSummary(),
-            memberships.Select(m => m.ToSummary()).ToList(), active?.Permissions ?? []);
+            memberships.Select(m => m.ToSummary()).ToList(), active?.Permissions ?? [], access);
     }
 
     public async Task<Result<UserSummary>> UpdateProfile(UpdateProfileCommand command, CancellationToken ct)
