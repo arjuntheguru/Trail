@@ -18,7 +18,7 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
         builder.HasOne<Site>().WithMany().HasForeignKey(x => x.SiteId).OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(x => new { x.MembershipId, x.ReadAt, x.CreatedAt });
-        builder.HasIndex(x => x.EmailStatus);
+        builder.HasIndex(x => new { x.EmailStatus, x.CreatedAt }); // email candidates: status, oldest first
         builder.HasIndex(x => x.EmailClaimToken);
         builder.HasIndex(x => new { x.SubjectType, x.SubjectId });
     }

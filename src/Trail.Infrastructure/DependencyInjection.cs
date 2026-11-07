@@ -8,6 +8,7 @@ using Trail.Application.Features.Integrations;
 using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Files;
 using Trail.Infrastructure.Jobs;
+using Trail.Infrastructure.Locking;
 using Trail.Infrastructure.Notifications;
 using Trail.Infrastructure.Persistence;
 using Trail.Infrastructure.Persistence.Interceptors;
@@ -29,11 +30,14 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<AuditingInterceptor>();
+        services.AddSingleton<IDistributedLock, MySqlDistributedLock>();
 
         services.AddDbContext<TrailDbContext>((sp, options) =>
         {
             var db = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-            options.UseMySQL(db.ConnectionString)
+            // No EnableRetryOnFailure: SequenceAllocator runs its own transactions, which a retrying execution
+            // strategy refuses to run. Transient failures surface to the caller instead.
+            options.UseMySQL(db.ConnectionString, o => o.CommandTimeout(db.CommandTimeoutSeconds))
                 .AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
         });
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<TrailDbContext>());
@@ -110,6 +114,13 @@ public static class DependencyInjection
     public static async Task MigrateDatabaseAsync(this IServiceProvider services, CancellationToken ct = default)
     {
         await using var scope = services.CreateAsyncScope();
+        var wait = TimeSpan.FromSeconds(services.GetRequiredService<IOptions<DatabaseOptions>>().Value.MigrationLockWaitSeconds);
+
+        // Replicas may start together; only one applies migrations while the others wait, then find nothing to do.
+        await using var migrationLock = await services.GetRequiredService<IDistributedLock>().TryAcquireAsync("migrations", wait, ct)
+            ?? throw new InvalidOperationException(
+                $"Could not obtain the migration lock within {wait.TotalSeconds:0} seconds; another instance is still migrating the database.");
+
         var db = scope.ServiceProvider.GetRequiredService<TrailDbContext>();
         await db.Database.MigrateAsync(ct);
     }
