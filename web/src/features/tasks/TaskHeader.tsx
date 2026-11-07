@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link, useRouter } from '@tanstack/react-router'
 import { AlarmClock, ArrowLeft, Clock, MapPin } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,39 @@ import { formatDay, formatTime } from '@/lib/dates'
 import { statusLabel } from './status'
 import type { TaskDetail } from './types'
 
+const route = getRouteApi('/_authenticated/tasks_/$taskId')
+
+const BACK_CLASS =
+  '-ml-2 inline-flex h-11 w-fit items-center gap-1 rounded-md px-2 text-base font-medium text-muted-foreground'
+
+/** Back to where the user came from: the Tasks list with its filters, or Today. */
+function BackLink() {
+  const { from } = route.useSearch()
+  const router = useRouter()
+  const toList = from?.startsWith('/tasks')
+  if (!from) {
+    return (
+      <Link to="/today" className={BACK_CLASS}>
+        <ArrowLeft className="size-5" aria-hidden />
+        Today
+      </Link>
+    )
+  }
+  return (
+    <a
+      href={from}
+      onClick={(e) => {
+        e.preventDefault()
+        router.history.push(from)
+      }}
+      className={BACK_CLASS}
+    >
+      <ArrowLeft className="size-5" aria-hidden />
+      {toList ? 'Tasks' : 'Today'}
+    </a>
+  )
+}
+
 const KIND_LABEL = { Checklist: 'Checklist', RecordLog: 'Record log', Form: 'Form' } as const
 
 export function TaskHeader({ task }: { task: TaskDetail }) {
@@ -14,13 +47,7 @@ export function TaskHeader({ task }: { task: TaskDetail }) {
   const bad = task.status === 'Missed' || task.isOverdue
   return (
     <header className="flex flex-col gap-3">
-      <Link
-        to="/today"
-        className="-ml-2 inline-flex h-11 w-fit items-center gap-1 rounded-md px-2 text-base font-medium text-muted-foreground"
-      >
-        <ArrowLeft className="size-5" aria-hidden />
-        Today
-      </Link>
+      <BackLink />
       <div>
         <h1 className="text-2xl leading-tight font-semibold tracking-tight">{task.title}</h1>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">

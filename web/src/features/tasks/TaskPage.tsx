@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { TriangleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { ApiError, errorMessage } from '@/api/problem'
@@ -54,6 +55,7 @@ export function TaskPage({ taskId }: { taskId: string }) {
 
 function TaskScreen({ task }: { task: TaskDetail }) {
   const canComplete = usePermission(Permissions.Tasks.Complete)
+  const canRaiseIssue = usePermission(Permissions.Issues.Raise)
   const now = useNow()
   const queryClient = useQueryClient()
   const organizationId = useSession().organization?.id
@@ -103,6 +105,14 @@ function TaskScreen({ task }: { task: TaskDetail }) {
       )}
 
       <TaskActions task={task} />
+      {canRaiseIssue && (
+        <Button asChild variant="outline" size="lg" className="self-start">
+          <Link to="/issues/new" search={{ siteId: task.siteId, taskId: task.id }}>
+            <TriangleAlert aria-hidden />
+            Raise issue
+          </Link>
+        </Button>
+      )}
     </article>
   )
 }

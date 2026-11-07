@@ -23,14 +23,7 @@ const URL_OF = (id = ISSUE.id) => `${API}/api/v1/issues/${id}`
 const PHOTO_ID = '77777777-0000-0000-0000-000000000001'
 const OTHER_MEMBER = 'aaaaaaaa-0000-0000-0000-000000000009'
 
-const MANAGER = [
-  'issues.view',
-  'issues.raise',
-  'issues.manage',
-  'members.view',
-  'sites.view',
-  'tasks.view',
-]
+const MANAGER = ['issues.view', 'issues.raise', 'issues.manage', 'sites.view', 'tasks.view']
 const STAFF = ['issues.view', 'issues.raise', 'sites.view']
 
 function signIn(permissions = MANAGER) {
@@ -39,35 +32,13 @@ function signIn(permissions = MANAGER) {
     http.get(`${API}/api/v1/issues/summary`, () =>
       HttpResponse.json({ byStatus: {}, overdue: 0, activeByPriority: {}, assignedToMe: 0 }),
     ),
-    http.get(`${API}/api/v1/members`, () =>
-      HttpResponse.json({
-        items: [
-          member(SESSION_MEMBERSHIP_ID, 'Sam', 'Chef'),
-          member(OTHER_MEMBER, 'Pat', 'Manager'),
-        ],
-        page: 1,
-        pageSize: 100,
-        totalCount: 2,
-      }),
-    ),
+    http.get(`${API}/api/v1/issues/assignee-candidates`, ({ request }) => {
+      const params = new URL(request.url).searchParams
+      candidateRequests.push(params)
+      const term = (params.get('Search') ?? '').toLowerCase()
+      return HttpResponse.json(CANDIDATES.filter((c) => c.name.toLowerCase().includes(term)))
+    }),
   )
-}
-
-function member(id: string, firstName: string, lastName: string) {
-  return {
-    id,
-    userId: crypto.randomUUID(),
-    email: `${firstName}@example.com`,
-    firstName,
-    lastName,
-    roleId: crypto.randomUUID(),
-    roleName: 'Member',
-    status: 'Active',
-    allSites: true,
-    joinedAt: null,
-    lastLoginAt: null,
-    createdAt: '2026-01-01T00:00:00Z',
-  }
 }
 
 /** Serves the issue and records every write. `state.issue` can be changed to simulate server-side changes. */
@@ -131,6 +102,24 @@ function serveUploads() {
     ),
   )
 }
+
+const CANDIDATES = [
+  {
+    membershipId: SESSION_MEMBERSHIP_ID,
+    userId: 'u1',
+    name: 'Sam Chef',
+    email: 'sam@example.com',
+    roleName: 'Site manager',
+  },
+  {
+    membershipId: OTHER_MEMBER,
+    userId: 'u2',
+    name: 'Pat Manager',
+    email: 'pat@example.com',
+    roleName: 'Admin',
+  },
+]
+const candidateRequests: URLSearchParams[] = []
 
 const ME = { membershipId: SESSION_MEMBERSHIP_ID, name: 'Sam Chef' }
 const SOMEONE = { membershipId: OTHER_MEMBER, name: 'Pat Manager' }
@@ -548,23 +537,47 @@ describe('workflow actions', () => {
 })
 
 describe('changing an issue', () => {
-  it('assigns from the list of members', async () => {
+  it('assigns from the people the server offers for the issue site', async () => {
     const user = userEvent.setup()
     signIn()
+    candidateRequests.length = 0
     const state = serveIssue(issueDetail())
     onWrite(state, 'put', 'assignee', respondWith(state, { assignee: SOMEONE }))
     await renderApp(`/issues/${ISSUE.id}`)
 
     const select = await screen.findByLabelText('Assignee')
     await waitFor(() =>
-      expect(within(select).getByRole('option', { name: 'Pat Manager' })).toBeVisible(),
+      expect(within(select).getByRole('option', { name: 'Pat Manager (Admin)' })).toBeVisible(),
     )
-    await user.selectOptions(select, 'Pat Manager')
+    expect(candidateRequests[0]?.get('SiteId')).toBe(ISSUE_SITE_ID)
+    await user.selectOptions(select, 'Pat Manager (Admin)')
 
-    await waitFor(() => expect(select).toHaveValue(OTHER_MEMBER))
-    expect(state.calls).toEqual([
-      { method: 'put', path: 'assignee', body: { assigneeId: OTHER_MEMBER } },
-    ])
+    await waitFor(() => expect(state.calls).toHaveLength(1))
+    expect(state.calls[0]).toEqual({
+      method: 'put',
+      path: 'assignee',
+      body: { assigneeId: OTHER_MEMBER },
+    })
+    await waitFor(() =>
+      expect(screen.getByText('Pat Manager', { selector: 'p.text-base' })).toBeVisible(),
+    )
+  })
+
+  it('searches the candidates as the person types, without members.view', async () => {
+    const user = userEvent.setup()
+    signIn()
+    candidateRequests.length = 0
+    serveIssue(issueDetail())
+    await renderApp(`/issues/${ISSUE.id}`)
+
+    const select = await screen.findByLabelText('Assignee')
+    await user.type(screen.getByRole('searchbox', { name: 'Find a person' }), 'pat')
+
+    await waitFor(() => expect(candidateRequests.at(-1)?.get('Search')).toBe('pat'))
+    await waitFor(() =>
+      expect(within(select).queryByRole('option', { name: /Sam Chef/ })).toBeNull(),
+    )
+    expect(within(select).getByRole('option', { name: /Pat Manager/ })).toBeVisible()
   })
 
   it('unassigns', async () => {
@@ -574,26 +587,23 @@ describe('changing an issue', () => {
     onWrite(state, 'put', 'assignee', respondWith(state, { assignee: null }))
     await renderApp(`/issues/${ISSUE.id}`)
 
-    const select = await screen.findByLabelText('Assignee')
-    await waitFor(() =>
-      expect(within(select).getByRole('option', { name: 'Sam Chef' })).toBeVisible(),
-    )
-    await user.selectOptions(select, 'Unassigned')
+    await user.click(await screen.findByRole('button', { name: 'Unassign' }))
 
     await waitFor(() => expect(state.calls).toHaveLength(1))
     expect(state.calls[0]?.body).toEqual({ assigneeId: null })
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Unassign' })).not.toBeInTheDocument(),
+    )
   })
 
-  it('falls back to "assign to me" when the caller cannot list members', async () => {
+  it('assigns to me', async () => {
     const user = userEvent.setup()
-    signIn(['issues.view', 'issues.raise', 'issues.manage', 'sites.view'])
+    signIn()
     const state = serveIssue(issueDetail({ assignee: SOMEONE }))
     onWrite(state, 'put', 'assignee', respondWith(state, { assignee: ME }))
     await renderApp(`/issues/${ISSUE.id}`)
 
-    expect(await screen.findByRole('button', { name: 'Assign to me' })).toBeInTheDocument()
-    expect(screen.queryByLabelText('Assignee')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Assign to me' }))
+    await user.click(await screen.findByRole('button', { name: 'Assign to me' }))
 
     await waitFor(() => expect(state.calls).toHaveLength(1))
     expect(state.calls[0]?.body).toEqual({ assigneeId: SESSION_MEMBERSHIP_ID })
@@ -611,21 +621,16 @@ describe('changing an issue', () => {
         problem(
           400,
           'issue.invalid_assignee',
-          'The assignee must be an active member who can view issues at this site.',
+          'The assignee must be an active member at this site.',
         ),
         { status: 400 },
       ),
     )
     await renderApp(`/issues/${ISSUE.id}`)
 
-    const select = await screen.findByLabelText('Assignee')
-    await waitFor(() =>
-      expect(within(select).getByRole('option', { name: 'Pat Manager' })).toBeVisible(),
-    )
-    await user.selectOptions(select, 'Pat Manager')
+    await user.click(await screen.findByRole('button', { name: 'Assign to me' }))
 
     expect(await screen.findByText(/must be an active member/)).toBeInTheDocument()
-    expect(select).toHaveValue('')
   })
 
   it('changes the priority', async () => {
@@ -654,7 +659,7 @@ describe('changing an issue', () => {
     })
     await renderApp(`/issues/${ISSUE.id}`)
 
-    const due = await screen.findByLabelText('Due')
+    const due = await screen.findByLabelText(/^Due/)
     fireEvent.change(due, { target: { value: '2020-01-01T09:00' } })
     await user.click(screen.getByRole('button', { name: 'Save due time' }))
     expect(await screen.findByText('Pick a time in the future.')).toBeInTheDocument()
@@ -663,7 +668,8 @@ describe('changing an issue', () => {
     fireEvent.change(due, { target: { value: '2099-06-01T09:00' } })
     await user.click(screen.getByRole('button', { name: 'Save due time' }))
     await waitFor(() => expect(state.calls).toHaveLength(1))
-    expect(state.calls[0]?.body).toEqual({ dueAt: new Date('2099-06-01T09:00').toISOString() })
+    // 09:00 on the site's wall clock (Europe/London, summer time) is 08:00 UTC.
+    expect(state.calls[0]?.body).toEqual({ dueAt: '2099-06-01T08:00:00.000Z' })
 
     await user.click(await screen.findByRole('button', { name: 'Clear' }))
     await waitFor(() => expect(state.calls).toHaveLength(2))
