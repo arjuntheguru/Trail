@@ -12,11 +12,13 @@ internal sealed class MemberAccessEndpoints : IEndpointGroup
 
         group.MapGet("", async (Guid membershipId, GetMemberAccessHandler handler, CancellationToken ct) =>
                 (await handler.Handle(membershipId, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Members.View);
+            .RequireAuthorization(Permissions.Members.View)
+            .Returns<MemberAccessResponse>();
 
         group.MapPut("", async (Guid membershipId, SetMemberAccessCommand command, SetMemberAccessHandler handler, CancellationToken ct) =>
                 (await handler.Handle(membershipId, command, ct)).ToHttp())
             .Validate<SetMemberAccessCommand>()
-            .RequireAuthorization(Permissions.Members.Manage);
+            .RequireAuthorization(Permissions.Members.Manage)
+            .Returns<MemberAccessResponse>();
     }
 }

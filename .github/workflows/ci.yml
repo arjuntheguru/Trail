@@ -29,6 +29,10 @@ jobs:
       - name: Check formatting
         run: dotnet format Trail.slnx --verify-no-changes --no-restore --verbosity minimal
       - run: dotnet build Trail.slnx --no-restore -c Release
+      - name: Check the OpenAPI document is up to date
+        run: |
+          dotnet build src/Trail.Api -c Debug --no-restore
+          git diff --exit-code -- web/openapi
       - name: Test (integration tests start MySQL 8.4 via Testcontainers)
         run: dotnet test --solution Trail.slnx --no-build -c Release
       - name: Check for vulnerable packages

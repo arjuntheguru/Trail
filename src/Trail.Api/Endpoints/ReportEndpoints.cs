@@ -14,29 +14,35 @@ internal sealed class ReportEndpoints : IEndpointGroup
 
         group.MapGet("compliance", async ([AsParameters] ComplianceReportQuery query, GetComplianceReportHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Reports.View);
+            .RequireAuthorization(Permissions.Reports.View)
+            .Returns<ComplianceReportResponse>();
 
         group.MapGet("dashboard", async ([AsParameters] DashboardQuery query, GetDashboardHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Reports.View);
+            .RequireAuthorization(Permissions.Reports.View)
+            .Returns<DashboardResponse>();
 
         group.MapGet("activity", async ([AsParameters] ActivityFeedQuery query, GetActivityFeedHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Reports.View);
+            .RequireAuthorization(Permissions.Reports.View)
+            .Returns<ActivityFeedResponse>();
 
         group.MapGet("tasks.csv", async ([AsParameters] ExportTasksQuery query, ExportTasksCsvHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp(export => new CsvResult(export)))
-            .RequireAuthorization(Permissions.Reports.Export);
+            .RequireAuthorization(Permissions.Reports.Export)
+            .ReturnsCsv();
 
         group.MapGet("issues.csv", async ([AsParameters] ExportIssuesQuery query, ExportIssuesCsvHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp(export => new CsvResult(export)))
-            .RequireAuthorization(Permissions.Reports.Export);
+            .RequireAuthorization(Permissions.Reports.Export)
+            .ReturnsCsv();
 
         // Both policies must pass: the export permission and the right to see the audit trail.
         group.MapGet("audit.csv", async ([AsParameters] ExportAuditQuery query, ExportAuditCsvHandler handler, CancellationToken ct) =>
                 (await handler.Handle(query, ct)).ToHttp(export => new CsvResult(export)))
             .RequireAuthorization(Permissions.Audit.View)
-            .RequireAuthorization(Permissions.Reports.Export);
+            .RequireAuthorization(Permissions.Reports.Export)
+            .ReturnsCsv();
     }
 }
 

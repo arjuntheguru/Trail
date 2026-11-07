@@ -14,6 +14,7 @@ internal sealed class AuditEndpoints : IEndpointGroup
         group.MapGet("", async (
                     [AsParameters] ListAuditEntriesQuery query, [AsParameters] PageRequest page,
                     ListAuditEntriesHandler handler, CancellationToken ct) =>
-                TypedResults.Ok(await handler.Handle(query, page, ct)));
+                TypedResults.Ok(await handler.Handle(query, page, ct)))
+            .Returns<PagedResult<AuditEntryResponse>>();
     }
 }
