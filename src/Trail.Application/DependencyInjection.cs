@@ -1,0 +1,52 @@
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using Trail.Application.Common.Abstractions;
+using Trail.Application.Common.Events;
+using Trail.Application.Common.Security;
+using Trail.Application.Features.Auth;
+using Trail.Application.Features.Integrations;
+using Trail.Application.Features.Issues;
+using Trail.Application.Features.Members;
+using Trail.Application.Features.Organizations;
+using Trail.Application.Features.Tasks;
+
+namespace Trail.Application;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        var assembly = typeof(DependencyInjection).Assembly;
+
+        services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
+
+        // Every concrete "*Handler" class is a use case, resolved by type from endpoints.
+        foreach (var handler in assembly.DefinedTypes.Where(t =>
+                     t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }
+                     && t.Name.EndsWith("Handler", StringComparison.Ordinal)))
+        {
+            services.AddScoped(handler.AsType());
+        }
+
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+        foreach (var type in assembly.DefinedTypes.Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }))
+        {
+            foreach (var contract in type.ImplementedInterfaces.Where(i =>
+                         i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDomainEventHandler<>)))
+            {
+                services.AddScoped(contract, type.AsType());
+            }
+        }
+
+        services.AddScoped<OrganizationProvisioner>();
+        services.AddScoped<SessionIssuer>();
+        services.AddScoped<EmailConfirmationSender>();
+        services.AddScoped<InvitationSender>();
+        services.AddScoped<ISiteAccess, SiteAccess>();
+        services.AddScoped<TaskGenerator>();
+        services.AddScoped<IssueRaiser>();
+        services.AddIntegrationFeatures();
+
+        return services;
+    }
+}
