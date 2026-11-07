@@ -1,7 +1,9 @@
+using MailKit.Security;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Logging;
-using MailKit.Security;
+
 using Trail.Api.Infrastructure;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;

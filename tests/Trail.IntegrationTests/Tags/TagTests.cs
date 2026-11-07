@@ -1,4 +1,5 @@
 using System.Net;
+
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Tags;
 using Trail.IntegrationTests.Infrastructure;

@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Trail.Domain.Tasks;
 
 namespace Trail.UnitTests.Tasks;
@@ -7,7 +8,12 @@ public sealed class AnswerEvaluatorTests
 {
     private static readonly TemplateField Fridge = new()
     {
-        Key = "fridge", Label = "Walk-in fridge", Type = FieldType.Temperature, Min = 0, Max = 5, PhotoRequiredOnFailure = true,
+        Key = "fridge",
+        Label = "Walk-in fridge",
+        Type = FieldType.Temperature,
+        Min = 0,
+        Max = 5,
+        PhotoRequiredOnFailure = true,
     };
     private static readonly TemplateField Clean = new() { Key = "clean", Label = "Surfaces sanitised", Type = FieldType.YesNo, ExpectedAnswer = true };
     private static readonly TemplateField Tick = new() { Key = "tick", Label = "Lights on", Type = FieldType.Checkbox };
@@ -15,7 +21,9 @@ public sealed class AnswerEvaluatorTests
     private static readonly TemplateField Info = new() { Key = "info", Label = "Read the HACCP plan", Type = FieldType.Instruction };
     private static readonly TemplateField Condition = new()
     {
-        Key = "cond", Label = "Packaging", Type = FieldType.SingleSelect,
+        Key = "cond",
+        Label = "Packaging",
+        Type = FieldType.SingleSelect,
         Options = [new("ok", "Intact"), new("damaged", "Damaged", IsFailure: true)],
     };
 

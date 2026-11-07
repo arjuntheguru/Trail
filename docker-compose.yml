@@ -27,6 +27,8 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     ports:
       - "8080:8080"
     environment:
@@ -41,9 +43,14 @@ services:
       Email__Provider: Smtp
       Email__SmtpHost: mailpit
       Email__SmtpPort: "1025"
-      Storage__LocalPath: /app/App_Data/uploads
-    volumes:
-      - trail-uploads:/app/App_Data/uploads
+      Storage__Provider: S3
+      Storage__S3__Bucket: trail
+      Storage__S3__ServiceUrl: http://minio:9000
+      Storage__S3__AllowInsecureServiceUrl: "true" # dev only: MinIO is plain http inside the compose network
+      Storage__S3__ForcePathStyle: "true"
+      Storage__S3__Region: us-east-1
+      Storage__S3__AccessKeyId: trail-dev
+      Storage__S3__SecretAccessKey: trail-dev-secret
 
   mailpit:
     profiles: ["app"]
@@ -51,6 +58,30 @@ services:
     ports:
       - "8025:8025"
 
+  # S3-compatible object storage for attachments (console on http://localhost:9001).
+  minio:
+    profiles: ["app"]
+    image: minio/minio
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: trail-dev
+      MINIO_ROOT_PASSWORD: trail-dev-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - trail-minio:/data
+
+  minio-init:
+    profiles: ["app"]
+    image: minio/mc
+    depends_on:
+      - minio
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "until mc alias set local http://minio:9000 trail-dev trail-dev-secret; do sleep 1; done;
+      mc mb --ignore-existing local/trail"
+
 volumes:
   trail-mysql:
-  trail-uploads:
+  trail-minio:

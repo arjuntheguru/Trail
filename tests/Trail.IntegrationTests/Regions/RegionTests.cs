@@ -1,4 +1,5 @@
 using System.Net;
+
 using Trail.Application.Features.Regions;
 using Trail.IntegrationTests.Infrastructure;
 

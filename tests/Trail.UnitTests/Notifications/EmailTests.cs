@@ -1,4 +1,5 @@
 using NSubstitute;
+
 using Trail.Application.Features.Notifications;
 using Trail.Domain.Notifications;
 

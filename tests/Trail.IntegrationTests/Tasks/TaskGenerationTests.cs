@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.IntegrationTests.Infrastructure;
@@ -53,7 +54,10 @@ public sealed class TaskGenerationTests(MySqlFixture mysql) : IAsyncLifetime
     {
         var schedule = new TaskSchedule
         {
-            TemplateId = _template.Id, Frequency = Frequency.Daily, StartDate = new DateOnly(2026, 1, 1), DueTime = new TimeOnly(10, 0),
+            TemplateId = _template.Id,
+            Frequency = Frequency.Daily,
+            StartDate = new DateOnly(2026, 1, 1),
+            DueTime = new TimeOnly(10, 0),
         };
         configure(schedule);
         await Db(async db => { db.TaskSchedules.Add(schedule); await db.SaveChangesAsync(); });

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure.Files;
 

@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Application;
 using Trail.Application.Common.Events;
 using Trail.Application.Features.Integrations;

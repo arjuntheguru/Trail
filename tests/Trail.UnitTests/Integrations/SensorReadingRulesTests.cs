@@ -9,7 +9,12 @@ public sealed class SensorReadingRulesTests
 
     private static readonly TemplateField Fridge = new()
     {
-        Key = "fridge", Label = "Walk-in fridge", Type = FieldType.Temperature, Min = 0, Max = 5, PhotoRequiredOnFailure = true,
+        Key = "fridge",
+        Label = "Walk-in fridge",
+        Type = FieldType.Temperature,
+        Min = 0,
+        Max = 5,
+        PhotoRequiredOnFailure = true,
     };
     private static readonly TemplateField Checked = new() { Key = "checked", Label = "Door seal checked", Type = FieldType.YesNo };
 

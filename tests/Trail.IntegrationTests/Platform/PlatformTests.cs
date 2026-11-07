@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Paging;
 using Trail.Application.Features.Auth;
@@ -44,7 +46,11 @@ public sealed class PlatformTests(MySqlFixture mysql) : IAsyncLifetime
 
         var created = await (await admin.PostJsonAsync("/api/v1/platform/organizations", new
         {
-            name = "Seaside Group", ownerEmail = email, ownerFirstName = "Sam", ownerLastName = "Sea", timeZone = "Europe/Dublin",
+            name = "Seaside Group",
+            ownerEmail = email,
+            ownerFirstName = "Sam",
+            ownerLastName = "Sea",
+            timeZone = "Europe/Dublin",
         })).ReadAsync<PlatformOrganizationResponse>();
         created.DefaultTimeZone.ShouldBe("Europe/Dublin");
 

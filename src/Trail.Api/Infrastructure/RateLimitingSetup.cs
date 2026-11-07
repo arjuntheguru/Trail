@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Features.Integrations;
 
 namespace Trail.Api.Infrastructure;

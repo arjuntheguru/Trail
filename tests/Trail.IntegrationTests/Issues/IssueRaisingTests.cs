@@ -1,6 +1,8 @@
 using System.Text.Json;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Features.Issues;
 using Trail.Domain.Common;
@@ -61,7 +63,9 @@ public sealed class IssueRaisingTests(MySqlFixture mysql) : IAsyncLifetime
             {
                 ["temp"] = new FieldAnswer
                 {
-                    Value = JsonSerializer.SerializeToElement(temperature), Comment = comment, PhotoIds = photo is { } p ? [p] : [],
+                    Value = JsonSerializer.SerializeToElement(temperature),
+                    Comment = comment,
+                    PhotoIds = photo is { } p ? [p] : [],
                 },
                 ["seal"] = new FieldAnswer { Value = JsonSerializer.SerializeToElement(seal) },
                 ["label"] = new FieldAnswer { Value = JsonSerializer.SerializeToElement(labelled) },

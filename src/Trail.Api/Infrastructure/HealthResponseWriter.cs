@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Trail.Api.Infrastructure;

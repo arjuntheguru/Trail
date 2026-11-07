@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure.Telemetry;
 

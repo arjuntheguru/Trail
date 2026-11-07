@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Trail.Application.Common.Settings;
+
 using Microsoft.IdentityModel.Tokens;
+
+using Trail.Application.Common.Settings;
 
 namespace Trail.Infrastructure.Security;
 

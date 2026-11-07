@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using Trail.Application.Common;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;

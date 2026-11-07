@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Integrations;

@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.IntegrationTests.Infrastructure;
@@ -72,9 +74,14 @@ public sealed class TaskPersistenceTests(MySqlFixture mysql) : IAsyncLifetime
         {
             var schedule = new TaskSchedule
             {
-                TemplateId = _template.Id, Frequency = Frequency.Weekly, Interval = 2,
-                StartDate = new DateOnly(2026, 3, 1), EndDate = new DateOnly(2026, 12, 31),
-                Days = WeekDays.Monday | WeekDays.Thursday, DueTime = new TimeOnly(9, 45), AvailableFrom = new TimeOnly(6, 0),
+                TemplateId = _template.Id,
+                Frequency = Frequency.Weekly,
+                Interval = 2,
+                StartDate = new DateOnly(2026, 3, 1),
+                EndDate = new DateOnly(2026, 12, 31),
+                Days = WeekDays.Monday | WeekDays.Thursday,
+                DueTime = new TimeOnly(9, 45),
+                AvailableFrom = new TimeOnly(6, 0),
                 Sites = [new TaskScheduleSite { SiteId = _site }],
             };
             write.TaskSchedules.Add(schedule);

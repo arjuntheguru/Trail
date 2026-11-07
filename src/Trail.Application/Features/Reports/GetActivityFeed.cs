@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Issues;
@@ -44,7 +45,14 @@ public sealed class GetActivityFeedHandler(IAppDbContext db, ISiteAccess access)
         var events = await db.IssueEvents.AsNoTracking()
             .Join(issues, e => e.IssueId, i => i.Id, (e, i) => new
             {
-                e.Kind, e.OccurredAt, e.ActorId, IssueId = i.Id, i.SiteId, i.Number, i.Title, e.Id,
+                e.Kind,
+                e.OccurredAt,
+                e.ActorId,
+                IssueId = i.Id,
+                i.SiteId,
+                i.Number,
+                i.Title,
+                e.Id,
             })
             .Where(e => (e.Kind == IssueEventKind.Raised || e.Kind == IssueEventKind.StatusChanged
                          || e.Kind == IssueEventKind.Assigned || e.Kind == IssueEventKind.Comment)

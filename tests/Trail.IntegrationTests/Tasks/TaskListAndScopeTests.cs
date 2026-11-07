@@ -1,4 +1,5 @@
 using System.Net;
+
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Tasks;
@@ -6,6 +7,7 @@ using Trail.Domain.Common;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
 using Trail.IntegrationTests.Infrastructure;
+
 using static Trail.IntegrationTests.Tasks.TaskTestKit;
 
 namespace Trail.IntegrationTests.Tasks;

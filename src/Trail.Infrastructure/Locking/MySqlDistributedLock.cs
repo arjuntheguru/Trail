@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Options;
+
 using MySql.Data.MySqlClient;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure.Persistence;
 

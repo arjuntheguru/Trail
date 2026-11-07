@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Domain.Auditing;
 using Trail.Domain.Identity;
@@ -96,7 +97,10 @@ public sealed class AuditTrailTests(MySqlFixture mysql) : IAsyncLifetime
             write.Users.Add(user);
             write.RefreshTokens.Add(new RefreshToken
             {
-                UserId = user.Id, FamilyId = Guid.CreateVersion7(), TokenHash = "hash", ExpiresAt = DateTime.UtcNow.AddDays(1),
+                UserId = user.Id,
+                FamilyId = Guid.CreateVersion7(),
+                TokenHash = "hash",
+                ExpiresAt = DateTime.UtcNow.AddDays(1),
             });
             await write.SaveChangesAsync(Ct);
         }

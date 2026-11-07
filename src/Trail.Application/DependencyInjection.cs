@@ -1,5 +1,7 @@
 using FluentValidation;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;
 using Trail.Application.Common.Security;

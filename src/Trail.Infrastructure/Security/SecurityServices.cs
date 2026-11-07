@@ -1,12 +1,16 @@
 using System.Security.Claims;
+
 using MailKit.Net.Smtp;
 using MailKit.Security;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+
 using MimeKit;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 using Trail.Application.Common.Settings;

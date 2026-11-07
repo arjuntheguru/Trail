@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
+
 using NSubstitute;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Locking;

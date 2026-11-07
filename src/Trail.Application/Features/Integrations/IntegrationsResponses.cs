@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+
 using Trail.Domain.Integrations;
 
 namespace Trail.Application.Features.Integrations;

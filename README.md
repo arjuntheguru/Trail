@@ -47,7 +47,14 @@ Required settings (environment variables):
 | `App__FrontendBaseUrl` | Public frontend URL used in email links |
 | `Email__Provider` | `Smtp` to send mail (also `Email__SmtpHost`, `Email__SmtpPort`, `Email__SmtpUser`, `Email__SmtpPassword`, `Email__FromAddress`) |
 | `Cors__AllowedOrigins__0` | Browser origin allowed to call the API |
-| `Storage__LocalPath` | Upload directory (default in image `/app/App_Data/uploads`); must be a shared volume when running several replicas |
+| `Storage__LocalPath` | Upload directory (default in image `/app/App_Data/uploads`); must be a shared volume when running several replicas, or use `Storage__Provider=S3` |
+| `Storage__Provider` | `Local` (default) or `S3` (AWS S3, Cloudflare R2, MinIO, ...) |
+| `Storage__S3__Bucket` | Bucket name (required for `S3`) |
+| `Storage__S3__Region` | Optional region, e.g. `eu-west-1` (`auto` for R2) |
+| `Storage__S3__ServiceUrl` | Optional endpoint for S3-compatible stores; must be https outside Development/Testing unless `Storage__S3__AllowInsecureServiceUrl=true` (logged as a warning) |
+| `Storage__S3__ForcePathStyle` | `true` for stores that need path-style addressing (MinIO); default `false` |
+| `Storage__S3__AccessKeyId`, `Storage__S3__SecretAccessKey` | Optional, set both or neither; when absent the AWS default credential chain (IAM role, environment) is used |
+| `Storage__S3__KeyPrefix` | Optional prefix inside the bucket, e.g. `attachments/` |
 | `Bootstrap__PlatformAdminEmail`, `Bootstrap__PlatformAdminPassword` | Optional: create the first platform admin at startup (password at least 12 characters) |
 
 Outside Development/Testing the API refuses to start when `Email__Provider` is not `Smtp` or `App__FrontendBaseUrl` is

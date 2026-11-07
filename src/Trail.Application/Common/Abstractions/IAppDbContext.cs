@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Domain.Auditing;
 using Trail.Domain.Files;
 using Trail.Domain.Identity;

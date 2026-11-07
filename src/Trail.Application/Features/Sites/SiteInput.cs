@@ -1,4 +1,5 @@
 using FluentValidation;
+
 using Trail.Application.Common;
 using Trail.Domain.Organizations;
 

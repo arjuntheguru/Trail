@@ -1,6 +1,9 @@
 using System.Net;
+
 using Microsoft.Extensions.Time.Testing;
+
 using NSubstitute;
+
 using Trail.Application.Features.Integrations;
 using Trail.Infrastructure.Integrations;
 

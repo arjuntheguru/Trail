@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+
 using Trail.Application.Features.Integrations;
 
 namespace Trail.UnitTests.Integrations;

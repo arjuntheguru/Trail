@@ -1,4 +1,5 @@
 using System.Globalization;
+
 using Trail.Domain.Tasks;
 
 namespace Trail.Application.Features.Schedules;

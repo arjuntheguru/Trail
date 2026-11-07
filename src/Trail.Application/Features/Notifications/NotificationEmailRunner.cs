@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Domain.Identity;
 using Trail.Domain.Notifications;
