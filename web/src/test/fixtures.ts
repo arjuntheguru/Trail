@@ -120,3 +120,86 @@ export function taskDetail(overrides: Partial<TaskDetail> = {}): TaskDetail {
     ...overrides,
   }
 }
+
+type IssueDetail = components['schemas']['IssueDetailResponse']
+type IssueListItem = components['schemas']['IssueListItemResponse']
+type IssueEvent = components['schemas']['IssueEventResponse']
+
+export const SESSION_MEMBERSHIP_ID = ORG_A.membershipId
+export const ISSUE_SITE_ID = '55555555-0000-0000-0000-000000000001'
+
+export function issueListItem(overrides: Partial<IssueListItem> = {}): IssueListItem {
+  return {
+    id: crypto.randomUUID(),
+    number: 12,
+    title: 'Fridge door will not seal',
+    siteId: ISSUE_SITE_ID,
+    siteName: 'Harbour Cafe',
+    priority: 'Medium',
+    status: 'Open',
+    source: 'Manual',
+    assignee: null,
+    dueAt: null,
+    isOverdue: false,
+    createdAt: '2026-11-06T09:00:00Z',
+    photoCount: 0,
+    ...overrides,
+  }
+}
+
+export function issueEvent(overrides: Partial<IssueEvent> = {}): IssueEvent {
+  return {
+    id: crypto.randomUUID(),
+    kind: 'Comment',
+    from: null,
+    to: null,
+    fromName: null,
+    toName: null,
+    note: null,
+    photoIds: [],
+    occurredAt: '2026-11-06T10:00:00Z',
+    actorId: null,
+    actorName: 'Pat Manager',
+    ...overrides,
+  }
+}
+
+/** An open, unassigned manual issue with a single "raised" event. */
+export function issueDetail(overrides: Partial<IssueDetail> = {}): IssueDetail {
+  return {
+    id: '88888888-0000-0000-0000-000000000001',
+    number: 12,
+    title: 'Fridge door will not seal',
+    description: null,
+    siteId: ISSUE_SITE_ID,
+    siteName: 'Harbour Cafe',
+    departmentId: null,
+    departmentName: null,
+    priority: 'Medium',
+    status: 'Open',
+    source: 'Manual',
+    assignee: null,
+    dueAt: null,
+    isOverdue: false,
+    siteTaskId: null,
+    taskTitle: null,
+    taskDueDate: null,
+    fieldKey: null,
+    resolution: null,
+    resolvedAt: null,
+    resolvedBy: null,
+    closedAt: null,
+    closedBy: null,
+    photoIds: [],
+    createdAt: '2026-11-06T09:00:00Z',
+    timeline: [
+      issueEvent({
+        kind: 'Raised',
+        to: 'Medium',
+        occurredAt: '2026-11-06T09:00:00Z',
+        actorName: 'Sam Chef',
+      }),
+    ],
+    ...overrides,
+  }
+}

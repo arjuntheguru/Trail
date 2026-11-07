@@ -20,3 +20,31 @@ export function formatDay(day: string): string {
     timeZone: 'UTC',
   }).format(new Date(Date.UTC(y, m - 1, d)))
 }
+
+function parseInstant(iso: string): Date {
+  const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso)
+  return new Date(hasZone ? iso : `${iso}Z`)
+}
+
+/** Date and time of an instant (ISO string, UTC when it has no offset) in the viewer's time zone. */
+export function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(parseInstant(iso))
+}
+
+/** The value a datetime-local input takes for an instant, in the viewer's time zone. */
+export function toLocalInput(iso: string): string {
+  const d = parseInstant(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  return `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** Converts a datetime-local value (viewer's time zone) to a UTC ISO instant for the API. */
+export function fromLocalInput(value: string): string {
+  return new Date(value).toISOString()
+}
