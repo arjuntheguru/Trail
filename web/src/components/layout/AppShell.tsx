@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from '@tanstack/react-router'
 import { hasPermission } from '@/auth/permissions'
 import { useAuthState } from '@/auth/context'
 import { IssuesNavBadge } from '@/features/issues/NavBadge'
+import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { cn } from '@/lib/utils'
 
 import { EmailBanner } from './EmailBanner'
@@ -31,6 +32,7 @@ export function AppShell() {
             T
           </span>
           Trail
+          <NotificationBell className="ml-auto" />
         </div>
         <OrganizationSwitcher />
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
@@ -54,7 +56,10 @@ export function AppShell() {
         {/* Mobile top bar */}
         <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b bg-card px-3 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] md:hidden">
           <OrganizationSwitcher compact />
-          <UserMenu compact />
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <UserMenu compact />
+          </div>
         </header>
         <EmailBanner />
         <main

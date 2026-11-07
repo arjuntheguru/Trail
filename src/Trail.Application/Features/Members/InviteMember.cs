@@ -10,7 +10,8 @@ using Trail.Domain.Identity;
 
 namespace Trail.Application.Features.Members;
 
-public sealed record InviteMemberCommand(string Email, Guid RoleId, string? FirstName = null, string? LastName = null, bool AllSites = true);
+public sealed record InviteMemberCommand(string Email, Guid RoleId, string? FirstName = null, string? LastName = null, bool AllSites = true,
+    IReadOnlyList<Guid>? SiteIds = null, IReadOnlyList<Guid>? RegionIds = null);
 
 internal sealed class InviteMemberValidator : AbstractValidator<InviteMemberCommand>
 {
@@ -20,6 +21,8 @@ internal sealed class InviteMemberValidator : AbstractValidator<InviteMemberComm
         RuleFor(x => x.RoleId).NotEmpty();
         RuleFor(x => x.FirstName).MaximumLength(User.NameMaxLength);
         RuleFor(x => x.LastName).MaximumLength(User.NameMaxLength);
+        MemberAccessRules.AddAccessIdRules(this, x => x.SiteIds);
+        MemberAccessRules.AddAccessIdRules(this, x => x.RegionIds);
     }
 }
 
@@ -27,15 +30,20 @@ internal sealed class InviteMemberValidator : AbstractValidator<InviteMemberComm
 /// Invites someone by email. A new person gets a user without a password; an existing Trail user is linked.
 /// Either way the membership stays <see cref="MembershipStatus.Invited"/> until they accept the emailed link.
 /// </summary>
-public sealed class InviteMemberHandler(IAppDbContext db, ICurrentUser caller, InvitationSender invitations)
+public sealed class InviteMemberHandler(IAppDbContext db, ICurrentUser caller, ISiteAccess access, InvitationSender invitations)
 {
     public async Task<Result<MemberResponse>> Handle(InviteMemberCommand command, CancellationToken ct)
     {
         var role = await db.Roles.SingleOrDefaultAsync(r => r.Id == command.RoleId, ct);
         if (role is null) return Error.Validation("member.unknown_role", "That role does not exist.");
         if (!MemberRules.CallerHolds(caller, role.Permissions)) return MemberRules.Escalation("invite someone to a role");
-        if (command.AllSites && !await MemberRules.CallerHasAllSitesAsync(db, caller, ct))
-            return Error.Forbidden("member.access_out_of_scope", "You can only invite members to the sites you can access.");
+
+        // Same grant rules as PUT /members/{id}/access. As there, ids are kept even when AllSites is on.
+        var siteIds = (command.SiteIds ?? []).Distinct().ToList();
+        var regionIds = (command.RegionIds ?? []).Distinct().ToList();
+        if (MemberAccessRules.IsOutOfScope(await access.GetScopeAsync(ct), command.AllSites, siteIds, regionIds))
+            return MemberAccessRules.OutOfScope;
+        if (!await MemberAccessRules.AllExistAsync(db, siteIds, regionIds, ct)) return MemberAccessRules.UnknownIds;
 
         var normalized = User.Normalize(command.Email);
         var user = await db.Users.SingleOrDefaultAsync(u => u.NormalizedEmail == normalized, ct);
@@ -65,6 +73,8 @@ public sealed class InviteMemberHandler(IAppDbContext db, ICurrentUser caller, I
             AllSites = command.AllSites,
         };
         db.Memberships.Add(membership);
+        db.MembershipSites.AddRange(siteIds.Select(id => new MembershipSite { MembershipId = membership.Id, SiteId = id }));
+        db.MembershipRegions.AddRange(regionIds.Select(id => new MembershipRegion { MembershipId = membership.Id, RegionId = id }));
 
         var token = await invitations.CreateAsync(user, membership, ct);
         await db.SaveChangesAsync(ct);

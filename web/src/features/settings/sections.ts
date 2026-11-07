@@ -1,4 +1,17 @@
-import { Building2, KeyRound, MapPin, Network, Tag, UsersRound, Layers } from 'lucide-react'
+import {
+  Bell,
+  Building2,
+  CalendarClock,
+  ClipboardList,
+  History,
+  KeyRound,
+  Layers,
+  MapPin,
+  Network,
+  Plug,
+  Tag,
+  UsersRound,
+} from 'lucide-react'
 
 import { Permissions } from '@/auth/permissions'
 
@@ -11,6 +24,11 @@ export interface SettingsSection {
     | '/settings/tags'
     | '/settings/members'
     | '/settings/roles'
+    | '/settings/templates'
+    | '/settings/schedules'
+    | '/settings/integrations'
+    | '/settings/audit'
+    | '/settings/notifications'
   label: string
   icon: typeof Building2
   /** Needed to open the section; every member may see the organization. */
@@ -35,6 +53,26 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
     permission: Permissions.Members.View,
   },
   { to: '/settings/roles', label: 'Roles', icon: KeyRound, permission: Permissions.Members.View },
+  {
+    to: '/settings/templates',
+    label: 'Templates',
+    icon: ClipboardList,
+    permission: Permissions.Templates.View,
+  },
+  {
+    to: '/settings/schedules',
+    label: 'Schedules',
+    icon: CalendarClock,
+    permission: Permissions.Schedules.Manage,
+  },
+  {
+    to: '/settings/integrations',
+    label: 'Integrations',
+    icon: Plug,
+    permission: Permissions.Integrations.Manage,
+  },
+  { to: '/settings/audit', label: 'Audit log', icon: History, permission: Permissions.Audit.View },
+  { to: '/settings/notifications', label: 'Notifications', icon: Bell },
 ]
 
 /** The sections these permissions can open, in menu order. */
