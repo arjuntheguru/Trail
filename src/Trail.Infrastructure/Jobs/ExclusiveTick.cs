@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Trail.Application.Common.Abstractions;
+using Trail.Infrastructure.Telemetry;
 
 namespace Trail.Infrastructure.Jobs;
 
@@ -36,6 +37,8 @@ internal static class ExclusiveTick
         {
             do
             {
+                using var activity = TrailTelemetry.StartJob(job);
+                TrailTelemetry.RecordJobRun(job);
                 try
                 {
                     await tick(stoppingToken);
@@ -46,6 +49,8 @@ internal static class ExclusiveTick
                 }
                 catch (Exception ex)
                 {
+                    TrailTelemetry.RecordJobFailure(job);
+                    activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, ex.Message);
                     logger.LogError(ex, "{Job} run failed.", job);
                 }
             }
