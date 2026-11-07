@@ -1,11 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Features.Notifications;
+using Trail.Infrastructure.Jobs;
 using Trail.Infrastructure.Persistence;
 
 namespace Trail.Infrastructure.Notifications;
@@ -45,7 +48,7 @@ public sealed class DailyDigestOptions
 /// Runs a unit of work for every active organization on a timer, each in its own scope and tenant, like the task
 /// generation job. One organization failing must not stop the others.
 /// </summary>
-internal abstract class PerOrganizationJob(IServiceScopeFactory scopes, TimeProvider clock, ILogger logger) : BackgroundService
+internal abstract class PerOrganizationJob(IServiceScopeFactory scopes, IDistributedLock locks, TimeProvider clock, ILogger logger) : BackgroundService
 {
     protected abstract string Name { get; }
     protected abstract bool Enabled { get; }
@@ -53,23 +56,20 @@ internal abstract class PerOrganizationJob(IServiceScopeFactory scopes, TimeProv
 
     protected abstract Task RunForOrganizationAsync(IServiceProvider services, Guid organizationId, CancellationToken ct);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (!Enabled) return;
+    /// <summary>When set, a tick runs only on the replica holding this job's distributed lock.</summary>
+    protected virtual string? LockName => null;
 
-        using var timer = new PeriodicTimer(Interval, clock);
-        do
+    protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
+        Enabled ? ExclusiveTick.LoopAsync(Interval, clock, logger, Name, TickAsync, stoppingToken) : Task.CompletedTask;
+
+    internal async Task<bool> TickAsync(CancellationToken ct)
+    {
+        if (LockName is null)
         {
-            try
-            {
-                await RunOnceAsync(stoppingToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                logger.LogError(ex, "{Job} run failed.", Name);
-            }
+            await RunOnceAsync(ct);
+            return true;
         }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
+        return await ExclusiveTick.RunAsync(locks, LockName, logger, RunOnceAsync, ct);
     }
 
     public async Task RunOnceAsync(CancellationToken ct)
@@ -104,8 +104,8 @@ internal abstract class PerOrganizationJob(IServiceScopeFactory scopes, TimeProv
 
 /// <summary>Sends pending notification emails, retrying failures with backoff.</summary>
 internal sealed class NotificationEmailJob(
-    IServiceScopeFactory scopes, IOptions<NotificationEmailOptions> options, TimeProvider clock, ILogger<NotificationEmailJob> logger)
-    : PerOrganizationJob(scopes, clock, logger)
+    IServiceScopeFactory scopes, IDistributedLock locks, IOptions<NotificationEmailOptions> options, TimeProvider clock, ILogger<NotificationEmailJob> logger)
+    : PerOrganizationJob(scopes, locks, clock, logger)
 {
     protected override string Name => "Notification email";
     protected override bool Enabled => options.Value.Enabled;
@@ -117,8 +117,8 @@ internal sealed class NotificationEmailJob(
 
 /// <summary>Announces overdue issues and escalates the ones that stay overdue.</summary>
 internal sealed class IssueEscalationJob(
-    IServiceScopeFactory scopes, IOptions<IssueEscalationOptions> options, TimeProvider clock, ILogger<IssueEscalationJob> logger)
-    : PerOrganizationJob(scopes, clock, logger)
+    IServiceScopeFactory scopes, IDistributedLock locks, IOptions<IssueEscalationOptions> options, TimeProvider clock, ILogger<IssueEscalationJob> logger)
+    : PerOrganizationJob(scopes, locks, clock, logger)
 {
     protected override string Name => "Issue escalation";
     protected override bool Enabled => options.Value.Enabled;
@@ -130,10 +130,11 @@ internal sealed class IssueEscalationJob(
 
 /// <summary>Sends each person's daily summary once their local digest hour has arrived.</summary>
 internal sealed class DailyDigestJob(
-    IServiceScopeFactory scopes, IOptions<DailyDigestOptions> options, TimeProvider clock, ILogger<DailyDigestJob> logger)
-    : PerOrganizationJob(scopes, clock, logger)
+    IServiceScopeFactory scopes, IDistributedLock locks, IOptions<DailyDigestOptions> options, TimeProvider clock, ILogger<DailyDigestJob> logger)
+    : PerOrganizationJob(scopes, locks, clock, logger)
 {
     protected override string Name => "Daily digest";
+    protected override string? LockName => "daily-digest";
     protected override bool Enabled => options.Value.Enabled;
     protected override TimeSpan Interval => TimeSpan.FromMinutes(options.Value.IntervalMinutes);
 

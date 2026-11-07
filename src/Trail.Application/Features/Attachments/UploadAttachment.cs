@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Domain.Files;

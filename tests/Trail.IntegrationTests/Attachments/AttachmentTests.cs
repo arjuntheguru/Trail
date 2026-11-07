@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Attachments;
 using Trail.Domain.Files;

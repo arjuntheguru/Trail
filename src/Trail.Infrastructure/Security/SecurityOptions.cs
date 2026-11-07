@@ -1,6 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+
 using Microsoft.IdentityModel.Tokens;
+
+using Trail.Application.Common.Settings;
 
 namespace Trail.Infrastructure.Security;
 
@@ -44,6 +47,27 @@ public sealed class EmailOptions
     public int SmtpPort { get; set; } = 587;
     public string? SmtpUser { get; set; }
     public string? SmtpPassword { get; set; }
+
+    /// <summary>"StartTls" (port 587) or "SslOnConnect" (port 465). TLS is always enforced when credentials are set.</summary>
+    public SmtpSecurity SmtpSecurity { get; set; } = SmtpSecurity.StartTls;
+
+    [Range(1, 300)]
+    public int SmtpTimeoutSeconds { get; set; } = 30;
+
+    public bool HasCredentials => !string.IsNullOrEmpty(SmtpUser);
+
+    public const string ProviderNotAllowedMessage =
+        "Email:Provider must be 'Smtp' outside the Development and Testing environments (the Log sender writes account tokens to the logs).";
+
+    /// <summary>The Log provider writes account tokens to the log, so it is only allowed in relaxed environments.</summary>
+    public bool IsProviderAllowedIn(string environmentName) =>
+        Provider == "Smtp" || EnvironmentRules.IsRelaxed(environmentName);
+}
+
+public enum SmtpSecurity
+{
+    StartTls,
+    SslOnConnect,
 }
 
 public sealed class BootstrapOptions
@@ -55,4 +79,14 @@ public sealed class BootstrapOptions
     public string? PlatformAdminEmail { get; set; }
 
     public string? PlatformAdminPassword { get; set; }
+
+    public const int MinPasswordLength = 12;
+
+    public const string InconsistentMessage =
+        "Bootstrap:PlatformAdminPassword must be at least 12 characters when Bootstrap:PlatformAdminEmail is set.";
+
+    /// <summary>When an admin email is configured the password must be present and long enough.</summary>
+    public bool IsConsistent =>
+        string.IsNullOrWhiteSpace(PlatformAdminEmail)
+        || (PlatformAdminPassword is { } password && password.Length >= MinPasswordLength);
 }

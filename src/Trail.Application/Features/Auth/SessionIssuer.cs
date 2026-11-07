@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 using Trail.Domain.Identity;

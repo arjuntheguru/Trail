@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Organizations;
 
 namespace Trail.Infrastructure.Persistence.Configurations;

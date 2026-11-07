@@ -10,7 +10,12 @@ public sealed class RecurrenceSummaryTests
     private static string Describe(Frequency frequency, int interval = 1, WeekDays days = WeekDays.None, int? dayOfMonth = null, DateOnly? end = null) =>
         RecurrenceSummary.Describe(new Recurrence
         {
-            Frequency = frequency, Interval = interval, StartDate = Start, EndDate = end, Days = days, DayOfMonth = dayOfMonth,
+            Frequency = frequency,
+            Interval = interval,
+            StartDate = Start,
+            EndDate = end,
+            Days = days,
+            DayOfMonth = dayOfMonth,
         });
 
     [Fact]

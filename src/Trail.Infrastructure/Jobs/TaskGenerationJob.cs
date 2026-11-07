@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Features.Tasks;
 using Trail.Infrastructure.Persistence;
@@ -26,27 +28,19 @@ public sealed class TaskGenerationOptions
 /// Safe to run on several instances at once: generation is idempotent and missed-marking is a conditional update.
 /// </summary>
 internal sealed class TaskGenerationJob(
-    IServiceScopeFactory scopes, IOptions<TaskGenerationOptions> options, TimeProvider clock, ILogger<TaskGenerationJob> logger)
+    IServiceScopeFactory scopes, IDistributedLock locks, IOptions<TaskGenerationOptions> options, TimeProvider clock, ILogger<TaskGenerationJob> logger)
     : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (!options.Value.Enabled) return;
+    protected override Task ExecuteAsync(CancellationToken stoppingToken) =>
+        options.Value.Enabled
+            ? ExclusiveTick.LoopAsync(TimeSpan.FromMinutes(options.Value.IntervalMinutes), clock, logger, JobName, TickAsync, stoppingToken)
+            : Task.CompletedTask;
 
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(options.Value.IntervalMinutes), clock);
-        do
-        {
-            try
-            {
-                await RunOnceAsync(stoppingToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                logger.LogError(ex, "Task generation run failed.");
-            }
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken));
-    }
+    internal const string JobName = "task-generation";
+
+    /// <summary>One scheduled tick: skipped when another replica is already running it.</summary>
+    internal Task<bool> TickAsync(CancellationToken ct) =>
+        ExclusiveTick.RunAsync(locks, JobName, logger, RunOnceAsync, ct);
 
     public async Task RunOnceAsync(CancellationToken ct)
     {

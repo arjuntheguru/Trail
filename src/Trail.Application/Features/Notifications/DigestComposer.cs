@@ -1,4 +1,5 @@
 using System.Text;
+
 using Trail.Application.Common.Abstractions;
 
 namespace Trail.Application.Features.Notifications;

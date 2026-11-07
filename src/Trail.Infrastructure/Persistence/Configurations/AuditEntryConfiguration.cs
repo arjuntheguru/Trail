@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Auditing;
 using Trail.Infrastructure.Persistence.Conventions;
 

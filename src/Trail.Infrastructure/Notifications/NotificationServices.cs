@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Settings;
 using Trail.Application.Features.Notifications;
 

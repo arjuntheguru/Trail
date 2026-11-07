@@ -1,12 +1,16 @@
 using System.Security.Claims;
+
 using MailKit.Net.Smtp;
 using MailKit.Security;
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+
 using MimeKit;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Security;
 using Trail.Application.Common.Settings;
@@ -86,13 +90,23 @@ internal sealed class LogEmailSender(ILogger<LogEmailSender> logger) : IEmailSen
 {
     public Task SendAsync(EmailMessage message, CancellationToken ct = default)
     {
-        logger.LogInformation("Email to {To}: {Subject}\n{Body}", message.To, message.Subject, message.TextBody);
+        // The body carries account tokens (reset and invitation links), so it is only written at Debug.
+        logger.LogInformation("Email to {To}: {Subject}", message.To, message.Subject);
+        if (logger.IsEnabled(LogLevel.Debug))
+            logger.LogDebug("Email body for {To}:\n{Body}", message.To, message.TextBody);
         return Task.CompletedTask;
     }
 }
 
 internal sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<SmtpEmailSender> logger) : IEmailSender
 {
+    /// <summary>TLS is mandatory when credentials are sent; opportunistic TLS is only for unauthenticated relays.</summary>
+    internal static SecureSocketOptions ResolveSecurity(EmailOptions settings) => settings.SmtpSecurity switch
+    {
+        SmtpSecurity.SslOnConnect => SecureSocketOptions.SslOnConnect,
+        _ => settings.HasCredentials ? SecureSocketOptions.StartTls : SecureSocketOptions.StartTlsWhenAvailable,
+    };
+
     public async Task SendAsync(EmailMessage message, CancellationToken ct = default)
     {
         var settings = options.Value;
@@ -102,8 +116,8 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options, ILogger<Sm
         mime.Subject = message.Subject;
         mime.Body = new TextPart("plain") { Text = message.TextBody };
 
-        using var client = new SmtpClient();
-        await client.ConnectAsync(settings.SmtpHost!, settings.SmtpPort, SecureSocketOptions.StartTlsWhenAvailable, ct);
+        using var client = new SmtpClient { Timeout = settings.SmtpTimeoutSeconds * 1000 };
+        await client.ConnectAsync(settings.SmtpHost!, settings.SmtpPort, ResolveSecurity(settings), ct);
         if (!string.IsNullOrEmpty(settings.SmtpUser))
             await client.AuthenticateAsync(settings.SmtpUser, settings.SmtpPassword ?? "", ct);
         await client.SendAsync(mime, ct);

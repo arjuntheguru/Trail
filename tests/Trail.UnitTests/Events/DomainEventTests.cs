@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+
 using NSubstitute;
+
 using Trail.Application;
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Events;

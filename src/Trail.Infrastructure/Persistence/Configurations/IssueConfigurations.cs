@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Identity;
 using Trail.Domain.Issues;
 using Trail.Domain.Organizations;
@@ -30,6 +31,7 @@ internal sealed class IssueConfiguration : IEntityTypeConfiguration<Issue>
         builder.HasIndex(x => new { x.SiteId, x.Status });
         builder.HasIndex(x => new { x.SiteTaskId, x.FieldKey });
         builder.HasIndex(x => x.AssigneeId);
+        builder.HasIndex(x => new { x.OrganizationId, x.Status, x.DueAt }); // escalation and digest scans
     }
 }
 

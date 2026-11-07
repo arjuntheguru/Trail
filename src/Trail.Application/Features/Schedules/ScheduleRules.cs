@@ -1,5 +1,7 @@
 using FluentValidation;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Domain.Tasks;
@@ -46,8 +48,12 @@ internal static class ScheduleRules
 {
     public static Recurrence ToRecurrence(IScheduleInput i) => new()
     {
-        Frequency = i.Frequency, Interval = i.Interval, StartDate = i.StartDate, EndDate = i.EndDate,
-        Days = i.Days, DayOfMonth = i.DayOfMonth,
+        Frequency = i.Frequency,
+        Interval = i.Interval,
+        StartDate = i.StartDate,
+        EndDate = i.EndDate,
+        Days = i.Days,
+        DayOfMonth = i.DayOfMonth,
     };
 
     /// <summary>

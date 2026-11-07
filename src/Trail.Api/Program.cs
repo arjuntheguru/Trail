@@ -1,22 +1,36 @@
 using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
+
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
+
 using Scalar.AspNetCore;
+
 using Serilog;
+using Serilog.Formatting.Compact;
+
 using Trail.Api.Infrastructure;
 using Trail.Application;
 using Trail.Application.Common.Abstractions;
-using Trail.Application.Features.Integrations;
 using Trail.Infrastructure;
 using Trail.Infrastructure.Security;
 
+using HttpOptions = Trail.Api.Infrastructure.HttpOptions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSerilog((services, logger) => logger
-    .ReadFrom.Configuration(builder.Configuration)
-    .ReadFrom.Services(services)
-    .Enrich.FromLogContext());
+builder.Services.AddSerilog((services, logger) =>
+{
+    logger
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .Enrich.WithProperty("Application", Observability.ServiceName);
+
+    // Readable console while developing; one compact JSON document per line (with @tr/@sp trace ids) everywhere else.
+    if (builder.Environment.IsDevelopment()) logger.WriteTo.Console();
+    else logger.WriteTo.Console(new RenderedCompactJsonFormatter());
+});
+builder.Services.AddTrailObservability(builder.Configuration);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
@@ -34,48 +48,13 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddTrailAuth();
 
-builder.Services.AddOptions<FrontendCorsOptions>().BindConfiguration(FrontendCorsOptions.SectionName);
-builder.Services.AddCors(options =>
-{
-    var origins = builder.Configuration.GetSection(FrontendCorsOptions.SectionName).Get<FrontendCorsOptions>()?.AllowedOrigins ?? [];
-    options.AddPolicy(FrontendCorsOptions.PolicyName, policy => policy
-        .WithOrigins(origins)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials());
-});
-
-var rateLimits = builder.Configuration.GetSection(RateLimitOptions.SectionName).Get<RateLimitOptions>() ?? new RateLimitOptions();
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = rateLimits.GlobalPermitsPerMinute, Window = TimeSpan.FromMinutes(1) }));
-    options.AddPolicy(RateLimitPolicies.Auth, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = rateLimits.AuthPermitsPerMinute, Window = TimeSpan.FromMinutes(1) }));
-    // Rate limiting runs before authentication, so the key's database id is not known yet: the partition is the key's
-    // public prefix (the identifier part of the key), and requests without a well-formed key share the client IP.
-    options.AddPolicy(RateLimitPolicies.Sensors, context =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            ApiKeyFormat.TryParse(ApiKeyAuth.ReadKey(context.Request), out var prefix)
-                ? $"key:{prefix}"
-                : $"ip:{context.Connection.RemoteIpAddress}",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = rateLimits.SensorPermitsPerMinute, Window = TimeSpan.FromMinutes(1) }));
-});
-
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    // Behind a reverse proxy (nginx/Caddy) on the same host. Add KnownProxies/KnownNetworks for anything else.
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-});
+// CORS, rate limits, proxy trust and request size limits, all from validated options (see EdgeSetup).
+builder.Services.AddTrailEdge();
 
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+app.UseMiddleware<RequestIdMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -88,17 +67,30 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseHsts();
-    app.UseHttpsRedirection();
+    // TLS usually terminates at the proxy in containers: Http:HttpsRedirection=false turns the redirect off.
+    if (app.Services.GetRequiredService<IOptions<HttpOptions>>().Value.HttpsRedirection)
+        app.UseHttpsRedirection();
 }
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    options.GetLevel = RequestLogging.GetLevel;
+    options.EnrichDiagnosticContext = (diagnostics, http) => RequestLogging.Enrich(diagnostics, http);
+});
 app.UseCors(FrontendCorsOptions.PolicyName);
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
+// Probes are anonymous and never rate limited, so an orchestrator cannot lock itself out.
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false })
+    .AllowAnonymous().DisableRateLimiting();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthResponseWriter.WriteAsync,
+})
+    .AllowAnonymous().DisableRateLimiting();
 app.MapEndpointGroups(typeof(Program).Assembly);
 
 if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))

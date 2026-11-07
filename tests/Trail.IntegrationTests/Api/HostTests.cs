@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Trail.IntegrationTests.Infrastructure;
 
 namespace Trail.IntegrationTests.Api;
@@ -20,15 +22,24 @@ public sealed class HostTests(MySqlFixture mysql) : IAsyncLifetime
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData("/health/live")]
-    [InlineData("/health/ready")]
-    public async Task Health_endpoints_report_healthy(string path)
+    [Fact]
+    public async Task Liveness_reports_healthy()
     {
-        var response = await _client.GetAsync(path, Ct);
+        var response = await _client.GetAsync("/health/live", Ct);
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await response.Content.ReadAsStringAsync(Ct)).ShouldBe("Healthy");
+    }
+
+    [Fact]
+    public async Task Readiness_reports_healthy_with_per_check_status()
+    {
+        var response = await _client.GetAsync("/health/ready", Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        body.ShouldContain("\"status\":\"Healthy\"");
+        body.ShouldContain("\"name\":\"database\"");
     }
 
     [Fact]

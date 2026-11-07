@@ -28,4 +28,53 @@ Nothing secret is committed. Outside Development, set these through environment 
 | `Database__MigrateOnStartup` | `true` to apply migrations on boot (default `false`) |
 | `Cors__AllowedOrigins__0` | Browser origin allowed to call the API |
 
+## Deployment
+The API ships as a container (`Dockerfile`, runs as non-root on port 8080, `Production` environment).
+```bash
+docker build -t trail-api .                          # API image
+docker build --target migrator -t trail-migrator .   # EF Core migrations bundle
+docker run --rm -e Database__ConnectionString="..." trail-migrator
+```
+Run the migrator once before rolling out new replicas, and leave `Database__MigrateOnStartup` off in production.
+Probe `/health/live` (liveness) and `/health/ready` (readiness); the image has no curl/wget, so use an orchestrator probe.
+
+Required settings (environment variables):
+
+| Key | Purpose |
+|---|---|
+| `Database__ConnectionString` | MySQL connection string |
+| `Jwt__SigningKey` | HMAC key, at least 32 characters, from a secret store |
+| `App__FrontendBaseUrl` | Public frontend URL used in email links |
+| `Email__Provider` | `Smtp` to send mail (also `Email__SmtpHost`, `Email__SmtpPort`, `Email__SmtpUser`, `Email__SmtpPassword`, `Email__FromAddress`) |
+| `Cors__AllowedOrigins__0` | Browser origin allowed to call the API |
+| `Storage__LocalPath` | Upload directory (default in image `/app/App_Data/uploads`); must be a shared volume when running several replicas, or use `Storage__Provider=S3` |
+| `Storage__Provider` | `Local` (default) or `S3` (AWS S3, Cloudflare R2, MinIO, ...) |
+| `Storage__S3__Bucket` | Bucket name (required for `S3`) |
+| `Storage__S3__Region` | Optional region, e.g. `eu-west-1` (`auto` for R2) |
+| `Storage__S3__ServiceUrl` | Optional endpoint for S3-compatible stores; must be https outside Development/Testing unless `Storage__S3__AllowInsecureServiceUrl=true` (logged as a warning) |
+| `Storage__S3__ForcePathStyle` | `true` for stores that need path-style addressing (MinIO); default `false` |
+| `Storage__S3__AccessKeyId`, `Storage__S3__SecretAccessKey` | Optional, set both or neither; when absent the AWS default credential chain (IAM role, environment) is used |
+| `Storage__S3__KeyPrefix` | Optional prefix inside the bucket, e.g. `attachments/` |
+| `Bootstrap__PlatformAdminEmail`, `Bootstrap__PlatformAdminPassword` | Optional: create the first platform admin at startup (password at least 12 characters) |
+
+Outside Development/Testing the API refuses to start when `Email__Provider` is not `Smtp` or `App__FrontendBaseUrl` is
+not a public https URL. SMTP with credentials always uses TLS (`Email__SmtpSecurity`: `StartTls` or `SslOnConnect`).
+
+Optional settings:
+
+| Key | Default | Purpose |
+|---|---|---|
+| `Http__HttpsRedirection` | `true` | Set `false` when TLS terminates at the proxy |
+| `Http__KnownProxies__0`, `Http__KnownNetworks__0` | loopback | Trusted reverse proxies (IPs / CIDRs) for `X-Forwarded-*` |
+| `Http__ForwardLimit` | `1` | Proxies in the chain to trust |
+| `Http__MaxRequestBodyBytes` | `1048576` | Global request body cap (attachment uploads allow 11 MB) |
+| `Database__CommandTimeoutSeconds` | `30` | EF Core command timeout |
+| `Database__MigrationLockWaitSeconds` | `300` | How long a replica waits for another one's migration |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | OTLP gRPC endpoint; traces and metrics are exported only when set |
+
+Rate limits are counted per instance. Background jobs are safe to run on every replica: task generation and the
+daily digest take a MySQL `GET_LOCK` per tick, the others claim rows.
+
+For a local containerised run: `docker compose --profile app up -d --build` (API on :8080, Mailpit UI on :8025).
+
 See [CLAUDE.md](CLAUDE.md) for architecture and coding conventions.

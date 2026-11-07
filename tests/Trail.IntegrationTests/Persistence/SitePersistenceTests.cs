@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Domain.Organizations;
 using Trail.IntegrationTests.Infrastructure;
 

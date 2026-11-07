@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Schedules;
@@ -115,8 +117,13 @@ public sealed class ScheduleTests(MySqlFixture mysql) : IAsyncLifetime
     {
         object Body(object days) => new
         {
-            templateId = _template.Id, frequency = "Weekly", interval = 2, startDate = Yesterday, days,
-            dueTime = "17:30:00", siteIds = new[] { _siteA.Id },
+            templateId = _template.Id,
+            frequency = "Weekly",
+            interval = 2,
+            startDate = Yesterday,
+            days,
+            dueTime = "17:30:00",
+            siteIds = new[] { _siteA.Id },
         };
 
         var byName = await (await _client.PostAsJsonAsync("/api/v1/schedules", Body("Monday, Thursday"), HttpExtensions.Json, Ct))

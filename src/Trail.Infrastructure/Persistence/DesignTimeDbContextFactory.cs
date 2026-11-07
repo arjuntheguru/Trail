@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+
 using Trail.Application.Common.Abstractions;
 
 namespace Trail.Infrastructure.Persistence;

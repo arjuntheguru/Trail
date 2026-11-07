@@ -1,4 +1,5 @@
 using System.Net;
+
 using Trail.Application.Features.Integrations;
 
 namespace Trail.UnitTests.Integrations;

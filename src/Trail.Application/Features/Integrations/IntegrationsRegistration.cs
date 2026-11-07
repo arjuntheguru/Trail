@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+
 using Trail.Application.Features.Tasks;
 
 namespace Trail.Application.Features.Integrations;

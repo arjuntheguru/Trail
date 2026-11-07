@@ -1,13 +1,18 @@
+using Amazon.S3;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Settings;
 using Trail.Application.Features.Integrations;
-using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Files;
+using Trail.Infrastructure.Integrations;
 using Trail.Infrastructure.Jobs;
+using Trail.Infrastructure.Locking;
 using Trail.Infrastructure.Notifications;
 using Trail.Infrastructure.Persistence;
 using Trail.Infrastructure.Persistence.Interceptors;
@@ -29,11 +34,14 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<AuditingInterceptor>();
+        services.AddSingleton<IDistributedLock, MySqlDistributedLock>();
 
         services.AddDbContext<TrailDbContext>((sp, options) =>
         {
             var db = sp.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-            options.UseMySQL(db.ConnectionString)
+            // No EnableRetryOnFailure: SequenceAllocator runs its own transactions, which a retrying execution
+            // strategy refuses to run. Transient failures surface to the caller instead.
+            options.UseMySQL(db.ConnectionString, o => o.CommandTimeout(db.CommandTimeoutSeconds))
                 .AddInterceptors(sp.GetRequiredService<AuditingInterceptor>());
         });
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<TrailDbContext>());
@@ -44,8 +52,7 @@ public static class DependencyInjection
         AddSecurity(services);
         services.AddNotifications();
 
-        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddSingleton<IFileStorage, LocalFileStorage>();
+        AddStorage(services);
 
         services.AddOptions<TaskGenerationOptions>().BindConfiguration(TaskGenerationOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<TaskGenerationJob>();
@@ -54,6 +61,23 @@ public static class DependencyInjection
         AddIntegrations(services);
 
         return services;
+    }
+
+    private static void AddStorage(IServiceCollection services)
+    {
+        services.AddOptions<StorageOptions>().BindConfiguration(StorageOptions.SectionName).ValidateOnStart();
+        services.AddSingleton<IValidateOptions<StorageOptions>, StorageOptionsValidator>();
+
+        services.AddSingleton<LocalFileStorage>();
+        services.AddSingleton<S3FileStorage>();
+        services.AddSingleton<IAmazonS3>(sp => S3ClientFactory.Create(
+            sp.GetRequiredService<IOptions<StorageOptions>>().Value.S3,
+            sp.GetRequiredService<ILoggerFactory>().CreateLogger("Trail.Infrastructure.Files.S3")));
+        services.AddSingleton<IFileStorage>(sp => sp.GetRequiredService<IOptions<StorageOptions>>().Value.IsS3
+            ? sp.GetRequiredService<S3FileStorage>()
+            : sp.GetRequiredService<LocalFileStorage>());
+
+        services.AddHealthChecks().AddCheck<StorageHealthCheck>("storage", tags: ["ready"]);
     }
 
     private static void AddIntegrations(IServiceCollection services)
@@ -89,9 +113,14 @@ public static class DependencyInjection
     private static void AddSecurity(IServiceCollection services)
     {
         services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
-        services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName).ValidateDataAnnotations();
+        services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName).ValidateDataAnnotations()
+            .Validate<IHostEnvironment>((o, env) => o.IsValidFor(env.EnvironmentName), AppOptions.InvalidForEnvironmentMessage)
+            .ValidateOnStart();
+        services.AddOptions<BootstrapOptions>().BindConfiguration(BootstrapOptions.SectionName).ValidateDataAnnotations()
+            .Validate(o => o.IsConsistent, BootstrapOptions.InconsistentMessage)
+            .ValidateOnStart();
         services.AddOptions<EmailOptions>().BindConfiguration(EmailOptions.SectionName).ValidateDataAnnotations()
+            .Validate<IHostEnvironment>((o, env) => o.IsProviderAllowedIn(env.EnvironmentName), EmailOptions.ProviderNotAllowedMessage)
             .Validate(o => o.Provider is "Log" or "Smtp", "Email:Provider must be 'Log' or 'Smtp'.")
             .Validate(o => o.Provider != "Smtp" || !string.IsNullOrWhiteSpace(o.SmtpHost), "Email:SmtpHost is required for SMTP.")
             .ValidateOnStart();
@@ -110,6 +139,13 @@ public static class DependencyInjection
     public static async Task MigrateDatabaseAsync(this IServiceProvider services, CancellationToken ct = default)
     {
         await using var scope = services.CreateAsyncScope();
+        var wait = TimeSpan.FromSeconds(services.GetRequiredService<IOptions<DatabaseOptions>>().Value.MigrationLockWaitSeconds);
+
+        // Replicas may start together; only one applies migrations while the others wait, then find nothing to do.
+        await using var migrationLock = await services.GetRequiredService<IDistributedLock>().TryAcquireAsync("migrations", wait, ct)
+            ?? throw new InvalidOperationException(
+                $"Could not obtain the migration lock within {wait.TotalSeconds:0} seconds; another instance is still migrating the database.");
+
         var db = scope.ServiceProvider.GetRequiredService<TrailDbContext>();
         await db.Database.MigrateAsync(ct);
     }

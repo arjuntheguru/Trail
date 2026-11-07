@@ -21,5 +21,5 @@ public sealed class WebhookOptions
 
     /// <summary>Whether <see cref="AllowInsecureTargets"/> may be on in the named hosting environment.</summary>
     public static bool InsecureTargetsAllowedIn(string environmentName) =>
-        environmentName is "Development" or "Testing";
+        Common.Settings.EnvironmentRules.IsRelaxed(environmentName);
 }

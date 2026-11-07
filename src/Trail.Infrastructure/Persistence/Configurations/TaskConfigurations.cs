@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 using Trail.Domain.Files;
 using Trail.Domain.Organizations;
 using Trail.Domain.Tasks;
@@ -90,6 +91,7 @@ internal sealed class SiteTaskConfiguration : IEntityTypeConfiguration<SiteTask>
         builder.HasIndex(x => new { x.ScheduleId, x.SiteId, x.ScheduledDate }).IsUnique();
         builder.HasIndex(x => new { x.SiteId, x.DueDate });
         builder.HasIndex(x => new { x.Status, x.DueAt });
+        builder.HasIndex(x => new { x.OrganizationId, x.DueDate }); // org-wide task lists
     }
 }
 

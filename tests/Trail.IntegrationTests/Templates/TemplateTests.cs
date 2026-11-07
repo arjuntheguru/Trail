@@ -1,5 +1,7 @@
 using System.Net;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Paging;
 using Trail.Application.Common.Security;
 using Trail.Application.Features.Schedules;
@@ -162,9 +164,16 @@ public sealed class TemplateTests(MySqlFixture mysql) : IAsyncLifetime
         {
             var task = new SiteTask
             {
-                Title = "Snapshot", Kind = TaskKind.Checklist, Fields = [Check("a")], SiteId = site.Id, TemplateId = template.Id,
-                TemplateVersion = 1, Source = SiteTaskSource.AdHoc, DueAt = dueAt,
-                ScheduledDate = DateOnly.FromDateTime(dueAt), DueDate = DateOnly.FromDateTime(dueAt),
+                Title = "Snapshot",
+                Kind = TaskKind.Checklist,
+                Fields = [Check("a")],
+                SiteId = site.Id,
+                TemplateId = template.Id,
+                TemplateVersion = 1,
+                Source = SiteTaskSource.AdHoc,
+                DueAt = dueAt,
+                ScheduledDate = DateOnly.FromDateTime(dueAt),
+                DueDate = DateOnly.FromDateTime(dueAt),
             };
             configure?.Invoke(task);
             await _factory.WithDbAsync(_owner.OrganizationId, async db =>

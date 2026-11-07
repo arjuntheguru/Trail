@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Domain.Common;
 using Trail.Domain.Files;
 using Trail.Domain.Organizations;
@@ -13,17 +15,28 @@ internal sealed class TaskTestKit(TrailApiFactory factory, Guid organizationId)
 {
     public static readonly TemplateField Temperature = new()
     {
-        Key = "temp", Label = "Fridge temperature", Type = FieldType.Temperature, Min = 0, Max = 5,
+        Key = "temp",
+        Label = "Fridge temperature",
+        Type = FieldType.Temperature,
+        Min = 0,
+        Max = 5,
     };
 
     public static readonly TemplateField Clean = new()
     {
-        Key = "clean", Label = "Surfaces clean", Type = FieldType.YesNo, ExpectedAnswer = true, CommentRequiredOnFailure = false,
+        Key = "clean",
+        Label = "Surfaces clean",
+        Type = FieldType.YesNo,
+        ExpectedAnswer = true,
+        CommentRequiredOnFailure = false,
     };
 
     public static readonly TemplateField Notes = new()
     {
-        Key = "notes", Label = "Notes", Type = FieldType.Text, Required = false,
+        Key = "notes",
+        Label = "Notes",
+        Type = FieldType.Text,
+        Required = false,
     };
 
     public Guid OrganizationId { get; } = organizationId;
@@ -82,8 +95,13 @@ internal sealed class TaskTestKit(TrailApiFactory factory, Guid organizationId)
         {
             var attachment = new Attachment
             {
-                Kind = kind, FileName = "evidence.png", ContentType = "image/png", SizeBytes = 8,
-                StorageKey = $"{OrganizationId}/test/{Guid.NewGuid():N}.png", Sha256 = new string('0', 64), SiteId = site.Id,
+                Kind = kind,
+                FileName = "evidence.png",
+                ContentType = "image/png",
+                SizeBytes = 8,
+                StorageKey = $"{OrganizationId}/test/{Guid.NewGuid():N}.png",
+                Sha256 = new string('0', 64),
+                SiteId = site.Id,
             };
             db.Attachments.Add(attachment);
             await db.SaveChangesAsync();

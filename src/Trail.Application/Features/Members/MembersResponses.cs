@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+
 using Trail.Domain.Identity;
 
 namespace Trail.Application.Features.Members;

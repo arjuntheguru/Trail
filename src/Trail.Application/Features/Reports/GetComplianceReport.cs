@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Results;
 using Trail.Application.Features.Tasks;
@@ -30,7 +31,12 @@ public sealed class GetComplianceReportHandler(IAppDbContext db, ISiteAccess acc
         var rows = await tasks
             .GroupBy(t => new
             {
-                t.SiteId, t.TemplateId, t.DueDate, t.Status, t.CompletedLate, t.HasFailures,
+                t.SiteId,
+                t.TemplateId,
+                t.DueDate,
+                t.Status,
+                t.CompletedLate,
+                t.HasFailures,
                 AwaitingApproval = t.Status == SiteTaskStatus.Completed && t.RequiresApproval && t.ApprovedAt == null,
             })
             .Select(g => new { g.Key, Title = g.Max(t => t.Title), Count = g.Count() })

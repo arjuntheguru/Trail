@@ -1,4 +1,5 @@
 using NSubstitute;
+
 using Trail.Application.Common.Abstractions;
 using Trail.Application.Common.Exceptions;
 using Trail.Application.Common.Paging;
