@@ -143,9 +143,14 @@ describe('task list', () => {
     await screen.findByText('A')
     const groups = screen.getAllByRole('region')
     expect(groups).toHaveLength(2)
-    expect(within(groups[0]!).getByRole('heading', { level: 2 })).toHaveTextContent('7 November')
+    // Day headers follow the viewer's locale ("7 November" / "November 7"), so match the parts.
+    expect(within(groups[0]!).getByRole('heading', { level: 2 })).toHaveTextContent(
+      /7.*November|November.*7/,
+    )
     expect(within(groups[0]!).getAllByTestId('task-row')).toHaveLength(2)
-    expect(within(groups[1]!).getByRole('heading', { level: 2 })).toHaveTextContent('6 November')
+    expect(within(groups[1]!).getByRole('heading', { level: 2 })).toHaveTextContent(
+      /6.*November|November.*6/,
+    )
     expect(within(groups[1]!).getAllByTestId('task-row')).toHaveLength(1)
   })
 
