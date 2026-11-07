@@ -32,6 +32,7 @@ internal sealed class WebhookDeliveryConfiguration : IEntityTypeConfiguration<We
 
         builder.HasIndex(x => new { x.SubscriptionId, x.EventId }).IsUnique();
         builder.HasIndex(x => new { x.Status, x.NextAttemptAt });
+        builder.HasIndex(x => new { x.Status, x.ClaimedAt }); // stuck-delivery recovery
         builder.HasIndex(x => new { x.SubscriptionId, x.CreatedAt });
     }
 }

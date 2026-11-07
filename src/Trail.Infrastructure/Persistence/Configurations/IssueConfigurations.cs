@@ -30,6 +30,7 @@ internal sealed class IssueConfiguration : IEntityTypeConfiguration<Issue>
         builder.HasIndex(x => new { x.SiteId, x.Status });
         builder.HasIndex(x => new { x.SiteTaskId, x.FieldKey });
         builder.HasIndex(x => x.AssigneeId);
+        builder.HasIndex(x => new { x.OrganizationId, x.Status, x.DueAt }); // escalation and digest scans
     }
 }
 

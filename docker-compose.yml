@@ -16,5 +16,41 @@ services:
       interval: 5s
       retries: 20
 
+  # Optional containerised API: docker compose --profile app up -d --build
+  # Runs in Production mode. The image has no curl/wget, so there is no container healthcheck;
+  # probe http://localhost:8080/health/live from outside.
+  api:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Http__HttpsRedirection: "false"
+      Database__ConnectionString: "Server=mysql;Port=3306;Database=trail;User=trail;Password=trail-dev"
+      Database__MigrateOnStartup: "true"
+      Jwt__SigningKey: "local-dev-only-signing-key-change-me-0123456789"
+      # Production rejects localhost frontend URLs; links in the emails caught by mailpit point here.
+      App__FrontendBaseUrl: "https://trail.example.test"
+      Cors__AllowedOrigins__0: "https://localhost:5173"
+      Email__Provider: Smtp
+      Email__SmtpHost: mailpit
+      Email__SmtpPort: "1025"
+      Storage__LocalPath: /app/App_Data/uploads
+    volumes:
+      - trail-uploads:/app/App_Data/uploads
+
+  mailpit:
+    profiles: ["app"]
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+
 volumes:
   trail-mysql:
+  trail-uploads:
