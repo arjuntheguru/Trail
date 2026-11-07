@@ -69,7 +69,9 @@ internal sealed class MySqlDistributedLock(IOptions<DatabaseOptions> options) : 
             }
             catch
             {
-                // Closing the connection below ends the session, which releases the lock anyway.
+                // A pooled connection keeps its session (and the lock) when returned to the pool, so drop the pool's
+                // idle connections; closing this one then ends its session and releases the lock.
+                MySqlConnection.ClearPool(connection);
             }
             finally
             {
