@@ -167,22 +167,17 @@ describe('invite', () => {
       firstName: 'Nia',
       lastName: null,
       allSites: true,
+      siteIds: [],
+      regionIds: [],
     })
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  it('invites to chosen sites and regions, then saves that access on the new member', async () => {
+  it('invites to chosen sites and regions in one call', async () => {
     const invitations = recordBodies('post', '/members/invitations', () =>
       HttpResponse.json(member({ id: 'm-new', allSites: false }), { status: 201 }),
     )
-    const access = recordBodies('put', '/members/m-new/access', () =>
-      HttpResponse.json({
-        allSites: false,
-        siteIds: ['site-2'],
-        regionIds: ['region-north'],
-        departmentIds: [],
-      }),
-    )
+    const access = recordBodies('put', '/members/m-new/access')
     const { user, dialog } = await openInvite()
 
     await user.type(within(dialog).getByLabelText('Email'), 'new@example.com')
@@ -192,14 +187,35 @@ describe('invite', () => {
     await user.click(within(dialog).getByRole('checkbox', { name: 'Quay Bar' }))
     await user.click(within(dialog).getByRole('button', { name: 'Send invitation' }))
 
-    await waitFor(() => expect(access).toHaveLength(1))
-    expect(invitations[0]).toMatchObject({ roleId: 'role-team', allSites: false })
-    expect(access[0]).toEqual({
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(invitations).toHaveLength(1)
+    expect(invitations[0]).toMatchObject({
+      roleId: 'role-team',
       allSites: false,
       siteIds: ['site-2'],
       regionIds: ['region-north'],
-      departmentIds: [],
     })
+    expect(access).toEqual([])
+  })
+
+  it('keeps a caller who holds only some sites from inviting to all sites', async () => {
+    server.use(
+      http.get(url('/me'), () =>
+        HttpResponse.json({
+          access: { allSites: false, siteIds: ['site-2'], regionIds: [] },
+        }),
+      ),
+    )
+    const { dialog } = await openInvite()
+
+    const allSites = within(dialog).getByRole('checkbox', { name: 'Access to all sites' })
+    await waitFor(() => expect(allSites).not.toBeChecked())
+    expect(allSites).toBeDisabled()
+    expect(
+      within(dialog).getByText(
+        'You can only give access to the sites and regions you hold yourself.',
+      ),
+    ).toBeInTheDocument()
   })
 
   it('does not offer roles with permissions the caller lacks, and explains why', async () => {

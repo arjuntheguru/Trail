@@ -23,6 +23,13 @@ type OrgId = string | undefined
 // Sites share the 'sites' prefix with the pickers in other areas, so a site change refreshes those too.
 const org = (organizationId: OrgId) => ['org', organizationId] as const
 
+/** The sites and regions the caller holds; null when /me does not say (treated as unrestricted). */
+export const callerAccessQuery = (client: ApiClient, organizationId: OrgId) =>
+  queryOptions({
+    queryKey: [...org(organizationId), 'me', 'access'],
+    queryFn: async () => (await unwrap(client.GET('/api/v1/me'))).access ?? null,
+  })
+
 export const organizationQuery = (client: ApiClient, organizationId: OrgId) =>
   queryOptions({
     queryKey: [...org(organizationId), 'organization'],
