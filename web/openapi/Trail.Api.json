@@ -8972,6 +8972,33 @@
           }
         }
       },
+      "CallerAccess": {
+        "required": [
+          "allSites",
+          "siteIds",
+          "regionIds"
+        ],
+        "type": "object",
+        "properties": {
+          "allSites": {
+            "type": "boolean"
+          },
+          "siteIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "regionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "ChangeIssuePriorityCommand": {
         "required": [
           "priority"
@@ -9956,6 +9983,26 @@
           "allSites": {
             "type": "boolean",
             "default": true
+          },
+          "siteIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "regionIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -10656,6 +10703,16 @@
             "items": {
               "type": "string"
             }
+          },
+          "access": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CallerAccess"
+              }
+            ]
           }
         }
       },

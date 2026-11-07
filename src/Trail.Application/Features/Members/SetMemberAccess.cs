@@ -17,16 +17,11 @@ public sealed record SetMemberAccessCommand(
 
 internal sealed class SetMemberAccessValidator : AbstractValidator<SetMemberAccessCommand>
 {
-    private const int MaxAssignments = 1000;
-
     public SetMemberAccessValidator()
     {
-        RuleFor(x => x.SiteIds).Must(ids => ids!.Count <= MaxAssignments).When(x => x.SiteIds is not null);
-        RuleFor(x => x.RegionIds).Must(ids => ids!.Count <= MaxAssignments).When(x => x.RegionIds is not null);
-        RuleFor(x => x.DepartmentIds).Must(ids => ids!.Count <= MaxAssignments).When(x => x.DepartmentIds is not null);
-        RuleForEach(x => x.SiteIds).NotEmpty();
-        RuleForEach(x => x.RegionIds).NotEmpty();
-        RuleForEach(x => x.DepartmentIds).NotEmpty();
+        MemberAccessRules.AddAccessIdRules(this, x => x.SiteIds);
+        MemberAccessRules.AddAccessIdRules(this, x => x.RegionIds);
+        MemberAccessRules.AddAccessIdRules(this, x => x.DepartmentIds);
     }
 }
 
@@ -54,20 +49,16 @@ public sealed class SetMemberAccessHandler(IAppDbContext db, ICurrentUser user, 
         {
             // Nobody can hand out more than they have, and nobody can edit access that is wider than theirs
             // (replacing it would also strip the part they cannot see).
-            var outOfScope = command.AllSites
+            var outOfScope = MemberAccessRules.IsOutOfScope(scope, command.AllSites, siteIds, regionIds)
                 || membership.AllSites
-                || siteIds.Any(id => !scope.SiteIds.Contains(id))
-                || regionIds.Any(id => !scope.RegionIds.Contains(id))
                 || (await GetMemberAccessHandler.LiveSiteIdsAsync(db, membershipId, ct)).Any(id => !scope.SiteIds.Contains(id))
                 || (await GetMemberAccessHandler.LiveRegionIdsAsync(db, membershipId, ct)).Any(id => !scope.RegionIds.Contains(id));
-            if (outOfScope)
-                return Error.Forbidden("member.access_out_of_scope", "You can only manage access within your own sites and regions.");
+            if (outOfScope) return MemberAccessRules.OutOfScope;
         }
 
-        if (await db.Sites.CountAsync(s => siteIds.Contains(s.Id), ct) != siteIds.Count
-            || await db.Regions.CountAsync(r => regionIds.Contains(r.Id), ct) != regionIds.Count
+        if (!await MemberAccessRules.AllExistAsync(db, siteIds, regionIds, ct)
             || await db.Departments.CountAsync(d => departmentIds.Contains(d.Id), ct) != departmentIds.Count)
-            return Error.Validation("member.unknown_ids", "One or more sites, regions or departments do not exist.");
+            return MemberAccessRules.UnknownIds;
 
         membership.AllSites = command.AllSites;
 
