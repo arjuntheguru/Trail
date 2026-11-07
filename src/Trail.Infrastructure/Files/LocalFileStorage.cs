@@ -44,7 +44,10 @@ internal sealed class LocalFileStorage(IOptions<StorageOptions> options) : IFile
     /// <summary>Maps a key to a path inside the root, refusing anything that would escape it.</summary>
     private string Resolve(string key)
     {
-        if (string.IsNullOrWhiteSpace(key) || key.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(key))
+        // Keys are server-generated "org/yyyy/MM/id.ext". Drive letters and backslashes are refused on every OS
+        // (on Linux "C:/x" is not rooted, so the rooted check alone would accept it).
+        if (string.IsNullOrWhiteSpace(key) || key.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(key)
+            || key.IndexOfAny([':', '\\']) >= 0)
             throw new ArgumentException("Invalid storage key.", nameof(key));
 
         var path = Path.GetFullPath(Path.Combine(Root, key));
