@@ -1689,6 +1689,11 @@ export interface components {
             organizations: components["schemas"]["OrganizationSummary"][];
             permissions: string[];
         };
+        CallerAccess: {
+            allSites: boolean;
+            siteIds: string[];
+            regionIds: string[];
+        };
         ChangeIssuePriorityCommand: {
             priority: components["schemas"]["IssuePriority"];
         };
@@ -1949,6 +1954,8 @@ export interface components {
             lastName?: null | string;
             /** @default true */
             allSites: boolean;
+            siteIds?: null | string[];
+            regionIds?: null | string[];
         };
         IssueAssigneeResponse: {
             /** Format: uuid */
@@ -2120,6 +2127,7 @@ export interface components {
             organization: null | components["schemas"]["OrganizationSummary"];
             organizations: components["schemas"]["OrganizationSummary"][];
             permissions: string[];
+            access?: null | components["schemas"]["CallerAccess"];
         };
         /** @enum {unknown} */
         NotificationKind: "IssueAssigned" | "IssueRaised" | "IssueStatusChanged" | "IssueCommented" | "IssueOverdue" | "IssueEscalated" | "TaskAwaitingApproval";

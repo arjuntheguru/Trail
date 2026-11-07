@@ -18,6 +18,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedIssuesRouteImport } from './routes/_authenticated/issues'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
@@ -28,17 +29,27 @@ import { Route as AuthenticatedReportsIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedReportsActivityRouteImport } from './routes/_authenticated/reports.activity'
 import { Route as AuthenticatedReportsComplianceRouteImport } from './routes/_authenticated/reports.compliance'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedSettingsAuditRouteImport } from './routes/_authenticated/settings.audit'
 import { Route as AuthenticatedSettingsDepartmentsRouteImport } from './routes/_authenticated/settings.departments'
+import { Route as AuthenticatedSettingsIntegrationsRouteImport } from './routes/_authenticated/settings.integrations'
 import { Route as AuthenticatedSettingsMembersRouteImport } from './routes/_authenticated/settings.members'
+import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings.notifications'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings.organization'
 import { Route as AuthenticatedSettingsRegionsRouteImport } from './routes/_authenticated/settings.regions'
 import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings.roles'
+import { Route as AuthenticatedSettingsSchedulesRouteImport } from './routes/_authenticated/settings.schedules'
 import { Route as AuthenticatedSettingsSitesRouteImport } from './routes/_authenticated/settings.sites'
 import { Route as AuthenticatedSettingsTagsRouteImport } from './routes/_authenticated/settings.tags'
+import { Route as AuthenticatedSettingsTemplatesRouteImport } from './routes/_authenticated/settings.templates'
 import { Route as AuthenticatedTasksTaskIdRouteImport } from './routes/_authenticated/tasks_.$taskId'
 import { Route as AuthenticatedSettingsMembersMembershipIdRouteImport } from './routes/_authenticated/settings.members_.$membershipId'
+import { Route as AuthenticatedSettingsSchedulesScheduleIdRouteImport } from './routes/_authenticated/settings.schedules_.$scheduleId'
+import { Route as AuthenticatedSettingsSchedulesNewRouteImport } from './routes/_authenticated/settings.schedules_.new'
 import { Route as AuthenticatedSettingsSitesSiteIdRouteImport } from './routes/_authenticated/settings.sites_.$siteId'
 import { Route as AuthenticatedSettingsSitesNewRouteImport } from './routes/_authenticated/settings.sites_.new'
+import { Route as AuthenticatedSettingsTemplatesTemplateIdRouteImport } from './routes/_authenticated/settings.templates_.$templateId'
+import { Route as AuthenticatedSettingsTemplatesLibraryRouteImport } from './routes/_authenticated/settings.templates_.library'
+import { Route as AuthenticatedSettingsTemplatesNewRouteImport } from './routes/_authenticated/settings.templates_.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -84,6 +95,12 @@ const AuthenticatedIssuesRoute = AuthenticatedIssuesRouteImport.update({
   path: '/issues',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -139,16 +156,34 @@ const AuthenticatedSettingsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsAuditRoute =
+  AuthenticatedSettingsAuditRouteImport.update({
+    id: '/audit',
+    path: '/audit',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedSettingsDepartmentsRoute =
   AuthenticatedSettingsDepartmentsRouteImport.update({
     id: '/departments',
     path: '/departments',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsIntegrationsRoute =
+  AuthenticatedSettingsIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedSettingsMembersRoute =
   AuthenticatedSettingsMembersRouteImport.update({
     id: '/members',
     path: '/members',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsNotificationsRoute =
+  AuthenticatedSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
 const AuthenticatedSettingsOrganizationRoute =
@@ -169,6 +204,12 @@ const AuthenticatedSettingsRolesRoute =
     path: '/roles',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsSchedulesRoute =
+  AuthenticatedSettingsSchedulesRouteImport.update({
+    id: '/schedules',
+    path: '/schedules',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedSettingsSitesRoute =
   AuthenticatedSettingsSitesRouteImport.update({
     id: '/sites',
@@ -179,6 +220,12 @@ const AuthenticatedSettingsTagsRoute =
   AuthenticatedSettingsTagsRouteImport.update({
     id: '/tags',
     path: '/tags',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsTemplatesRoute =
+  AuthenticatedSettingsTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
 const AuthenticatedTasksTaskIdRoute =
@@ -193,6 +240,18 @@ const AuthenticatedSettingsMembersMembershipIdRoute =
     path: '/members/$membershipId',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsSchedulesScheduleIdRoute =
+  AuthenticatedSettingsSchedulesScheduleIdRouteImport.update({
+    id: '/schedules_/$scheduleId',
+    path: '/schedules/$scheduleId',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsSchedulesNewRoute =
+  AuthenticatedSettingsSchedulesNewRouteImport.update({
+    id: '/schedules_/new',
+    path: '/schedules/new',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedSettingsSitesSiteIdRoute =
   AuthenticatedSettingsSitesSiteIdRouteImport.update({
     id: '/sites_/$siteId',
@@ -205,6 +264,24 @@ const AuthenticatedSettingsSitesNewRoute =
     path: '/sites/new',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsTemplatesTemplateIdRoute =
+  AuthenticatedSettingsTemplatesTemplateIdRouteImport.update({
+    id: '/templates_/$templateId',
+    path: '/templates/$templateId',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsTemplatesLibraryRoute =
+  AuthenticatedSettingsTemplatesLibraryRouteImport.update({
+    id: '/templates_/library',
+    path: '/templates/library',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsTemplatesNewRoute =
+  AuthenticatedSettingsTemplatesNewRouteImport.update({
+    id: '/templates_/new',
+    path: '/templates/new',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/issues': typeof AuthenticatedIssuesRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/reports': typeof AuthenticatedReportsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/tasks': typeof AuthenticatedTasksRoute
@@ -223,19 +301,29 @@ export interface FileRoutesByFullPath {
   '/issues/new': typeof AuthenticatedIssuesNewRoute
   '/reports/activity': typeof AuthenticatedReportsActivityRoute
   '/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/settings/audit': typeof AuthenticatedSettingsAuditRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/regions': typeof AuthenticatedSettingsRegionsRoute
   '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/settings/schedules': typeof AuthenticatedSettingsSchedulesRoute
   '/settings/sites': typeof AuthenticatedSettingsSitesRoute
   '/settings/tags': typeof AuthenticatedSettingsTagsRoute
+  '/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
   '/reports/': typeof AuthenticatedReportsIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/settings/members/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/settings/schedules/$scheduleId': typeof AuthenticatedSettingsSchedulesScheduleIdRoute
+  '/settings/schedules/new': typeof AuthenticatedSettingsSchedulesNewRoute
   '/settings/sites/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
   '/settings/sites/new': typeof AuthenticatedSettingsSitesNewRoute
+  '/settings/templates/$templateId': typeof AuthenticatedSettingsTemplatesTemplateIdRoute
+  '/settings/templates/library': typeof AuthenticatedSettingsTemplatesLibraryRoute
+  '/settings/templates/new': typeof AuthenticatedSettingsTemplatesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -246,25 +334,36 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/issues': typeof AuthenticatedIssuesRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/today': typeof AuthenticatedTodayRoute
   '/issues/$issueId': typeof AuthenticatedIssuesIssueIdRoute
   '/issues/new': typeof AuthenticatedIssuesNewRoute
   '/reports/activity': typeof AuthenticatedReportsActivityRoute
   '/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/settings/audit': typeof AuthenticatedSettingsAuditRoute
   '/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/regions': typeof AuthenticatedSettingsRegionsRoute
   '/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/settings/schedules': typeof AuthenticatedSettingsSchedulesRoute
   '/settings/sites': typeof AuthenticatedSettingsSitesRoute
   '/settings/tags': typeof AuthenticatedSettingsTagsRoute
+  '/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/tasks/$taskId': typeof AuthenticatedTasksTaskIdRoute
   '/reports': typeof AuthenticatedReportsIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/settings/members/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/settings/schedules/$scheduleId': typeof AuthenticatedSettingsSchedulesScheduleIdRoute
+  '/settings/schedules/new': typeof AuthenticatedSettingsSchedulesNewRoute
   '/settings/sites/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
   '/settings/sites/new': typeof AuthenticatedSettingsSitesNewRoute
+  '/settings/templates/$templateId': typeof AuthenticatedSettingsTemplatesTemplateIdRoute
+  '/settings/templates/library': typeof AuthenticatedSettingsTemplatesLibraryRoute
+  '/settings/templates/new': typeof AuthenticatedSettingsTemplatesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -277,6 +376,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/issues': typeof AuthenticatedIssuesRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
@@ -285,19 +385,29 @@ export interface FileRoutesById {
   '/_authenticated/issues_/new': typeof AuthenticatedIssuesNewRoute
   '/_authenticated/reports/activity': typeof AuthenticatedReportsActivityRoute
   '/_authenticated/reports/compliance': typeof AuthenticatedReportsComplianceRoute
+  '/_authenticated/settings/audit': typeof AuthenticatedSettingsAuditRoute
   '/_authenticated/settings/departments': typeof AuthenticatedSettingsDepartmentsRoute
+  '/_authenticated/settings/integrations': typeof AuthenticatedSettingsIntegrationsRoute
   '/_authenticated/settings/members': typeof AuthenticatedSettingsMembersRoute
+  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/regions': typeof AuthenticatedSettingsRegionsRoute
   '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRoute
+  '/_authenticated/settings/schedules': typeof AuthenticatedSettingsSchedulesRoute
   '/_authenticated/settings/sites': typeof AuthenticatedSettingsSitesRoute
   '/_authenticated/settings/tags': typeof AuthenticatedSettingsTagsRoute
+  '/_authenticated/settings/templates': typeof AuthenticatedSettingsTemplatesRoute
   '/_authenticated/tasks_/$taskId': typeof AuthenticatedTasksTaskIdRoute
   '/_authenticated/reports/': typeof AuthenticatedReportsIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/settings/members_/$membershipId': typeof AuthenticatedSettingsMembersMembershipIdRoute
+  '/_authenticated/settings/schedules_/$scheduleId': typeof AuthenticatedSettingsSchedulesScheduleIdRoute
+  '/_authenticated/settings/schedules_/new': typeof AuthenticatedSettingsSchedulesNewRoute
   '/_authenticated/settings/sites_/$siteId': typeof AuthenticatedSettingsSitesSiteIdRoute
   '/_authenticated/settings/sites_/new': typeof AuthenticatedSettingsSitesNewRoute
+  '/_authenticated/settings/templates_/$templateId': typeof AuthenticatedSettingsTemplatesTemplateIdRoute
+  '/_authenticated/settings/templates_/library': typeof AuthenticatedSettingsTemplatesLibraryRoute
+  '/_authenticated/settings/templates_/new': typeof AuthenticatedSettingsTemplatesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -310,6 +420,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/issues'
+    | '/notifications'
     | '/reports'
     | '/settings'
     | '/tasks'
@@ -318,19 +429,29 @@ export interface FileRouteTypes {
     | '/issues/new'
     | '/reports/activity'
     | '/reports/compliance'
+    | '/settings/audit'
     | '/settings/departments'
+    | '/settings/integrations'
     | '/settings/members'
+    | '/settings/notifications'
     | '/settings/organization'
     | '/settings/regions'
     | '/settings/roles'
+    | '/settings/schedules'
     | '/settings/sites'
     | '/settings/tags'
+    | '/settings/templates'
     | '/tasks/$taskId'
     | '/reports/'
     | '/settings/'
     | '/settings/members/$membershipId'
+    | '/settings/schedules/$scheduleId'
+    | '/settings/schedules/new'
     | '/settings/sites/$siteId'
     | '/settings/sites/new'
+    | '/settings/templates/$templateId'
+    | '/settings/templates/library'
+    | '/settings/templates/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -341,25 +462,36 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/issues'
+    | '/notifications'
     | '/tasks'
     | '/today'
     | '/issues/$issueId'
     | '/issues/new'
     | '/reports/activity'
     | '/reports/compliance'
+    | '/settings/audit'
     | '/settings/departments'
+    | '/settings/integrations'
     | '/settings/members'
+    | '/settings/notifications'
     | '/settings/organization'
     | '/settings/regions'
     | '/settings/roles'
+    | '/settings/schedules'
     | '/settings/sites'
     | '/settings/tags'
+    | '/settings/templates'
     | '/tasks/$taskId'
     | '/reports'
     | '/settings'
     | '/settings/members/$membershipId'
+    | '/settings/schedules/$scheduleId'
+    | '/settings/schedules/new'
     | '/settings/sites/$siteId'
     | '/settings/sites/new'
+    | '/settings/templates/$templateId'
+    | '/settings/templates/library'
+    | '/settings/templates/new'
   id:
     | '__root__'
     | '/'
@@ -371,6 +503,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/_authenticated/issues'
+    | '/_authenticated/notifications'
     | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/tasks'
@@ -379,19 +512,29 @@ export interface FileRouteTypes {
     | '/_authenticated/issues_/new'
     | '/_authenticated/reports/activity'
     | '/_authenticated/reports/compliance'
+    | '/_authenticated/settings/audit'
     | '/_authenticated/settings/departments'
+    | '/_authenticated/settings/integrations'
     | '/_authenticated/settings/members'
+    | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/organization'
     | '/_authenticated/settings/regions'
     | '/_authenticated/settings/roles'
+    | '/_authenticated/settings/schedules'
     | '/_authenticated/settings/sites'
     | '/_authenticated/settings/tags'
+    | '/_authenticated/settings/templates'
     | '/_authenticated/tasks_/$taskId'
     | '/_authenticated/reports/'
     | '/_authenticated/settings/'
     | '/_authenticated/settings/members_/$membershipId'
+    | '/_authenticated/settings/schedules_/$scheduleId'
+    | '/_authenticated/settings/schedules_/new'
     | '/_authenticated/settings/sites_/$siteId'
     | '/_authenticated/settings/sites_/new'
+    | '/_authenticated/settings/templates_/$templateId'
+    | '/_authenticated/settings/templates_/library'
+    | '/_authenticated/settings/templates_/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -470,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIssuesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/reports': {
       id: '/_authenticated/reports'
       path: '/reports'
@@ -540,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/audit': {
+      id: '/_authenticated/settings/audit'
+      path: '/audit'
+      fullPath: '/settings/audit'
+      preLoaderRoute: typeof AuthenticatedSettingsAuditRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/departments': {
       id: '/_authenticated/settings/departments'
       path: '/departments'
@@ -547,11 +704,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsDepartmentsRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/integrations': {
+      id: '/_authenticated/settings/integrations'
+      path: '/integrations'
+      fullPath: '/settings/integrations'
+      preLoaderRoute: typeof AuthenticatedSettingsIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/members': {
       id: '/_authenticated/settings/members'
       path: '/members'
       fullPath: '/settings/members'
       preLoaderRoute: typeof AuthenticatedSettingsMembersRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/notifications': {
+      id: '/_authenticated/settings/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
     '/_authenticated/settings/organization': {
@@ -575,6 +746,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRolesRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/schedules': {
+      id: '/_authenticated/settings/schedules'
+      path: '/schedules'
+      fullPath: '/settings/schedules'
+      preLoaderRoute: typeof AuthenticatedSettingsSchedulesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/sites': {
       id: '/_authenticated/settings/sites'
       path: '/sites'
@@ -587,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/tags'
       fullPath: '/settings/tags'
       preLoaderRoute: typeof AuthenticatedSettingsTagsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/templates': {
+      id: '/_authenticated/settings/templates'
+      path: '/templates'
+      fullPath: '/settings/templates'
+      preLoaderRoute: typeof AuthenticatedSettingsTemplatesRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
     '/_authenticated/tasks_/$taskId': {
@@ -603,6 +788,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsMembersMembershipIdRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/schedules_/$scheduleId': {
+      id: '/_authenticated/settings/schedules_/$scheduleId'
+      path: '/schedules/$scheduleId'
+      fullPath: '/settings/schedules/$scheduleId'
+      preLoaderRoute: typeof AuthenticatedSettingsSchedulesScheduleIdRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/schedules_/new': {
+      id: '/_authenticated/settings/schedules_/new'
+      path: '/schedules/new'
+      fullPath: '/settings/schedules/new'
+      preLoaderRoute: typeof AuthenticatedSettingsSchedulesNewRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/sites_/$siteId': {
       id: '/_authenticated/settings/sites_/$siteId'
       path: '/sites/$siteId'
@@ -615,6 +814,27 @@ declare module '@tanstack/react-router' {
       path: '/sites/new'
       fullPath: '/settings/sites/new'
       preLoaderRoute: typeof AuthenticatedSettingsSitesNewRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/templates_/$templateId': {
+      id: '/_authenticated/settings/templates_/$templateId'
+      path: '/templates/$templateId'
+      fullPath: '/settings/templates/$templateId'
+      preLoaderRoute: typeof AuthenticatedSettingsTemplatesTemplateIdRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/templates_/library': {
+      id: '/_authenticated/settings/templates_/library'
+      path: '/templates/library'
+      fullPath: '/settings/templates/library'
+      preLoaderRoute: typeof AuthenticatedSettingsTemplatesLibraryRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/settings/templates_/new': {
+      id: '/_authenticated/settings/templates_/new'
+      path: '/templates/new'
+      fullPath: '/settings/templates/new'
+      preLoaderRoute: typeof AuthenticatedSettingsTemplatesNewRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
   }
@@ -636,33 +856,60 @@ const AuthenticatedReportsRouteWithChildren =
   AuthenticatedReportsRoute._addFileChildren(AuthenticatedReportsRouteChildren)
 
 interface AuthenticatedSettingsRouteChildren {
+  AuthenticatedSettingsAuditRoute: typeof AuthenticatedSettingsAuditRoute
   AuthenticatedSettingsDepartmentsRoute: typeof AuthenticatedSettingsDepartmentsRoute
+  AuthenticatedSettingsIntegrationsRoute: typeof AuthenticatedSettingsIntegrationsRoute
   AuthenticatedSettingsMembersRoute: typeof AuthenticatedSettingsMembersRoute
+  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedSettingsRegionsRoute: typeof AuthenticatedSettingsRegionsRoute
   AuthenticatedSettingsRolesRoute: typeof AuthenticatedSettingsRolesRoute
+  AuthenticatedSettingsSchedulesRoute: typeof AuthenticatedSettingsSchedulesRoute
   AuthenticatedSettingsSitesRoute: typeof AuthenticatedSettingsSitesRoute
   AuthenticatedSettingsTagsRoute: typeof AuthenticatedSettingsTagsRoute
+  AuthenticatedSettingsTemplatesRoute: typeof AuthenticatedSettingsTemplatesRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedSettingsMembersMembershipIdRoute: typeof AuthenticatedSettingsMembersMembershipIdRoute
+  AuthenticatedSettingsSchedulesScheduleIdRoute: typeof AuthenticatedSettingsSchedulesScheduleIdRoute
+  AuthenticatedSettingsSchedulesNewRoute: typeof AuthenticatedSettingsSchedulesNewRoute
   AuthenticatedSettingsSitesSiteIdRoute: typeof AuthenticatedSettingsSitesSiteIdRoute
   AuthenticatedSettingsSitesNewRoute: typeof AuthenticatedSettingsSitesNewRoute
+  AuthenticatedSettingsTemplatesTemplateIdRoute: typeof AuthenticatedSettingsTemplatesTemplateIdRoute
+  AuthenticatedSettingsTemplatesLibraryRoute: typeof AuthenticatedSettingsTemplatesLibraryRoute
+  AuthenticatedSettingsTemplatesNewRoute: typeof AuthenticatedSettingsTemplatesNewRoute
 }
 
 const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
+  AuthenticatedSettingsAuditRoute: AuthenticatedSettingsAuditRoute,
   AuthenticatedSettingsDepartmentsRoute: AuthenticatedSettingsDepartmentsRoute,
+  AuthenticatedSettingsIntegrationsRoute:
+    AuthenticatedSettingsIntegrationsRoute,
   AuthenticatedSettingsMembersRoute: AuthenticatedSettingsMembersRoute,
+  AuthenticatedSettingsNotificationsRoute:
+    AuthenticatedSettingsNotificationsRoute,
   AuthenticatedSettingsOrganizationRoute:
     AuthenticatedSettingsOrganizationRoute,
   AuthenticatedSettingsRegionsRoute: AuthenticatedSettingsRegionsRoute,
   AuthenticatedSettingsRolesRoute: AuthenticatedSettingsRolesRoute,
+  AuthenticatedSettingsSchedulesRoute: AuthenticatedSettingsSchedulesRoute,
   AuthenticatedSettingsSitesRoute: AuthenticatedSettingsSitesRoute,
   AuthenticatedSettingsTagsRoute: AuthenticatedSettingsTagsRoute,
+  AuthenticatedSettingsTemplatesRoute: AuthenticatedSettingsTemplatesRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedSettingsMembersMembershipIdRoute:
     AuthenticatedSettingsMembersMembershipIdRoute,
+  AuthenticatedSettingsSchedulesScheduleIdRoute:
+    AuthenticatedSettingsSchedulesScheduleIdRoute,
+  AuthenticatedSettingsSchedulesNewRoute:
+    AuthenticatedSettingsSchedulesNewRoute,
   AuthenticatedSettingsSitesSiteIdRoute: AuthenticatedSettingsSitesSiteIdRoute,
   AuthenticatedSettingsSitesNewRoute: AuthenticatedSettingsSitesNewRoute,
+  AuthenticatedSettingsTemplatesTemplateIdRoute:
+    AuthenticatedSettingsTemplatesTemplateIdRoute,
+  AuthenticatedSettingsTemplatesLibraryRoute:
+    AuthenticatedSettingsTemplatesLibraryRoute,
+  AuthenticatedSettingsTemplatesNewRoute:
+    AuthenticatedSettingsTemplatesNewRoute,
 }
 
 const AuthenticatedSettingsRouteWithChildren =
@@ -672,6 +919,7 @@ const AuthenticatedSettingsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIssuesRoute: typeof AuthenticatedIssuesRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
@@ -683,6 +931,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIssuesRoute: AuthenticatedIssuesRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,

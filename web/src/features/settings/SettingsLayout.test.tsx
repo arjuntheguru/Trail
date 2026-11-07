@@ -40,6 +40,11 @@ describe('settings layout', () => {
       'Tags',
       'Members',
       'Roles',
+      'Templates',
+      'Schedules',
+      'Integrations',
+      'Audit log',
+      'Notifications',
     ])
   })
 
@@ -49,16 +54,22 @@ describe('settings layout', () => {
     await renderApp('/settings')
 
     await screen.findByRole('navigation', { name: 'Settings' })
-    expect(sectionLinks()).toEqual(['Organization', 'Sites', 'Regions', 'Departments'])
+    expect(sectionLinks()).toEqual([
+      'Organization',
+      'Sites',
+      'Regions',
+      'Departments',
+      'Notifications',
+    ])
   })
 
-  it('shows a plain member only the organization', async () => {
+  it('shows a plain member only the organization and their notifications', async () => {
     signIn(['tasks.view'])
     serveOrganization()
     await renderApp('/settings')
 
     await screen.findByRole('navigation', { name: 'Settings' })
-    expect(sectionLinks()).toEqual(['Organization'])
+    expect(sectionLinks()).toEqual(['Organization', 'Notifications'])
   })
 
   it.each(['/settings/members', '/settings/roles', '/settings/tags', '/settings/sites'])(
