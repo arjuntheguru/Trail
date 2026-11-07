@@ -12,20 +12,26 @@ internal sealed class DepartmentEndpoints : IEndpointGroup
 
         group.MapGet("", async (ListDepartmentsHandler handler, CancellationToken ct) =>
                 TypedResults.Ok(await handler.Handle(ct)))
-            .RequireAuthorization(Permissions.Sites.View);
+            .RequireAuthorization(Permissions.Sites.View)
+            .Returns<IReadOnlyList<DepartmentResponse>>();
 
         group.MapPost("", async (CreateDepartmentCommand command, CreateDepartmentHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp(department => TypedResults.Created($"/api/v1/departments/{department.Id}", department)))
             .Validate<CreateDepartmentCommand>()
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .Creates<DepartmentResponse>()
+            .ReturnsConflict();
 
         group.MapPut("{id:guid}", async (Guid id, UpdateDepartmentCommand command, UpdateDepartmentHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, command, ct)).ToHttp())
             .Validate<UpdateDepartmentCommand>()
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .Returns<DepartmentResponse>()
+            .ReturnsConflict();
 
         group.MapDelete("{id:guid}", async (Guid id, DeleteDepartmentHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, ct)).ToHttp())
-            .RequireAuthorization(Permissions.Sites.Manage);
+            .RequireAuthorization(Permissions.Sites.Manage)
+            .ReturnsNoContent();
     }
 }

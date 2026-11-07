@@ -12,26 +12,33 @@ internal sealed class ScheduleEndpoints : IEndpointGroup
         var group = app.MapGroup("schedules").WithTags("Schedules").RequireAuthorization(Permissions.Schedules.Manage);
 
         group.MapGet("", async ([AsParameters] ListSchedulesQuery query, [AsParameters] PageRequest page, ListSchedulesHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.Handle(query, page, ct)));
+            TypedResults.Ok(await handler.Handle(query, page, ct)))
+            .Returns<PagedResult<ScheduleResponse>>();
 
         group.MapGet("{id:guid}", async (Guid id, GetScheduleHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, ct)).ToHttp());
+            (await handler.Handle(id, ct)).ToHttp())
+            .Returns<ScheduleResponse>();
 
         group.MapPost("", async (CreateScheduleCommand command, CreateScheduleHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp(s => TypedResults.Created($"/api/v1/schedules/{s.Id}", s)))
-            .Validate<CreateScheduleCommand>();
+            .Validate<CreateScheduleCommand>()
+            .Creates<ScheduleResponse>();
 
         group.MapPut("{id:guid}", async (Guid id, UpdateScheduleCommand command, UpdateScheduleHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, command, ct)).ToHttp())
-            .Validate<UpdateScheduleCommand>();
+            .Validate<UpdateScheduleCommand>()
+            .Returns<ScheduleResponse>();
 
         group.MapPost("{id:guid}/deactivate", async (Guid id, SetScheduleActiveHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, false, ct)).ToHttp());
+            (await handler.Handle(id, false, ct)).ToHttp())
+            .ReturnsNoContent();
 
         group.MapPost("{id:guid}/activate", async (Guid id, SetScheduleActiveHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, true, ct)).ToHttp());
+            (await handler.Handle(id, true, ct)).ToHttp())
+            .ReturnsNoContent();
 
         group.MapDelete("{id:guid}", async (Guid id, DeleteScheduleHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, ct)).ToHttp());
+            (await handler.Handle(id, ct)).ToHttp())
+            .ReturnsNoContent();
     }
 }

@@ -32,11 +32,13 @@ internal sealed class AttachmentEndpoints : IEndpointGroup
                     context.User.HasClaim(TrailClaimTypes.Permission, Permissions.Tasks.Complete)
                     || context.User.HasClaim(TrailClaimTypes.Permission, Permissions.Issues.Raise)))
             .WithMetadata(new RequestSizeLimitAttribute(RequestLimitBytes))
+            .Creates<AttachmentResponse>()
             .DisableAntiforgery(); // Bearer-token API: there is no cookie session to forge requests against.
 
         group.MapGet("{id:guid}", async (Guid id, GetAttachmentHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, ct)).ToHttp())
-            .RequireAuthorization(AuthPolicies.OrganizationMember);
+            .RequireAuthorization(AuthPolicies.OrganizationMember)
+            .Returns<AttachmentResponse>();
 
         group.MapGet("{id:guid}/content", async Task<IResult> (Guid id, GetAttachmentHandler handler, HttpContext http, CancellationToken ct) =>
             {
@@ -50,6 +52,7 @@ internal sealed class AttachmentEndpoints : IEndpointGroup
                 http.Response.Headers.CacheControl = "private, max-age=3600";
                 return TypedResults.Stream(file.Content, file.ContentType);
             })
-            .RequireAuthorization(AuthPolicies.OrganizationMember);
+            .RequireAuthorization(AuthPolicies.OrganizationMember)
+            .ReturnsFile();
     }
 }

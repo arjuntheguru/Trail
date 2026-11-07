@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <UserSecretsId>trail-api-6b1f8f4e-6a52-4d8e-9a0c-2f0b9f4f7f11</UserSecretsId>
+    <!-- The OpenAPI document is written to web/openapi at build time (Debug only) for the web client's typed API. -->
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocumentsOnBuild Condition="'$(Configuration)' != 'Debug'">false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../web/openapi</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +15,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Serilog.AspNetCore" />

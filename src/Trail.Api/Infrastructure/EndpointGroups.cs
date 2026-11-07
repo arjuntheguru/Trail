@@ -16,6 +16,7 @@ internal static class EndpointGroupExtensions
     public static IEndpointRouteBuilder MapEndpointGroups(this IEndpointRouteBuilder app, Assembly assembly)
     {
         var api = app.MapGroup("/api/v1");
+        api.AddOpenApiConventions();
 
         var groups = assembly.DefinedTypes
             .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IEndpointGroup).IsAssignableFrom(t))

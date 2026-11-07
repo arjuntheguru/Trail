@@ -14,21 +14,28 @@ internal sealed class SensorEndpoints : IEndpointGroup
         var devices = app.MapGroup("sensor-devices").WithTags("Sensors").RequireAuthorization(Permissions.Integrations.Manage);
 
         devices.MapGet("", async ([AsParameters] PageRequest page, ListSensorDevicesHandler handler, CancellationToken ct) =>
-            TypedResults.Ok(await handler.Handle(page, ct)));
+            TypedResults.Ok(await handler.Handle(page, ct)))
+            .Returns<PagedResult<SensorDeviceResponse>>();
 
         devices.MapPost("", async (CreateSensorDeviceCommand command, CreateSensorDeviceHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp(device => TypedResults.Created($"/api/v1/sensor-devices/{device.Id}", device)))
-            .Validate<CreateSensorDeviceCommand>();
+            .Validate<CreateSensorDeviceCommand>()
+            .Creates<SensorDeviceResponse>()
+            .ReturnsConflict();
 
         devices.MapGet("{id:guid}", async (Guid id, GetSensorDeviceHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, ct)).ToHttp());
+            (await handler.Handle(id, ct)).ToHttp())
+            .Returns<SensorDeviceResponse>();
 
         devices.MapPut("{id:guid}", async (Guid id, UpdateSensorDeviceCommand command, UpdateSensorDeviceHandler handler, CancellationToken ct) =>
                 (await handler.Handle(id, command, ct)).ToHttp())
-            .Validate<UpdateSensorDeviceCommand>();
+            .Validate<UpdateSensorDeviceCommand>()
+            .Returns<SensorDeviceResponse>()
+            .ReturnsConflict();
 
         devices.MapDelete("{id:guid}", async (Guid id, DeleteSensorDeviceHandler handler, CancellationToken ct) =>
-            (await handler.Handle(id, ct)).ToHttp());
+            (await handler.Handle(id, ct)).ToHttp())
+            .ReturnsNoContent();
 
         // Machine endpoint: authenticated by API key only (see ApiKeyAuth), never by a user token.
         var sensors = app.MapGroup("sensors").WithTags("Sensors")
@@ -37,6 +44,8 @@ internal sealed class SensorEndpoints : IEndpointGroup
 
         sensors.MapPost("readings", async (SensorReadingsCommand command, ClaimsPrincipal caller, IngestSensorReadingsHandler handler, CancellationToken ct) =>
                 (await handler.Handle(Guid.Parse(caller.FindFirstValue(ApiKeyClaims.ApiKeyId)!), command, ct)).ToHttp())
-            .Validate<SensorReadingsCommand>();
+            .Validate<SensorReadingsCommand>()
+            .Returns<SensorReadingsResponse>()
+            .ReturnsConflict();
     }
 }
