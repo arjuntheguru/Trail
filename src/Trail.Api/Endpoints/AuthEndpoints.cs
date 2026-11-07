@@ -1,4 +1,5 @@
 using Trail.Api.Infrastructure;
+using Trail.Application.Common.Results;
 using Trail.Application.Features.Auth;
 using Trail.Application.Features.Me;
 
@@ -13,19 +14,31 @@ internal sealed class AuthEndpoints : IEndpointGroup
 
         auth.MapPost("register", async (RegisterOrganizationCommand command, RegisterOrganizationHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp(session => TypedResults.Created("/api/v1/me", session)))
-            .Validate<RegisterOrganizationCommand>();
+            .Validate<RegisterOrganizationCommand>()
+            .WithRefreshCookie();
 
         auth.MapPost("login", async (LoginCommand command, LoginHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp())
-            .Validate<LoginCommand>();
+            .Validate<LoginCommand>()
+            .WithRefreshCookie();
 
-        auth.MapPost("refresh", async (RefreshSessionCommand command, RefreshSessionHandler handler, CancellationToken ct) =>
-                (await handler.Handle(command, ct)).ToHttp())
-            .Validate<RefreshSessionCommand>();
+        // Cookie-transport clients may send an empty body; the token then comes from the httpOnly cookie.
+        auth.MapPost("refresh", async (HttpRequest request, RefreshTokenRequest? body, RefreshSessionHandler handler, CancellationToken ct) =>
+            {
+                var token = RefreshCookie.Read(request, body?.RefreshToken);
+                if (token is null || token.Length > 128)
+                    return Error.Unauthorized("auth.invalid_refresh_token", "The session has expired. Sign in again.").ToProblem();
+                return (await handler.Handle(new RefreshSessionCommand(token), ct)).ToHttp();
+            })
+            .WithRefreshCookie();
 
-        auth.MapPost("logout", async (LogoutCommand command, LogoutHandler handler, CancellationToken ct) =>
-                (await handler.Handle(command, ct)).ToHttp())
-            .Validate<LogoutCommand>();
+        auth.MapPost("logout", async (HttpRequest request, HttpResponse response, RefreshTokenRequest? body, LogoutHandler handler, CancellationToken ct) =>
+            {
+                var token = RefreshCookie.Read(request, body?.RefreshToken);
+                if (RefreshCookie.Requested(request)) RefreshCookie.Clear(response);
+                if (token is null || token.Length > 128) return TypedResults.NoContent();
+                return (await handler.Handle(new LogoutCommand(token), ct)).ToHttp();
+            });
 
         auth.MapPost("confirm-email", async (ConfirmEmailCommand command, ConfirmEmailHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp())
@@ -41,12 +54,14 @@ internal sealed class AuthEndpoints : IEndpointGroup
 
         auth.MapPost("accept-invitation", async (AcceptInvitationCommand command, AcceptInvitationHandler handler, CancellationToken ct) =>
                 (await handler.Handle(command, ct)).ToHttp())
-            .Validate<AcceptInvitationCommand>();
+            .Validate<AcceptInvitationCommand>()
+            .WithRefreshCookie();
 
         // Separate group: AllowAnonymous on the group above would override RequireAuthorization here.
         app.MapGroup("auth").WithTags("Auth").RequireAuthorization()
             .MapPost("switch-organization", async (SwitchOrganizationCommand command, SwitchOrganizationHandler handler, CancellationToken ct) =>
-                (await handler.Handle(command, ct)).ToHttp());
+                (await handler.Handle(command, ct)).ToHttp())
+            .WithRefreshCookie();
 
         var me = app.MapGroup("me").WithTags("Me").RequireAuthorization();
 
@@ -59,6 +74,7 @@ internal sealed class AuthEndpoints : IEndpointGroup
         me.MapPost("change-password", async (ChangePasswordCommand command, MeHandler handler, CancellationToken ct) =>
                 (await handler.ChangePassword(command, ct)).ToHttp())
             .Validate<ChangePasswordCommand>()
+            .WithRefreshCookie()
             .RequireRateLimiting(RateLimitPolicies.Auth);
 
         me.MapPost("sessions/revoke-all", async (MeHandler handler, CancellationToken ct) =>

@@ -16,7 +16,14 @@ using Trail.Infrastructure.Security;
 
 using HttpOptions = Trail.Api.Infrastructure.HttpOptions;
 
-var builder = WebApplication.CreateBuilder(args);
+// The build-time OpenAPI generator (web/openapi) boots the host; it gets placeholder settings and no jobs or DB work.
+var generatingOpenApi = OpenApiBuild.IsRunning;
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName = generatingOpenApi ? Environments.Development : null,
+});
+if (generatingOpenApi) builder.Configuration.AddInMemoryCollection(OpenApiBuild.Settings);
 
 builder.Services.AddSerilog((services, logger) =>
 {
@@ -93,9 +100,12 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
     .AllowAnonymous().DisableRateLimiting();
 app.MapEndpointGroups(typeof(Program).Assembly);
 
-if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
-    await app.Services.MigrateDatabaseAsync();
-await app.Services.EnsurePlatformAdminAsync();
+if (!generatingOpenApi)
+{
+    if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+        await app.Services.MigrateDatabaseAsync();
+    await app.Services.EnsurePlatformAdminAsync();
+}
 
 await app.RunAsync();
 
