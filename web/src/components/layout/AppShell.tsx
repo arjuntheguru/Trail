@@ -8,7 +8,9 @@ import { cn } from '@/lib/utils'
 
 import { EmailBanner } from './EmailBanner'
 import { NAV_ITEMS } from './nav'
+import { OfflineBanner } from './OfflineBanner'
 import { OrganizationSwitcher } from './OrganizationSwitcher'
+import { SyncIndicator } from './SyncIndicator'
 import { UserMenu } from './UserMenu'
 
 const linkBase = 'flex items-center gap-3 rounded-lg px-3 text-base font-medium transition-colors'
@@ -61,6 +63,10 @@ export function AppShell() {
             <UserMenu compact />
           </div>
         </header>
+        <OfflineBanner />
+        <div className="flex justify-end px-4 pt-2 empty:hidden">
+          <SyncIndicator />
+        </div>
         <EmailBanner />
         <main
           className={cn(

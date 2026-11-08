@@ -39,7 +39,8 @@ public sealed record TaskEntryResponse(
     bool HasFailures,
     DateTime? SubmittedAt,
     Guid? SubmittedById,
-    string? SubmittedBy);
+    string? SubmittedBy,
+    DateTime? SyncedAt = null);
 
 public sealed record TaskDetailResponse(
     Guid Id,
@@ -71,4 +72,5 @@ public sealed record TaskDetailResponse(
     Guid? ApprovedById,
     string? ApprovedBy,
     string? ApprovalNote,
-    IReadOnlyList<TaskEntryResponse> Entries);
+    IReadOnlyList<TaskEntryResponse> Entries,
+    DateTime? SyncedAt = null);

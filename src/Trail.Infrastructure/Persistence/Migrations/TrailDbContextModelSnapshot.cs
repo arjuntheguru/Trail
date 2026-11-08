@@ -16,7 +16,7 @@ namespace Trail.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Trail.Domain.Auditing.AuditEntry", b =>
@@ -107,6 +107,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("char(36)");
 
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("Sha256")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -135,6 +138,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("SiteId");
+
+                    b.HasIndex("OrganizationId", "CreatedById", "RequestId")
+                        .IsUnique();
 
                     b.ToTable("attachments", (string)null);
                 });
@@ -1469,6 +1475,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
                     b.Property<bool>("CompletedLate")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<Guid?>("CompletionRequestId")
+                        .HasColumnType("char(36)");
+
                     b.Property<Guid>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("char(36)");
@@ -1534,6 +1543,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("TemplateId")
                         .HasColumnType("char(36)");
@@ -1606,6 +1618,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("json");
 
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("char(36)");
+
                     b.Property<Guid>("SiteTaskId")
                         .HasColumnType("char(36)");
 
@@ -1614,6 +1629,9 @@ namespace Trail.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("SubmittedById")
                         .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -1625,7 +1643,8 @@ namespace Trail.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.HasIndex("SiteTaskId");
+                    b.HasIndex("SiteTaskId", "RequestId")
+                        .IsUnique();
 
                     b.ToTable("task_entries", (string)null);
                 });

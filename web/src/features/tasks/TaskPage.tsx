@@ -9,6 +9,8 @@ import { Permissions } from '@/auth/permissions'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatTime } from '@/lib/dates'
+import { useOutbox, usePendingForTask } from '@/offline/context'
+import type { CompleteItem } from '@/offline/outbox-types'
 
 import { ChecklistForm } from './ChecklistForm'
 import { taskKey, taskQuery } from './queries'
@@ -16,7 +18,7 @@ import { AnswerList } from './ReadOnly'
 import { RecordLogView } from './RecordLogView'
 import { TaskActions } from './TaskActions'
 import { TaskHeader } from './TaskHeader'
-import type { TaskDetail } from './types'
+import type { TaskDetail, TaskEntry } from './types'
 import { workability } from './workability'
 
 function useNow(intervalMs = 30_000) {
@@ -32,8 +34,10 @@ export function TaskPage({ taskId }: { taskId: string }) {
   const { client } = useAuthService()
   const organizationId = useSession().organization?.id
   const query = useQuery({ ...taskQuery(client, organizationId, taskId) })
+  // Changes kept on this device decide what the screen shows, so wait until they have been read.
+  const { loaded } = useOutbox()
 
-  if (query.isPending) return <TaskSkeleton />
+  if (query.isPending || !loaded) return <TaskSkeleton />
   if (query.isError) {
     const notFound = query.error instanceof ApiError && query.error.status === 404
     return (
@@ -61,6 +65,9 @@ function TaskScreen({ task }: { task: TaskDetail }) {
   const organizationId = useSession().organization?.id
   const [notice, setNotice] = useState<string>()
   const state = workability(task, now, canComplete)
+  const queuedCompletion = usePendingForTask(task.id).find(
+    (i): i is CompleteItem => i.type === 'complete',
+  )
 
   function onConflict(message: string) {
     setNotice(message)
@@ -88,6 +95,7 @@ function TaskScreen({ task }: { task: TaskDetail }) {
           {state.message}
         </p>
       )}
+      {queuedCompletion && <QueuedCompletion task={task} item={queuedCompletion} />}
       {task.status === 'Completed' && <CompletionSummary task={task} />}
       {task.status === 'Open' && task.approvalNote && (
         <p className="rounded-md border border-warning/50 bg-warning/10 p-3 text-sm">
@@ -96,7 +104,13 @@ function TaskScreen({ task }: { task: TaskDetail }) {
       )}
 
       {task.kind === 'RecordLog' ? (
-        <RecordLogView task={task} editable={state.workable} onConflict={onConflict} />
+        <RecordLogView
+          task={task}
+          editable={state.workable && !queuedCompletion}
+          onConflict={onConflict}
+        />
+      ) : queuedCompletion ? (
+        <QueuedAnswers task={task} item={queuedCompletion} />
       ) : state.workable ? (
         // Re-created when the task changes status (e.g. reopened) so the draft is loaded again.
         <ChecklistForm key={`${task.id}:${task.status}`} task={task} onConflict={onConflict} />
@@ -104,7 +118,7 @@ function TaskScreen({ task }: { task: TaskDetail }) {
         <SubmittedAnswers task={task} />
       )}
 
-      <TaskActions task={task} />
+      {!queuedCompletion && <TaskActions task={task} />}
       {canRaiseIssue && (
         <Button asChild variant="outline" size="lg" className="self-start">
           <Link to="/issues/new" search={{ siteId: task.siteId, taskId: task.id }}>
@@ -114,6 +128,48 @@ function TaskScreen({ task }: { task: TaskDetail }) {
         </Button>
       )}
     </article>
+  )
+}
+
+/** The completion that is stored on this device and has not reached the server yet. */
+function QueuedCompletion({ task, item }: { task: TaskDetail; item: CompleteItem }) {
+  const time = formatTime(item.completedAt, task.timeZone)
+  const failed = item.status === 'failed'
+  return (
+    <div
+      role="status"
+      data-testid="queued-completion"
+      className={
+        failed
+          ? 'rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive'
+          : 'rounded-md border bg-muted p-3 text-sm'
+      }
+    >
+      {failed
+        ? `Completed on this device at ${time}, but it could not be synced. ${item.error?.message ?? ''}`.trim()
+        : `Completed on this device at ${time}. Waiting to sync.`}
+    </div>
+  )
+}
+
+/** What was entered for a completion that is still queued. */
+function QueuedAnswers({ task, item }: { task: TaskDetail; item: CompleteItem }) {
+  const entry: TaskEntry = {
+    id: item.id,
+    answers: item.body.answers ?? {},
+    note: item.body.note ?? null,
+    photoIds: item.body.photoIds ?? [],
+    failures: [],
+    hasFailures: false,
+    submittedAt: item.completedAt,
+    submittedById: null,
+    submittedBy: null,
+  }
+  return (
+    <section aria-label="Answers" className="flex flex-col gap-3">
+      <h2 className="text-lg font-semibold">Answers</h2>
+      <AnswerList fields={task.fields} entry={entry} />
+    </section>
   )
 }
 

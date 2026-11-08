@@ -35,6 +35,9 @@ public sealed class SiteTask : TenantEntity
     /// <summary>How long after its due time a missed task can still be completed (marked late).</summary>
     public static readonly TimeSpan LateCompletionWindow = TimeSpan.FromDays(7);
 
+    /// <summary>How far back a client may date work it did offline and synced later.</summary>
+    public static readonly TimeSpan OfflineGrace = TimeSpan.FromHours(24);
+
     public Guid SiteId { get; set; }
     public Guid TemplateId { get; set; }
     public int TemplateVersion { get; set; }
@@ -64,6 +67,12 @@ public sealed class SiteTask : TenantEntity
     public DateTime? CompletedAt { get; set; }
     public Guid? CompletedById { get; set; }
     public bool CompletedLate { get; set; }
+
+    /// <summary>When the completion reached the server, set only when the client supplied its own completion time.</summary>
+    public DateTime? SyncedAt { get; set; }
+
+    /// <summary>The client request that completed the task, so a replay is recognised. Never cleared, even on reopen.</summary>
+    public Guid? CompletionRequestId { get; set; }
     public bool HasFailures { get; set; }
 
     public DateTime? ApprovedAt { get; set; }
@@ -109,7 +118,7 @@ public sealed class SiteTask : TenantEntity
     public void Complete(DateTime now, Guid? userId, bool hasFailures)
     {
         if (!CanBeWorkedOn(now)) throw new InvalidOperationException($"A {Status} task cannot be completed.");
-        CompletedLate = now > DueAt || Status == SiteTaskStatus.Missed;
+        CompletedLate = now > DueAt;
         Status = SiteTaskStatus.Completed;
         CompletedAt = now;
         CompletedById = userId;
@@ -135,6 +144,7 @@ public sealed class SiteTask : TenantEntity
         CompletedAt = null;
         CompletedById = null;
         CompletedLate = false;
+        SyncedAt = null;
     }
 
     /// <summary>Moves an open task to a later local day, shifting its due time with it.</summary>

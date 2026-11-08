@@ -12,16 +12,20 @@ import { FormAlert } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { useOutboxApi, usePendingForTask } from '@/offline/context'
+import { SAVED_ON_DEVICE } from '@/offline/messages'
+import { isOnline } from '@/offline/online'
+import type { EntryBody } from '@/offline/outbox-types'
 
 import { emptyFormValues, toServerAnswers } from './answers'
 import { evaluateAnswers } from './evaluate'
-import { isConflict, mapServerErrors } from './errors'
+import { isConflict, isOffline, mapServerErrors } from './errors'
 import { FieldsEditor } from './FieldsEditor'
 import { TaskFormProvider, useTaskForm } from './form-context'
 import { focusFirstProblem, NO_PROBLEMS, validateForSubmit, type FormProblems } from './problems'
 import { applyTaskUpdate, taskKey } from './queries'
 import { ReadingCard } from './ReadOnly'
-import type { TaskDetail, TaskFormValues } from './types'
+import type { TaskDetail, TaskEntry, TaskFormValues } from './types'
 
 interface RecordLogProps {
   task: TaskDetail
@@ -32,6 +36,7 @@ interface RecordLogProps {
 
 /** Submitted readings, a form to add the next one and a button to finish the log. */
 export function RecordLogView({ task, editable, onConflict }: RecordLogProps) {
+  const user = useSession().user
   const readings = useMemo(
     () =>
       task.entries
@@ -39,29 +44,59 @@ export function RecordLogView({ task, editable, onConflict }: RecordLogProps) {
         .sort((a, b) => (a.submittedAt! < b.submittedAt! ? 1 : -1)),
     [task.entries],
   )
+  // Readings taken on this device that the server has not received yet, newest first.
+  const waiting = usePendingForTask(task.id)
+    .filter((i) => i.type === 'entry')
+    .map((item) => ({
+      item,
+      entry: {
+        id: item.id,
+        answers: item.body.answers,
+        note: item.body.note ?? null,
+        photoIds: item.body.photoIds ?? [],
+        failures: [],
+        hasFailures: false,
+        submittedAt: item.recordedAt,
+        submittedById: null,
+        submittedBy: `${user.firstName} ${user.lastName}`.trim() || null,
+      } satisfies TaskEntry,
+    }))
+    .reverse()
+  const total = readings.length + waiting.length
 
   return (
-    <TaskFormProvider siteId={task.siteId} readOnly={!editable}>
+    <TaskFormProvider siteId={task.siteId} taskId={task.id} readOnly={!editable}>
       <div className="flex flex-col gap-8">
         {editable && <AddReading task={task} onConflict={onConflict} />}
 
         <section aria-label="Readings" className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Readings ({readings.length})</h2>
-          {readings.length === 0 ? (
+          <h2 className="text-lg font-semibold">Readings ({total})</h2>
+          {total === 0 ? (
             <p className="text-muted-foreground">No readings yet.</p>
           ) : (
-            readings.map((entry) => (
-              <ReadingCard
-                key={entry.id}
-                fields={task.fields}
-                entry={entry}
-                timeZone={task.timeZone}
-              />
-            ))
+            <>
+              {waiting.map(({ item, entry }) => (
+                <ReadingCard
+                  key={item.id}
+                  fields={task.fields}
+                  entry={entry}
+                  timeZone={task.timeZone}
+                  sync={item.status === 'failed' ? 'failed' : 'waiting'}
+                />
+              ))}
+              {readings.map((entry) => (
+                <ReadingCard
+                  key={entry.id}
+                  fields={task.fields}
+                  entry={entry}
+                  timeZone={task.timeZone}
+                />
+              ))}
+            </>
           )}
         </section>
 
-        {editable && <FinishLog task={task} count={readings.length} onConflict={onConflict} />}
+        {editable && <FinishLog task={task} count={total} onConflict={onConflict} />}
       </div>
     </TaskFormProvider>
   )
@@ -72,6 +107,7 @@ function AddReading({ task, onConflict }: { task: TaskDetail; onConflict: (m: st
   const organizationId = useSession().organization?.id
   const queryClient = useQueryClient()
   const { pendingUploads } = useTaskForm()
+  const outbox = useOutboxApi()
   const root = useRef<HTMLFormElement>(null)
   const [problems, setProblems] = useState<FormProblems>(NO_PROBLEMS)
   const form = useForm<TaskFormValues>({ defaultValues: emptyFormValues(task.fields) })
@@ -89,24 +125,43 @@ function AddReading({ task, onConflict }: { task: TaskDetail; onConflict: (m: st
   )
 
   const add = useMutation({
-    mutationFn: (body: {
-      answers: ReturnType<typeof toServerAnswers>
-      note: string | null
-      photoIds: string[]
-    }) =>
-      unwrap(
-        client.POST('/api/v1/tasks/{id}/entries', { params: { path: { id: task.id } }, body }),
-      ),
-    onSuccess: (updated) => {
-      applyTaskUpdate(queryClient, organizationId, updated)
-      const submitted = updated.entries
-        .filter((e) => e.submittedAt)
-        .sort((x, y) => (x.submittedAt! < y.submittedAt! ? 1 : -1))
-      toast.success(
-        submitted[0]?.hasFailures
-          ? `Reading ${submitted.length} added. It failed a check.`
-          : `Reading ${submitted.length} added.`,
-      )
+    networkMode: 'always', // offline readings are queued rather than paused
+    mutationFn: async (input: EntryBody): Promise<{ queued: true } | TaskDetail> => {
+      const requestId = crypto.randomUUID()
+      const recordedAt = new Date().toISOString()
+      const planned = await outbox.plan(task.id, input)
+      const queue = async () => {
+        await outbox.enqueueEntry({ taskId: task.id, body: planned.body, requestId, recordedAt })
+        return { queued: true } as const
+      }
+      if (planned.queue || !isOnline()) return queue()
+      try {
+        return await unwrap(
+          client.POST('/api/v1/tasks/{id}/entries', {
+            params: { path: { id: task.id } },
+            body: { ...planned.body, requestId },
+          }),
+        )
+      } catch (error) {
+        // The request may or may not have arrived; the queued copy carries the same requestId.
+        if (isOffline(error)) return queue()
+        throw error
+      }
+    },
+    onSuccess: (result) => {
+      if ('queued' in result) {
+        toast.success(SAVED_ON_DEVICE)
+      } else {
+        applyTaskUpdate(queryClient, organizationId, result)
+        const submitted = result.entries
+          .filter((e) => e.submittedAt)
+          .sort((x, y) => (x.submittedAt! < y.submittedAt! ? 1 : -1))
+        toast.success(
+          submitted[0]?.hasFailures
+            ? `Reading ${submitted.length} added. It failed a check.`
+            : `Reading ${submitted.length} added.`,
+        )
+      }
       form.reset(emptyFormValues(task.fields))
       setProblems(NO_PROBLEMS)
     },
@@ -198,23 +253,45 @@ function FinishLog({
   const navigate = useNavigate()
   const [note, setNote] = useState('')
   const [error, setError] = useState<string>()
+  const outbox = useOutboxApi()
 
   const finish = useMutation({
-    mutationFn: () =>
-      unwrap(
-        client.POST('/api/v1/tasks/{id}/complete', {
-          params: { path: { id: task.id } },
-          body: { note: note.trim() || null },
-        }),
-      ),
+    networkMode: 'always', // offline completions are queued rather than paused
+    mutationFn: async (): Promise<{ queued: true } | TaskDetail> => {
+      const body = { note: note.trim() || null }
+      const requestId = crypto.randomUUID()
+      const completedAt = new Date().toISOString()
+      const queue = async () => {
+        await outbox.enqueueComplete({ taskId: task.id, body, requestId, completedAt })
+        return { queued: true } as const
+      }
+      // Readings still queued must reach the server before the log is finished.
+      const planned = await outbox.plan(task.id, body)
+      if (planned.queue || !isOnline()) return queue()
+      try {
+        return await unwrap(
+          client.POST('/api/v1/tasks/{id}/complete', {
+            params: { path: { id: task.id } },
+            body: { ...body, requestId },
+          }),
+        )
+      } catch (e) {
+        if (isOffline(e)) return queue()
+        throw e
+      }
+    },
     onMutate: () => setError(undefined),
-    onSuccess: (updated) => {
-      applyTaskUpdate(queryClient, organizationId, updated)
-      toast.success(
-        updated.hasFailures
-          ? 'Record log finished. Some readings failed their checks.'
-          : 'Record log finished.',
-      )
+    onSuccess: (result) => {
+      if ('queued' in result) {
+        toast.success(SAVED_ON_DEVICE)
+      } else {
+        applyTaskUpdate(queryClient, organizationId, result)
+        toast.success(
+          result.hasFailures
+            ? 'Record log finished. Some readings failed their checks.'
+            : 'Record log finished.',
+        )
+      }
       void navigate({ to: '/today' })
     },
     onError: (e) => {

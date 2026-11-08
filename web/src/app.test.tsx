@@ -1,8 +1,8 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { ORG_A, ORG_B, problem, sessionResponse } from '@/test/fixtures'
+import { ORG_A, ORG_B, problem, sessionResponse, taskDetail } from '@/test/fixtures'
 import { renderApp } from '@/test/renderApp'
 import { API, server } from '@/test/server'
 
@@ -170,6 +170,39 @@ describe('Today', () => {
     expect(screen.getByText(/Done 10:00 AM by Sam Chef|Done 10:00 by Sam Chef/)).toBeInTheDocument()
     expect(screen.getByText(/2 readings/)).toBeInTheDocument()
     expect(screen.getByText('Can still be completed')).toBeInTheDocument()
+  })
+
+  it('prefetches the detail of each open task so it opens offline', async () => {
+    signedInServer()
+    const fetched: string[] = []
+    server.use(
+      http.get(`${API}/api/v1/sites`, () =>
+        HttpResponse.json({ items: [SITE], page: 1, pageSize: 100, totalCount: 1 }),
+      ),
+      http.get(`${API}/api/v1/sites/s1/tasks`, () =>
+        HttpResponse.json({
+          siteId: 's1',
+          siteName: 'Harbour Cafe',
+          date: '2026-11-07',
+          timeZone: 'Europe/London',
+          items: [
+            task({ id: 'open-1', title: 'Opening checks' }),
+            task({ id: 'open-2', title: 'Fridge temperatures', kind: 'RecordLog' }),
+            task({ id: 'done-1', title: 'Closing checks', status: 'Completed' }),
+          ],
+        }),
+      ),
+      http.get(`${API}/api/v1/tasks/:id`, ({ params }) => {
+        fetched.push(String(params.id))
+        return HttpResponse.json(taskDetail({ id: String(params.id) }))
+      }),
+    )
+    const { queryClient } = await renderApp('/today')
+    await screen.findByText('Opening checks')
+
+    await waitFor(() => expect(fetched.sort()).toEqual(['open-1', 'open-2']))
+    expect(queryClient.getQueryData(['org', ORG_A.id, 'task', 'open-1'])).toBeDefined()
+    expect(queryClient.getQueryData(['org', ORG_A.id, 'task', 'done-1'])).toBeUndefined()
   })
 
   it('shows an empty state when nothing is scheduled', async () => {

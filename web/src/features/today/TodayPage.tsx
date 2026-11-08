@@ -1,18 +1,21 @@
-import { useQuery } from '@tanstack/react-query'
+import { onlineManager, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarCheck, RefreshCw } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { errorMessage } from '@/api/problem'
 import { useAuthService, usePermission, useSession } from '@/auth/context'
 import { Permissions } from '@/auth/permissions'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { taskQuery } from '@/features/tasks/queries'
 import { formatDay } from '@/lib/dates'
 
 import { groupTasks } from './groups'
 import { siteTasksQuery, sitesQuery } from './queries'
 import { TaskCard } from './TaskCard'
 import { useSelectedSite } from './useSelectedSite'
+
+const CLOSED_STATUSES = new Set<string>(['Completed', 'Missed', 'Cancelled'])
 
 export function TodayPage() {
   const { client } = useAuthService()
@@ -27,6 +30,18 @@ export function TodayPage() {
     siteList.map((s) => s.id),
   )
   const tasks = useQuery({ ...siteTasksQuery(client, organizationId, siteId ?? undefined) })
+
+  // Warm the detail of every task still to do, so opening one works without a connection.
+  const queryClient = useQueryClient()
+  const taskItems = tasks.data?.items
+  useEffect(() => {
+    if (!taskItems || !onlineManager.isOnline()) return
+    for (const task of taskItems) {
+      if (CLOSED_STATUSES.has(task.status ?? '')) continue
+      // prefetchQuery skips data that is still fresh and never throws.
+      void queryClient.prefetchQuery(taskQuery(client, organizationId, task.id))
+    }
+  }, [taskItems, queryClient, client, organizationId])
 
   if (!canViewTasks) {
     return <Message title="Today" body="You do not have access to tasks in this organization." />

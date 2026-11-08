@@ -105,6 +105,7 @@ internal sealed class TaskEntryConfiguration : IEntityTypeConfiguration<TaskEntr
         builder.Property(x => x.PhotoIds).HasJsonConversion();
         builder.Property(x => x.Failures).HasJsonConversion();
         builder.Property(x => x.Note).HasMaxLength(SiteTask.NoteMaxLength);
+        builder.HasIndex(x => new { x.SiteTaskId, x.RequestId }).IsUnique();
     }
 }
 
@@ -119,5 +120,7 @@ internal sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachm
         builder.Property(x => x.Sha256).HasMaxLength(64).IsFixedLength();
         builder.HasOne<Site>().WithMany().HasForeignKey(x => x.SiteId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => x.SiteId);
+        // Replay lookup; MySQL allows many NULL request ids.
+        builder.HasIndex(x => new { x.OrganizationId, x.CreatedById, x.RequestId }).IsUnique();
     }
 }

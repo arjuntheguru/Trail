@@ -80,10 +80,13 @@ export function ReadingCard({
   fields,
   entry,
   timeZone,
+  sync,
 }: {
   fields: readonly TaskField[]
   entry: TaskEntry
   timeZone: string
+  /** Set for a reading that only exists on this device so far. */
+  sync?: 'waiting' | 'failed'
 }) {
   return (
     <article className="flex flex-col gap-3 rounded-xl border p-4" data-testid="reading">
@@ -94,7 +97,11 @@ export function ReadingCard({
             <span className="font-normal text-muted-foreground"> · {entry.submittedBy}</span>
           )}
         </p>
-        {entry.hasFailures && <Badge variant="destructive">Failed checks</Badge>}
+        <div className="flex gap-1.5">
+          {sync === 'waiting' && <Badge variant="outline">Waiting to sync</Badge>}
+          {sync === 'failed' && <Badge variant="destructive">Sync failed</Badge>}
+          {entry.hasFailures && <Badge variant="destructive">Failed checks</Badge>}
+        </div>
       </header>
       <AnswerList fields={fields} entry={entry} />
     </article>

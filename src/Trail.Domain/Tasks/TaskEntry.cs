@@ -23,4 +23,10 @@ public sealed class TaskEntry : TenantEntity
     /// <summary>Null while a checklist is in progress; set when submitted.</summary>
     public DateTime? SubmittedAt { get; set; }
     public Guid? SubmittedById { get; set; }
+
+    /// <summary>Client-generated id that makes replaying the same request safe.</summary>
+    public Guid? RequestId { get; set; }
+
+    /// <summary>When the entry reached the server, set only when the client supplied its own time.</summary>
+    public DateTime? SyncedAt { get; set; }
 }

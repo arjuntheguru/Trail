@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 interface TaskFormContextValue {
   siteId: string
+  /** Set when photos may be queued offline against this task. */
+  taskId?: string
   /** True while the task cannot be edited (completed, not yet open, or the user may not complete it). */
   readOnly: boolean
   /** Number of uploads in flight; completion waits for them. */
@@ -13,10 +15,13 @@ const TaskFormContext = createContext<TaskFormContextValue | null>(null)
 
 export function TaskFormProvider({
   siteId,
+  taskId,
   readOnly,
   children,
 }: {
   siteId: string
+  /** Set when photos may be queued offline against this task. */
+  taskId?: string
   readOnly: boolean
   children: ReactNode
 }) {
@@ -26,8 +31,8 @@ export function TaskFormProvider({
     return upload.finally(() => setPending((n) => n - 1))
   }, [])
   const value = useMemo(
-    () => ({ siteId, readOnly, pendingUploads, trackUpload }),
-    [siteId, readOnly, pendingUploads, trackUpload],
+    () => ({ siteId, taskId, readOnly, pendingUploads, trackUpload }),
+    [siteId, taskId, readOnly, pendingUploads, trackUpload],
   )
   return <TaskFormContext.Provider value={value}>{children}</TaskFormContext.Provider>
 }

@@ -8,11 +8,14 @@ using Trail.Domain.Files;
 
 namespace Trail.Application.Features.Attachments;
 
-/// <summary>An uploaded file. <see cref="ClaimedFileName"/> is untrusted; the real type is read from the content.</summary>
-public sealed record UploadAttachmentCommand(Stream Content, string? ClaimedFileName, AttachmentKind Kind, Guid SiteId);
+/// <summary>
+/// An uploaded file. <see cref="ClaimedFileName"/> is untrusted; the real type is read from the content. Repeating a
+/// <see cref="RequestId"/> used by the same user returns the earlier upload instead of storing the file again.
+/// </summary>
+public sealed record UploadAttachmentCommand(Stream Content, string? ClaimedFileName, AttachmentKind Kind, Guid SiteId, Guid? RequestId = null);
 
 public sealed class UploadAttachmentHandler(
-    IAppDbContext db, ISiteAccess access, IFileStorage storage, ITenantContext tenant, TimeProvider clock)
+    IAppDbContext db, ISiteAccess access, IFileStorage storage, ITenantContext tenant, ICurrentUser user, TimeProvider clock)
 {
     private const int HeaderLength = 32;
 
@@ -25,6 +28,14 @@ public sealed class UploadAttachmentHandler(
         if (!await access.CanAccessSiteAsync(command.SiteId, ct)
             || !await db.Sites.AnyAsync(s => s.Id == command.SiteId, ct))
             return Error.NotFound("site.not_found", "Site not found.");
+
+        // Only the caller's own earlier upload counts as a replay; someone else's request id is no concern of theirs.
+        if (command.RequestId is { } requestId && user.UserId is { } userId)
+        {
+            var existing = await db.Attachments.AsNoTracking()
+                .FirstOrDefaultAsync(a => a.RequestId == requestId && a.CreatedById == userId, ct);
+            if (existing is not null) return ToResponse(existing);
+        }
 
         var content = command.Content;
         if (!content.CanSeek)
@@ -68,6 +79,7 @@ public sealed class UploadAttachmentHandler(
             StorageKey = string.Empty,
             Sha256 = sha256,
             SiteId = command.SiteId,
+            RequestId = command.RequestId,
         };
         attachment.StorageKey = $"{organizationId}/{now:yyyy}/{now:MM}/{attachment.Id}{extension}";
 
@@ -85,8 +97,11 @@ public sealed class UploadAttachmentHandler(
             throw;
         }
 
-        return new AttachmentResponse(attachment.Id, attachment.Kind, attachment.ContentType, attachment.SizeBytes, attachment.FileName, attachment.SiteId);
+        return ToResponse(attachment);
     }
+
+    private static AttachmentResponse ToResponse(Attachment attachment) => new(
+        attachment.Id, attachment.Kind, attachment.ContentType, attachment.SizeBytes, attachment.FileName, attachment.SiteId);
 
     /// <summary>Drops any path and control characters from a client's file name and limits its length.</summary>
     public static string SanitizeFileName(string? claimed, string fallbackExtension)

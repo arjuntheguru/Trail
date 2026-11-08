@@ -10,10 +10,14 @@ import { unwrap } from '@/api/unwrap'
 import { useAuthService, useSession } from '@/auth/context'
 import { FormAlert } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
+import { useOutboxApi, usePendingForTask } from '@/offline/context'
+import { SAVED_ON_DEVICE } from '@/offline/messages'
+import { isOnline } from '@/offline/online'
+import type { CompleteBody } from '@/offline/outbox-types'
 
 import { toDraftAnswers, toFormAnswers, toServerAnswers } from './answers'
 import { evaluateAnswers } from './evaluate'
-import { isConflict, mapServerErrors } from './errors'
+import { isConflict, isOffline, mapServerErrors } from './errors'
 import { FieldsEditor } from './FieldsEditor'
 import { TaskFormProvider, useTaskForm } from './form-context'
 import { focusFirstProblem, NO_PROBLEMS, validateForSubmit, type FormProblems } from './problems'
@@ -26,6 +30,7 @@ const STATUS_TEXT: Record<SaveStatus, string> = {
   unsaved: 'Unsaved changes',
   saving: 'Saving…',
   saved: 'Saved',
+  queued: 'Saved on this device',
   offline: 'Offline – not saved',
   error: 'Could not save',
 }
@@ -55,7 +60,7 @@ interface ChecklistFormProps {
 /** Checklists and forms: one draft that autosaves, completed in a single step. */
 export function ChecklistForm(props: ChecklistFormProps) {
   return (
-    <TaskFormProvider siteId={props.task.siteId} readOnly={false}>
+    <TaskFormProvider siteId={props.task.siteId} taskId={props.task.id} readOnly={false}>
       <ChecklistFormInner {...props} />
     </TaskFormProvider>
   )
@@ -67,13 +72,19 @@ function ChecklistFormInner({ task, onConflict }: ChecklistFormProps) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { pendingUploads } = useTaskForm()
+  const outbox = useOutboxApi()
+  const queuedProgress = usePendingForTask(task.id).find((i) => i.type === 'progress')
   const root = useRef<HTMLFormElement>(null)
   const [problems, setProblems] = useState<FormProblems>(NO_PROBLEMS)
   const [stopped, setStopped] = useState(false)
 
   // The form is created once from the saved draft; later responses (autosaves) must not reset what is typed.
   const [defaults] = useState<TaskFormValues>(() => {
-    const draft = task.entries.find((e) => !e.submittedAt)
+    // A draft kept on this device is newer than the one the server (or the cache) holds.
+    const draft =
+      queuedProgress?.type === 'progress'
+        ? queuedProgress.body
+        : task.entries.find((e) => !e.submittedAt)
     return {
       answers: toFormAnswers(task.fields, draft?.answers),
       note: draft?.note ?? '',
@@ -121,6 +132,11 @@ function ChecklistFormInner({ task, onConflict }: ChecklistFormProps) {
     initialSnapshot,
     save: async (body) => {
       try {
+        // Earlier drafts still queued must go first, so this one joins the queue behind them.
+        if (outbox.hasQueued(task.id)) {
+          await outbox.enqueueProgress(task.id, JSON.parse(body) as ReturnType<typeof draftBody>)
+          return
+        }
         const updated = await unwrap(
           client.PUT('/api/v1/tasks/{id}/progress', {
             params: { path: { id: task.id } },
@@ -133,20 +149,50 @@ function ChecklistFormInner({ task, onConflict }: ChecklistFormProps) {
         throw error
       }
     },
+    saveOffline: (body) =>
+      outbox.enqueueProgress(task.id, JSON.parse(body) as ReturnType<typeof draftBody>),
   })
 
   const complete = useMutation({
-    mutationFn: (body: {
-      answers: ReturnType<typeof toServerAnswers>
-      note: string | null
-      photoIds: string[]
-    }) =>
-      unwrap(
-        client.POST('/api/v1/tasks/{id}/complete', { params: { path: { id: task.id } }, body }),
-      ),
-    onSuccess: (updated) => {
-      applyTaskUpdate(queryClient, organizationId, updated)
-      toast.success(updated.hasFailures ? 'Task completed with failed checks.' : 'Task completed.')
+    // Offline is handled here (by queueing), so the mutation must not pause until the network returns.
+    networkMode: 'always',
+    mutationFn: async (input: CompleteBody): Promise<{ queued: true } | TaskDetail> => {
+      // One id per press of the button, kept when the request is retried from the queue.
+      const requestId = crypto.randomUUID()
+      const completedAt = new Date().toISOString()
+      const planned = await outbox.plan(task.id, input)
+      const queue = async () => {
+        await outbox.enqueueComplete({
+          taskId: task.id,
+          body: planned.body,
+          requestId,
+          completedAt,
+        })
+        return { queued: true } as const
+      }
+      if (planned.queue || !isOnline()) return queue()
+      try {
+        const updated = await unwrap(
+          client.POST('/api/v1/tasks/{id}/complete', {
+            params: { path: { id: task.id } },
+            body: { ...planned.body, requestId },
+          }),
+        )
+        void outbox.dropProgress(task.id).catch(() => {})
+        return updated
+      } catch (error) {
+        // The request may or may not have arrived; the queued copy carries the same requestId.
+        if (isOffline(error)) return queue()
+        throw error
+      }
+    },
+    onSuccess: (result) => {
+      if ('queued' in result) {
+        toast.success(SAVED_ON_DEVICE)
+      } else {
+        applyTaskUpdate(queryClient, organizationId, result)
+        toast.success(result.hasFailures ? 'Task completed with failed checks.' : 'Task completed.')
+      }
       void navigate({ to: '/today' })
     },
     onError: (error) => {

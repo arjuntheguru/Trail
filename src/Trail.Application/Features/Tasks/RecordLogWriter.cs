@@ -13,7 +13,17 @@ namespace Trail.Application.Features.Tasks;
 /// </summary>
 public sealed record RecordLogReading(
     IReadOnlyDictionary<string, FieldAnswer> Answers, string? Note, IReadOnlyList<Guid> PhotoIds,
-    DateTime SubmittedAt, Guid? SubmittedById, bool Automated = false);
+    DateTime SubmittedAt, Guid? SubmittedById, bool Automated = false)
+{
+    /// <summary>Client request id for replay safety (people only).</summary>
+    public Guid? RequestId { get; init; }
+
+    /// <summary>Set when the client supplied its own time; the moment the reading reached the server.</summary>
+    public DateTime? SyncedAt { get; init; }
+
+    /// <summary>The time to judge whether the task can be worked on; null means now.</summary>
+    public DateTime? WorkableAt { get; init; }
+}
 
 /// <summary>
 /// The core of adding an entry to a record log, shared by people (<see cref="AddTaskEntryHandler"/>) and sensors:
@@ -22,11 +32,11 @@ public sealed record RecordLogReading(
 /// </summary>
 public sealed class RecordLogWriter(IAppDbContext db, IssueRaiser issues)
 {
-    /// <param name="now">The current time, used to decide whether the task can still be worked on.</param>
+    /// <param name="now">The current time, used for issues raised by the reading and, unless the reading says otherwise, to decide whether the task can be worked on.</param>
     public async Task<Result<TaskEntry>> AddAsync(SiteTask task, RecordLogReading reading, DateTime now, CancellationToken ct)
     {
         if (TaskRules.CheckKind(task, TaskKind.RecordLog) is { } wrongKind) return wrongKind;
-        if (TaskRules.CheckWorkable(task, now) is { } notWorkable) return notWorkable;
+        if (TaskRules.CheckWorkable(task, reading.WorkableAt ?? now) is { } notWorkable) return notWorkable;
 
         var evaluation = AnswerEvaluator.Evaluate(task.Fields, reading.Answers, requireAll: !reading.Automated);
         if (!evaluation.IsValid) return TaskRules.InvalidAnswers(evaluation.Problems);
@@ -47,6 +57,8 @@ public sealed class RecordLogWriter(IAppDbContext db, IssueRaiser issues)
             Failures = [.. evaluation.Failures],
             SubmittedAt = reading.SubmittedAt,
             SubmittedById = reading.SubmittedById,
+            RequestId = reading.RequestId,
+            SyncedAt = reading.SyncedAt,
         };
         db.TaskEntries.Add(entry);
         task.HasFailures |= evaluation.HasFailures;

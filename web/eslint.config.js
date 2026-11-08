@@ -24,6 +24,7 @@ export default tseslint.config(
       'src/components/ui/**',
       'src/routes/**',
       'src/auth/context.tsx',
+      'src/offline/context.tsx',
       'src/features/tasks/form-context.tsx',
     ],
     rules: { 'react-refresh/only-export-components': 'off' },
