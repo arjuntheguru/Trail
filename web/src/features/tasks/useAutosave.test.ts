@@ -78,6 +78,39 @@ describe('useAutosave', () => {
     expect(result.current.status).toBe('saved')
   })
 
+  it('keeps the draft on the device when offline and a queue is available', async () => {
+    const save = vi.fn().mockResolvedValue(undefined)
+    const saveOffline = vi.fn().mockResolvedValue(undefined)
+    const initial = '{"a":0}'
+    const { result, rerender } = renderHook(
+      ({ snapshot }: Props) =>
+        useAutosave({ enabled: true, snapshot, initialSnapshot: initial, save, saveOffline }),
+      { initialProps: { snapshot: initial } as Props },
+    )
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    rerender({ snapshot: '{"a":1}' })
+    await act(async () => void vi.advanceTimersByTime(AUTOSAVE_DELAY_MS))
+    expect(saveOffline).toHaveBeenCalledWith('{"a":1}')
+    expect(save).not.toHaveBeenCalled()
+    expect(result.current.status).toBe('queued')
+    vi.restoreAllMocks()
+  })
+
+  it('queues the draft when the request cannot reach the server', async () => {
+    const save = vi.fn().mockRejectedValue(new ApiError({ status: 0 }))
+    const saveOffline = vi.fn().mockResolvedValue(undefined)
+    const initial = '{"a":0}'
+    const { result, rerender } = renderHook(
+      ({ snapshot }: Props) =>
+        useAutosave({ enabled: true, snapshot, initialSnapshot: initial, save, saveOffline }),
+      { initialProps: { snapshot: initial } as Props },
+    )
+    rerender({ snapshot: '{"a":1}' })
+    await act(async () => void vi.advanceTimersByTime(AUTOSAVE_DELAY_MS))
+    expect(saveOffline).toHaveBeenCalledWith('{"a":1}')
+    expect(result.current.status).toBe('queued')
+  })
+
   it('reports other failures as errors', async () => {
     const save = vi.fn().mockRejectedValue(new ApiError({ status: 500 }))
     const { result, rerender } = setup(save)

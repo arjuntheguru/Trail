@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import type { components } from '@/api/schema'
 import {
@@ -12,6 +12,7 @@ import {
   sessionResponse,
   taskDetail,
 } from '@/test/fixtures'
+import { resetNetwork, setOnline } from '@/test/network'
 import { renderApp } from '@/test/renderApp'
 import { API, server } from '@/test/server'
 
@@ -277,6 +278,7 @@ describe('checklist completion', () => {
           },
           note: 'all good',
           photoIds: [],
+          requestId: expect.any(String),
         },
       },
     ])
@@ -666,7 +668,12 @@ describe('record log', () => {
     await waitFor(() => expect(screen.getAllByTestId('reading')).toHaveLength(3))
     expect(state.calls[0]).toEqual({
       path: 'entries',
-      body: { answers: { temp: { value: 4, photoIds: [] } }, note: null, photoIds: [] },
+      body: {
+        answers: { temp: { value: 4, photoIds: [] } },
+        note: null,
+        photoIds: [],
+        requestId: expect.any(String),
+      },
     })
     // The form is cleared for the next reading.
     expect(screen.getByLabelText('Reading')).toHaveValue('')
@@ -674,7 +681,10 @@ describe('record log', () => {
     await user.type(screen.getByLabelText('Closing note (optional)'), 'Done for the day')
     await user.click(screen.getByRole('button', { name: 'Finish' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/today'))
-    expect(state.calls[1]).toEqual({ path: 'complete', body: { note: 'Done for the day' } })
+    expect(state.calls[1]).toEqual({
+      path: 'complete',
+      body: { note: 'Done for the day', requestId: expect.any(String) },
+    })
   })
 
   it('does not let you finish without a reading, nor add an empty one', async () => {
@@ -906,5 +916,290 @@ describe('snooze', () => {
     await screen.findByRole('heading', { name: 'Opening checks' })
     expect(screen.queryByRole('button', { name: 'Snooze' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Complete task' })).not.toBeInTheDocument()
+  })
+})
+
+describe('working offline', () => {
+  const PHOTO_ID = '77777777-0000-0000-0000-000000000009'
+  const LOG_FIELDS = [field({ key: 'temp', type: 'Temperature', label: 'Reading', min: 0, max: 5 })]
+
+  afterEach(() => resetNetwork())
+
+  function serveUploads() {
+    const uploads: { requestId?: string }[] = []
+    server.use(
+      http.post(`${API}/api/v1/attachments`, async ({ request }) => {
+        const parts = parseMultipart(await request.text())
+        uploads.push({ requestId: parts.requestId?.value })
+        return HttpResponse.json(
+          {
+            id: PHOTO_ID,
+            kind: 'Photo',
+            contentType: 'image/jpeg',
+            size: 1,
+            fileName: 'shot.jpg',
+            siteId: TASK.siteId,
+          },
+          { status: 201 },
+        )
+      }),
+      http.get(
+        `${API}/api/v1/attachments/${PHOTO_ID}/content`,
+        () => new HttpResponse(new Blob(['x'], { type: 'image/jpeg' }), { status: 200 }),
+      ),
+    )
+    return uploads
+  }
+
+  async function fillChecklist(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('checkbox', { name: 'Hands washed' }))
+    await user.type(screen.getByLabelText('Fridge temp'), '4')
+    await user.click(screen.getByRole('radio', { name: 'Yes' }))
+  }
+
+  it('queues a completion, shows it as waiting and sends it with requestId and completedAt when back online', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const state = serveTask(taskDetail({ fields: FIELDS }))
+    onWrite(state, 'post', 'complete', () =>
+      HttpResponse.json({ ...state.task, status: 'Completed' }),
+    )
+    const { router, outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    await fillChecklist(user)
+    setOnline(false)
+    const pressed = Date.now()
+    await user.click(screen.getByRole('button', { name: 'Complete task' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'))
+    expect(state.calls).toEqual([])
+    expect(outbox.getSnapshot().pendingCount).toBe(1)
+    expect(await screen.findByRole('button', { name: '1 change waiting to sync' })).toBeVisible()
+
+    // Opening the task shows what was entered, read-only, instead of the form.
+    router.history.push(`/tasks/${TASK.id}`)
+    expect(await screen.findByTestId('queued-completion')).toHaveTextContent(
+      /Completed on this device at .*\. Waiting to sync\./,
+    )
+    expect(screen.queryByRole('button', { name: 'Complete task' })).not.toBeInTheDocument()
+    expect(screen.getByText('Hands washed')).toBeInTheDocument()
+
+    setOnline(true)
+    await waitFor(() => expect(state.calls).toHaveLength(1))
+    const body = state.calls[0]!.body as { requestId: string; completedAt: string }
+    expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/)
+    expect(Date.parse(body.completedAt)).toBeGreaterThanOrEqual(pressed - 1000)
+    expect(Date.parse(body.completedAt)).toBeLessThanOrEqual(Date.now())
+    await waitFor(() => expect(outbox.getSnapshot().items).toHaveLength(0))
+  })
+
+  it('queues the completion when the request cannot reach the server, keeping the same requestId', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const state = serveTask(taskDetail({ fields: FIELDS }))
+    const requestIds: string[] = []
+    let lost = true
+    onWrite(state, 'post', 'complete', (body) => {
+      requestIds.push((body as { requestId: string }).requestId)
+      return lost
+        ? HttpResponse.error()
+        : HttpResponse.json({ ...state.task, status: 'Completed' }, { status: 200 })
+    })
+    const { router, outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    await fillChecklist(user)
+    await user.click(screen.getByRole('button', { name: 'Complete task' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'))
+    await waitFor(() => expect(outbox.getSnapshot().items).toHaveLength(1))
+
+    lost = false
+    await outbox.syncNow()
+    expect(requestIds.length).toBeGreaterThanOrEqual(2)
+    expect(new Set(requestIds).size).toBe(1)
+    expect(outbox.getSnapshot().items).toHaveLength(0)
+  })
+
+  it('sends a requestId, and no offline time, when completing online', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const state = serveTask(taskDetail({ fields: FIELDS }))
+    onWrite(state, 'post', 'complete', () =>
+      HttpResponse.json({ ...state.task, status: 'Completed' }),
+    )
+    const { router, outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    await fillChecklist(user)
+    await user.click(screen.getByRole('button', { name: 'Complete task' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'))
+    expect(state.calls).toHaveLength(1)
+    expect(state.calls[0]!.body).toMatchObject({
+      requestId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    })
+    expect(state.calls[0]!.body).not.toHaveProperty('completedAt')
+    expect(outbox.getSnapshot().items).toHaveLength(0)
+  })
+
+  it('queues an offline photo and rewrites its id when the completion syncs', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const uploads = serveUploads()
+    const state = serveTask(
+      taskDetail({
+        requiresPhoto: true,
+        fields: [field({ key: 'wash', type: 'Checkbox', label: 'Hands washed' })],
+      }),
+    )
+    onWrite(state, 'post', 'complete', () =>
+      HttpResponse.json({ ...state.task, status: 'Completed' }),
+    )
+    const { router, outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    await user.click(await screen.findByRole('checkbox', { name: 'Hands washed' }))
+    setOnline(false)
+    await user.upload(
+      screen.getByTestId('photo-input-camera'),
+      new File(['pixels'], 'shot.jpg', { type: 'image/jpeg' }),
+    )
+    // The thumbnail comes from the queued bytes and does not block completing.
+    expect(await screen.findByRole('img', { name: 'Task photo 1' })).toBeInTheDocument()
+    expect(outbox.getSnapshot().items.map((i) => i.type)).toEqual(['upload'])
+    await user.click(screen.getByRole('button', { name: 'Complete task' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe('/today'))
+    expect(uploads).toHaveLength(0)
+    expect(state.calls).toHaveLength(0)
+
+    setOnline(true)
+    await waitFor(() => expect(state.calls).toHaveLength(1))
+    expect(uploads).toHaveLength(1)
+    expect(uploads[0]!.requestId).toMatch(/^[0-9a-f-]{36}$/)
+    expect(state.calls[0]!.body).toMatchObject({ photoIds: [PHOTO_ID] })
+    expect(JSON.stringify(state.calls[0]!.body)).not.toContain('local-')
+  })
+
+  it('keeps an offline draft in the queue and sends it when the connection returns', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const state = serveTask(taskDetail({ fields: FIELDS }))
+    const { outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    const temp = await screen.findByLabelText('Fridge temp')
+    setOnline(false)
+    await user.type(temp, '4')
+    expect(
+      await screen.findByText('Saved on this device', {}, { timeout: 4000 }),
+    ).toBeInTheDocument()
+    expect(state.saves).toEqual([])
+    expect(outbox.getSnapshot().items.map((i) => i.type)).toEqual(['progress'])
+
+    setOnline(true)
+    await waitFor(() => expect(state.saves).toHaveLength(1))
+    expect(state.saves[0]).toMatchObject({ answers: { temp: { value: 4 } } })
+    await waitFor(() => expect(outbox.getSnapshot().items).toHaveLength(0))
+  })
+
+  it('adds a reading offline, lists it as waiting and syncs it later', async () => {
+    const user = userEvent.setup()
+    signIn()
+    const state = serveTask(taskDetail({ kind: 'RecordLog', fields: LOG_FIELDS }))
+    onWrite(state, 'post', 'entries', (body) => {
+      const answers = (body as { answers: Record<string, { value: number }> }).answers
+      state.task = {
+        ...state.task,
+        entries: [
+          entry({
+            answers: { temp: { value: answers.temp!.value, photoIds: [] } },
+            submittedAt: '2026-11-07T08:00:00Z',
+            submittedBy: 'Sam Chef',
+          }),
+        ],
+      }
+      return HttpResponse.json(state.task, { status: 201 })
+    })
+    const { outbox } = await renderApp(`/tasks/${TASK.id}`)
+
+    await user.type(await screen.findByLabelText('Reading'), '3')
+    setOnline(false)
+    await user.click(screen.getByRole('button', { name: 'Add reading' }))
+
+    const waiting = await screen.findByTestId('reading')
+    expect(waiting).toHaveTextContent('Waiting to sync')
+    expect(waiting).toHaveTextContent('3 °C')
+    expect(screen.getByRole('heading', { name: 'Readings (1)' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Reading')).toHaveValue('')
+    expect(state.calls).toEqual([])
+    // The log can be finished while the reading is still queued.
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeEnabled()
+
+    setOnline(true)
+    await waitFor(() => expect(state.calls).toHaveLength(1))
+    expect(state.calls[0]!.body).toMatchObject({
+      answers: { temp: { value: 3, photoIds: [] } },
+      requestId: expect.any(String),
+      recordedAt: expect.any(String),
+    })
+    await waitFor(() => expect(screen.queryByText('Waiting to sync')).not.toBeInTheDocument())
+    expect(outbox.getSnapshot().items).toHaveLength(0)
+    expect(await screen.findByTestId('reading')).toHaveTextContent('Sam Chef')
+  })
+
+  describe('when a queued change is refused', () => {
+    async function queueRefusedCompletion() {
+      const user = userEvent.setup()
+      signIn()
+      const state = serveTask(taskDetail({ fields: FIELDS }))
+      let refuse = true
+      onWrite(state, 'post', 'complete', () =>
+        refuse
+          ? HttpResponse.json(problem(409, 'task.not_open', 'The task is not open.'), {
+              status: 409,
+            })
+          : HttpResponse.json({ ...state.task, status: 'Completed' }),
+      )
+      const app = await renderApp(`/tasks/${TASK.id}`)
+      await fillChecklist(user)
+      setOnline(false)
+      await user.click(screen.getByRole('button', { name: 'Complete task' }))
+      await waitFor(() => expect(app.router.state.location.pathname).toBe('/today'))
+      setOnline(true)
+      const failed = await screen.findByRole('button', { name: '1 change could not sync' })
+      return { user, state, app, failed, allow: () => (refuse = false) }
+    }
+
+    it('shows the failure in the indicator and retries', async () => {
+      const { user, failed, state, app, allow } = await queueRefusedCompletion()
+      await user.click(failed)
+      expect(await screen.findByText('Opening checks')).toBeInTheDocument()
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'This task was already completed or closed before your changes synced.',
+      )
+      expect(state.calls).toHaveLength(1)
+
+      allow()
+      await user.click(screen.getByRole('button', { name: 'Retry' }))
+      await waitFor(() => expect(state.calls).toHaveLength(2))
+      await waitFor(() => expect(app.outbox.getSnapshot().items).toHaveLength(0))
+      expect(screen.queryByTestId('sync-indicator')).not.toBeInTheDocument()
+    })
+
+    it('discards only after confirmation', async () => {
+      const { user, failed, app } = await queueRefusedCompletion()
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false)
+      await user.click(failed)
+      await user.click(await screen.findByRole('button', { name: 'Discard' }))
+      expect(confirm).toHaveBeenCalledTimes(1)
+      expect(app.outbox.getSnapshot().items).toHaveLength(1)
+
+      confirm.mockReturnValueOnce(true)
+      await user.click(screen.getByRole('button', { name: 'Discard' }))
+      await waitFor(() => expect(app.outbox.getSnapshot().items).toHaveLength(0))
+    })
+
+    it('says so on the task page', async () => {
+      const { app } = await queueRefusedCompletion()
+      app.router.history.push(`/tasks/${TASK.id}`)
+      expect(await screen.findByTestId('queued-completion')).toHaveTextContent(
+        /could not be synced/,
+      )
+    })
   })
 })

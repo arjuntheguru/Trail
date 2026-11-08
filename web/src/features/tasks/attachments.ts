@@ -23,19 +23,25 @@ export interface UploadInput {
   fileName: string
   kind: AttachmentKind
   siteId: string
+  /** Lets the server recognise a repeat of this upload (e.g. after a lost response) and return the same file. */
+  requestId?: string
 }
 
 /** Uploads one file as multipart form data and resolves with the stored attachment. */
-export function uploadAttachment(client: ApiClient, { file, fileName, kind, siteId }: UploadInput) {
+export function uploadAttachment(
+  client: ApiClient,
+  { file, fileName, kind, siteId, requestId }: UploadInput,
+) {
   return unwrap(
     client.POST('/api/v1/attachments', {
       // The generated type models the file part as a string; the serializer below builds the real form.
-      body: { file: fileName, kind, siteId },
+      body: { file: fileName, kind, siteId, requestId },
       bodySerializer: () => {
         const form = new FormData()
         form.append('file', file, fileName)
         form.append('kind', kind)
         form.append('siteId', siteId)
+        if (requestId) form.append('requestId', requestId)
         return form
       },
     }),

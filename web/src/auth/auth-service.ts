@@ -4,6 +4,7 @@ import { createApiClient, type ApiClient } from '@/api/client'
 import type { components } from '@/api/schema'
 import { unwrap } from '@/api/unwrap'
 
+import type { ProfileStore } from './profile-store'
 import {
   createSessionStore,
   toSession,
@@ -30,6 +31,11 @@ export interface AuthServiceOptions {
   now?: () => number
   /** Serializes refreshes across browser tabs. Defaults to the Web Locks API when available. */
   withLock?: <T>(task: () => Promise<T>) => Promise<T>
+  /**
+   * Remembers the signed-in profile (never tokens) so the app can open offline. Omit to disable offline
+   * startup.
+   */
+  profileStore?: ProfileStore
   /** How long before expiry the access token is refreshed. */
   refreshLeadMs?: number
 }
@@ -61,11 +67,26 @@ export function createAuthService(options: AuthServiceOptions) {
   const now = options.now ?? Date.now
   const withLock = options.withLock ?? defaultWithLock
   const refreshLeadMs = options.refreshLeadMs ?? 60_000
+  const profileStore = options.profileStore
   const doFetch = options.fetch ?? ((request: Request) => globalThis.fetch(request))
+
+  if (profileStore) {
+    store.subscribe(() => {
+      const state = store.getState()
+      if (state.status === 'authenticated') {
+        const { user, organization, organizations, permissions } = state.session
+        profileStore.save({ user, organization, organizations, permissions })
+      } else if (state.status === 'anonymous') {
+        profileStore.clear()
+      }
+    })
+  }
 
   // Requests in flight that carried a bearer token, kept so a 401 can be retried once.
   const sent = new Map<string, { token: string; clone: Request }>()
 
+  // True when the last refresh failed because the request never reached the server.
+  let unreachable = false
   let inflight: Promise<RefreshOutcome> | null = null
   let initialization: Promise<void> | null = null
 
@@ -77,7 +98,8 @@ export function createAuthService(options: AuthServiceOptions) {
         await refresh()
         state = store.getState()
       }
-      if (state.status !== 'authenticated') return undefined
+      // An offline-restored session has no token yet; send nothing rather than an empty bearer.
+      if (state.status !== 'authenticated' || !state.session.accessToken) return undefined
       request.headers.set('Authorization', `Bearer ${state.session.accessToken}`)
       sent.set(id, { token: state.session.accessToken, clone: request.clone() })
       return request
@@ -113,6 +135,7 @@ export function createAuthService(options: AuthServiceOptions) {
   })
 
   async function runRefresh(): Promise<RefreshOutcome> {
+    unreachable = false
     try {
       const { data, response } = await client.POST('/api/v1/auth/refresh')
       if (response.ok && data) {
@@ -126,6 +149,7 @@ export function createAuthService(options: AuthServiceOptions) {
       store.clear('expired')
       return 'rejected'
     } catch {
+      unreachable = true
       return 'unavailable'
     }
   }
@@ -143,7 +167,14 @@ export function createAuthService(options: AuthServiceOptions) {
     initialization ??= (async () => {
       if (store.getState().status !== 'unknown') return
       const outcome = await refresh()
-      if (outcome === 'unavailable' && store.getState().status === 'unknown') store.clear()
+      if (outcome === 'unavailable' && store.getState().status === 'unknown') {
+        // Offline start: if this device remembers a signed-in user, open their cached screens instead of the
+        // sign-in page. There is no access token; the refresh scheduler keeps retrying and the first
+        // successful refresh replaces this with a real session. A rejected refresh still signs out.
+        const profile = unreachable ? profileStore?.load() : null
+        if (profile) store.setSession({ ...profile, accessToken: '', accessTokenExpiresAt: 0 })
+        else store.clear()
+      }
     })()
     return initialization
   }
@@ -204,10 +235,13 @@ export function createAuthService(options: AuthServiceOptions) {
 
     const unsubscribe = store.subscribe(schedule)
     document.addEventListener('visibilitychange', onVisible)
+    // Regaining the network is the moment to replace an offline-restored session with a real one.
+    window.addEventListener('online', onVisible)
     schedule()
     return () => {
       unsubscribe()
       document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', onVisible)
       clearTimeout(timer)
     }
   }
