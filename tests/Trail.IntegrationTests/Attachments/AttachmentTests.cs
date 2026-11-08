@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 using Trail.Application.Common.Security;
@@ -63,7 +64,7 @@ public sealed class AttachmentTests(MySqlFixture mysql) : IAsyncLifetime
     }
 
     private static Task<HttpResponseMessage> UploadAsync(
-        HttpClient client, byte[] content, string fileName, string claimedType, string kind, Guid siteId)
+        HttpClient client, byte[] content, string fileName, string claimedType, string kind, Guid siteId, Guid? requestId = null)
     {
         var file = new ByteArrayContent(content);
         file.Headers.ContentType = new MediaTypeHeaderValue(claimedType);
@@ -73,7 +74,44 @@ public sealed class AttachmentTests(MySqlFixture mysql) : IAsyncLifetime
             { new StringContent(kind), "kind" },
             { new StringContent(siteId.ToString()), "siteId" },
         };
+        if (requestId is { } id) form.Add(new StringContent(id.ToString()), "requestId");
         return client.PostAsync("/api/v1/attachments", form, Ct);
+    }
+
+    [Fact]
+    public async Task Repeating_an_upload_with_the_same_request_id_returns_the_same_attachment()
+    {
+        var client = ClientFor(_owner);
+        var requestId = Guid.NewGuid();
+
+        var first = await UploadAsync(client, Png(), "a.png", "image/png", "Photo", _site.Id, requestId);
+        var second = await UploadAsync(client, Png(), "a.png", "image/png", "Photo", _site.Id, requestId);
+
+        first.StatusCode.ShouldBe(HttpStatusCode.Created);
+        second.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var firstBody = await first.ReadAsync<AttachmentResponse>();
+        (await second.ReadAsync<AttachmentResponse>()).Id.ShouldBe(firstBody.Id);
+        (await _kit.InDbAsync(db => db.Attachments.CountAsync(a => a.RequestId == requestId, Ct))).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Another_user_or_organization_using_the_same_request_id_gets_a_new_attachment()
+    {
+        var requestId = Guid.NewGuid();
+        var mine = await (await UploadAsync(ClientFor(_owner), Png(), "a.png", "image/png", "Photo", _site.Id, requestId))
+            .ReadAsync<AttachmentResponse>();
+
+        var colleague = ClientFor(await _factory.AddMemberAsync(_owner.OrganizationId, SystemRoles.TeamMember));
+        var theirs = await (await UploadAsync(colleague, Png(), "a.png", "image/png", "Photo", _site.Id, requestId))
+            .ReadAsync<AttachmentResponse>();
+        theirs.Id.ShouldNotBe(mine.Id);
+
+        var otherOwner = await _factory.CreateOrganizationAsync("Other Org");
+        var otherSite = await new TaskTestKit(_factory, otherOwner.OrganizationId).AddSiteAsync("Elsewhere");
+        var other = await (await UploadAsync(ClientFor(otherOwner), Png(), "a.png", "image/png", "Photo", otherSite.Id, requestId))
+            .ReadAsync<AttachmentResponse>();
+        other.Id.ShouldNotBe(mine.Id);
+        (await ClientFor(otherOwner).GetAsync($"/api/v1/attachments/{mine.Id}", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]

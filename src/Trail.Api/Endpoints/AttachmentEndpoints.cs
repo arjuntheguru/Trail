@@ -20,10 +20,11 @@ internal sealed class AttachmentEndpoints : IEndpointGroup
         // Anyone who can fill in tasks or raise issues can attach evidence; no permission of its own.
         group.MapPost("", async (
                     IFormFile file, [FromForm] AttachmentKind kind, [FromForm] Guid siteId,
+                    [FromForm] Guid? requestId,
                     UploadAttachmentHandler handler, CancellationToken ct) =>
                 {
                     await using var content = file.OpenReadStream();
-                    var result = await handler.Handle(new UploadAttachmentCommand(content, file.FileName, kind, siteId), ct);
+                    var result = await handler.Handle(new UploadAttachmentCommand(content, file.FileName, kind, siteId, requestId), ct);
                     return result.ToHttp(attachment => TypedResults.Created($"/api/v1/attachments/{attachment.Id}", attachment));
                 })
             .RequireAuthorization(policy => policy

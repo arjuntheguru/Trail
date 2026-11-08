@@ -211,6 +211,15 @@
                         "format": "uuid"
                       }
                     }
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "requestId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
                   }
                 ]
               }
@@ -8627,6 +8636,20 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "requestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "recordedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -9103,6 +9126,20 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "requestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -12318,6 +12355,13 @@
             "items": {
               "$ref": "#/components/schemas/TaskEntryResponse"
             }
+          },
+          "syncedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -12386,6 +12430,13 @@
               "null",
               "string"
             ]
+          },
+          "syncedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
