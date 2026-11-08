@@ -51,6 +51,21 @@ public sealed class SiteTimeAndTaskTests
     };
 
     [Fact]
+    public void Lateness_is_judged_by_the_completion_time_not_by_the_missed_status()
+    {
+        // Done before the due time on a phone that was offline while the job marked the task missed.
+        var offline = NewTask();
+        offline.Status = SiteTaskStatus.Missed;
+        offline.Complete(new DateTime(2026, 1, 15, 9, 0, 0, DateTimeKind.Utc), Guid.NewGuid(), hasFailures: false);
+        offline.CompletedLate.ShouldBeFalse();
+
+        var late = NewTask();
+        late.Status = SiteTaskStatus.Missed;
+        late.Complete(new DateTime(2026, 1, 15, 12, 0, 0, DateTimeKind.Utc), Guid.NewGuid(), hasFailures: false);
+        late.CompletedLate.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Completing_after_the_due_time_marks_the_task_late()
     {
         var onTime = NewTask();

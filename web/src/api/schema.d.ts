@@ -1601,6 +1601,10 @@ export interface components {
             };
             note?: null | string;
             photoIds?: null | string[];
+            /** Format: uuid */
+            requestId?: null | string;
+            /** Format: date-time */
+            recordedAt?: null | string;
         };
         ApiKeyCreatedResponse: {
             apiKey: components["schemas"]["ApiKeyResponse"];
@@ -1718,6 +1722,10 @@ export interface components {
             };
             note?: null | string;
             photoIds?: null | string[];
+            /** Format: uuid */
+            requestId?: null | string;
+            /** Format: date-time */
+            completedAt?: null | string;
         };
         /** @enum {unknown} */
         ComplianceGrouping: "Site" | "Day" | "Template";
@@ -2568,6 +2576,8 @@ export interface components {
             approvedBy: null | string;
             approvalNote: null | string;
             entries: components["schemas"]["TaskEntryResponse"][];
+            /** Format: date-time */
+            syncedAt?: null | string;
         };
         TaskEntryResponse: {
             /** Format: uuid */
@@ -2584,6 +2594,8 @@ export interface components {
             /** Format: uuid */
             submittedById: null | string;
             submittedBy: null | string;
+            /** Format: date-time */
+            syncedAt?: null | string;
         };
         /** @enum {unknown} */
         TaskKind: "Checklist" | "RecordLog" | "Form";
@@ -2981,6 +2993,9 @@ export interface operations {
                 } & {
                     /** Format: uuid */
                     siteId: string;
+                } & {
+                    /** Format: uuid */
+                    requestId?: string;
                 };
             };
         };

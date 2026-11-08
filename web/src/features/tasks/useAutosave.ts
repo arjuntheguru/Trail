@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { ApiError } from '@/api/problem'
+import { isOnline } from '@/offline/online'
 
-export type SaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved' | 'offline' | 'error'
+export type SaveStatus =
+  | 'idle'
+  | 'unsaved'
+  | 'saving'
+  | 'saved'
+  /** Kept on this device; it will be sent when the connection returns. */
+  | 'queued'
+  | 'offline'
+  | 'error'
 
 export const AUTOSAVE_DELAY_MS = 1500
 
@@ -14,6 +23,11 @@ interface AutosaveOptions {
   /** The snapshot the server already holds (nothing to save until the draft changes). */
   initialSnapshot: string
   save: (snapshot: string) => Promise<void>
+  /**
+   * Keeps the draft on this device when there is no connection (or the save could not reach the server).
+   * Without it an offline draft is not saved at all.
+   */
+  saveOffline?: (snapshot: string) => Promise<void>
   delayMs?: number
 }
 
@@ -26,6 +40,7 @@ export function useAutosave({
   snapshot,
   initialSnapshot,
   save,
+  saveOffline,
   delayMs = AUTOSAVE_DELAY_MS,
 }: AutosaveOptions) {
   const [status, setStatus] = useState<SaveStatus>('idle')
@@ -33,6 +48,7 @@ export function useAutosave({
   const latest = useRef(snapshot)
   const enabledRef = useRef(enabled)
   const saveRef = useRef(save)
+  const saveOfflineRef = useRef(saveOffline)
   const inflight = useRef(false)
   const cancelled = useRef(false)
   const flushRef = useRef<() => Promise<void>>(async () => {})
@@ -41,13 +57,14 @@ export function useAutosave({
   useEffect(() => {
     enabledRef.current = enabled && !cancelled.current
     saveRef.current = save
+    saveOfflineRef.current = saveOffline
   })
 
   const flush = useCallback(async () => {
     clearTimeout(timer.current)
     if (!enabledRef.current || inflight.current) return
     if (latest.current === lastSaved.current) return
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    if (!isOnline() && !saveOfflineRef.current) {
       setStatus('offline')
       return
     }
@@ -55,13 +72,31 @@ export function useAutosave({
     inflight.current = true
     setStatus('saving')
     let succeeded = false
-    try {
-      await saveRef.current(attempt)
+    const keepOnDevice = async () => {
+      await saveOfflineRef.current!(attempt)
       lastSaved.current = attempt
       succeeded = true
-      setStatus(latest.current === attempt ? 'saved' : 'unsaved')
+      setStatus(latest.current === attempt ? 'queued' : 'unsaved')
+    }
+    try {
+      if (!isOnline()) {
+        await keepOnDevice()
+      } else {
+        await saveRef.current(attempt)
+        lastSaved.current = attempt
+        succeeded = true
+        setStatus(latest.current === attempt ? 'saved' : 'unsaved')
+      }
     } catch (error) {
-      setStatus(error instanceof ApiError && error.status === 0 ? 'offline' : 'error')
+      if (error instanceof ApiError && error.status === 0 && saveOfflineRef.current) {
+        try {
+          await keepOnDevice()
+        } catch {
+          setStatus('error')
+        }
+      } else {
+        setStatus(error instanceof ApiError && error.status === 0 ? 'offline' : 'error')
+      }
     } finally {
       inflight.current = false
     }

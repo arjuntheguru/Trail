@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query'
+import { onlineManager, queryOptions } from '@tanstack/react-query'
 
 import type { ApiClient } from '@/api/client'
 import { unwrap } from '@/api/unwrap'
@@ -24,7 +24,8 @@ export const siteTasksQuery = (
   queryOptions({
     queryKey: ['org', organizationId, 'site', siteId, 'tasks', 'today'],
     enabled: !!siteId,
-    refetchInterval: 60_000,
+    // No polling while offline; the reconnect refetch resumes it.
+    refetchInterval: () => (onlineManager.isOnline() ? 60_000 : false),
     queryFn: () =>
       unwrap(client.GET('/api/v1/sites/{siteId}/tasks', { params: { path: { siteId: siteId! } } })),
   })

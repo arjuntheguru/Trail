@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { errorMessage } from '@/api/problem'
 import { useAuthService } from '@/auth/context'
 import { Button } from '@/components/ui/button'
+import { isOffline } from '@/features/tasks/errors'
 import { cn } from '@/lib/utils'
+import { useBlobUrl, useQueuedUpload } from '@/offline/context'
+import { isOnline } from '@/offline/online'
+import { isLocalId } from '@/offline/outbox-types'
 
 import {
   downscaleImage,
@@ -13,15 +17,34 @@ import {
   useAttachmentUrl,
 } from '@/features/tasks/attachments'
 
-export function AttachmentImage({
-  id,
-  alt,
-  className,
-}: {
-  id: string
-  alt: string
-  className?: string
-}) {
+type ImageProps = { id: string; alt: string; className?: string }
+
+/** A stored photo, or one still waiting on this device to be uploaded (a `local-` id). */
+export function AttachmentImage(props: ImageProps) {
+  return isLocalId(props.id) ? <QueuedImage {...props} /> : <StoredImage {...props} />
+}
+
+function QueuedImage({ id, alt, className }: ImageProps) {
+  const upload = useQueuedUpload(id)
+  const url = useBlobUrl(upload?.blob)
+  // Once uploaded the queued copy is gone and the server's takes over.
+  if (upload?.serverId) return <StoredImage id={upload.serverId} alt={alt} className={className} />
+  if (url) return <img src={url} alt={alt} className={cn('size-full object-cover', className)} />
+  return (
+    <div
+      className={cn(
+        'grid size-full place-items-center bg-muted text-xs text-muted-foreground',
+        className,
+      )}
+      role={upload ? 'status' : 'img'}
+      aria-label={upload ? `Loading ${alt}` : `${alt} could not be loaded`}
+    >
+      {upload ? <LoaderCircle className="size-5 animate-spin" aria-hidden /> : 'Unavailable'}
+    </div>
+  )
+}
+
+function StoredImage({ id, alt, className }: ImageProps) {
   const { url, isError } = useAttachmentUrl(id)
   if (url) return <img src={url} alt={alt} className={cn('size-full object-cover', className)} />
   return (
@@ -56,8 +79,18 @@ interface PendingUpload {
   key: number
   name: string
   file: File
+  /** Generated once per photo so a retry after a lost response does not store it twice. */
+  requestId: string
   state: 'uploading' | 'error'
   message?: string
+}
+
+export interface QueuedPhoto {
+  blob: Blob
+  fileName: string
+  kind: 'Photo'
+  siteId: string
+  requestId: string
 }
 
 export interface PhotoPickerProps {
@@ -70,6 +103,11 @@ export interface PhotoPickerProps {
   readOnly?: boolean
   /** Lets the owner of the form wait for uploads in flight (see `useUploadTracker`). */
   trackUpload?: <T>(upload: Promise<T>) => Promise<T>
+  /**
+   * Keeps a photo on this device for upload later and returns the id to use meanwhile. Used when the device
+   * is offline or the upload cannot reach the server. Without it, such uploads simply fail.
+   */
+  queueUpload?: (photo: QueuedPhoto) => Promise<string>
 }
 
 const untracked = <T,>(upload: Promise<T>) => upload
@@ -86,6 +124,7 @@ export function PhotoPicker({
   siteId,
   readOnly = false,
   trackUpload = untracked,
+  queueUpload,
 }: PhotoPickerProps) {
   const { client } = useAuthService()
   const [pending, setPending] = useState<PendingUpload[]>([])
@@ -107,15 +146,31 @@ export function PhotoPicker({
         (async () => {
           const file = await downscaleImage(item.file)
           if (file.size > MAX_UPLOAD_BYTES) throw new Error('This photo is larger than 10 MB.')
-          return uploadAttachment(client, {
-            file,
+          const photo: QueuedPhoto = {
+            blob: file,
             fileName: file.name,
             kind: 'Photo',
             siteId,
-          })
+            requestId: item.requestId,
+          }
+          if (queueUpload && !isOnline()) return await queueUpload(photo)
+          try {
+            const stored = await uploadAttachment(client, {
+              file,
+              fileName: file.name,
+              kind: 'Photo',
+              siteId,
+              requestId: item.requestId,
+            })
+            return stored.id
+          } catch (error) {
+            // The request may have arrived; the queued copy reuses its requestId so nothing is doubled.
+            if (queueUpload && isOffline(error)) return await queueUpload(photo)
+            throw error
+          }
         })(),
       )
-      latest.current = [...latest.current, prepared.id]
+      latest.current = [...latest.current, prepared]
       onChange(latest.current)
       setPending((list) => list.filter((p) => p.key !== item.key))
     } catch (error) {
@@ -135,6 +190,7 @@ export function PhotoPicker({
         key: ++counter.current,
         name: file.name,
         file,
+        requestId: crypto.randomUUID(),
         state: 'uploading' as const,
       }))
     if (items.length === 0) return

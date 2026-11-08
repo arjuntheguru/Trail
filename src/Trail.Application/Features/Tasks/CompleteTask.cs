@@ -10,11 +10,13 @@ namespace Trail.Application.Features.Tasks;
 
 /// <summary>
 /// Checklist and form: the final answers, merged over the saved draft (the body wins per key). Record log: answers
-/// are ignored, since readings are added as entries; only the note applies.
+/// are ignored, since readings are added as entries; only the note applies. <paramref name="RequestId"/> makes a
+/// replay safe (a repeat returns the task without completing it again); <paramref name="CompletedAt"/> is when the
+/// work was done, for completions made offline.
 /// </summary>
 public sealed record CompleteTaskCommand(
-    IReadOnlyDictionary<string, FieldAnswer>? Answers = null, string? Note = null, IReadOnlyList<Guid>? PhotoIds = null);
-
+    IReadOnlyDictionary<string, FieldAnswer>? Answers = null, string? Note = null, IReadOnlyList<Guid>? PhotoIds = null,
+    Guid? RequestId = null, DateTime? CompletedAt = null);
 internal sealed class CompleteTaskValidator : AbstractValidator<CompleteTaskCommand>
 {
     public CompleteTaskValidator() => TaskRules.AddCommonRules(this, x => x.Answers, x => x.Note, x => x.PhotoIds);
@@ -29,7 +31,16 @@ public sealed class CompleteTaskHandler(
         if (task is null) return TaskRules.NotFound;
 
         var now = clock.GetUtcNow().UtcDateTime;
-        if (TaskRules.CheckWorkable(task, now) is { } notWorkable) return notWorkable;
+
+        // A replay never completes the task twice, whatever happened to it since.
+        if (command.RequestId is { } requestId && task.CompletionRequestId == requestId)
+            return await TaskMapping.ToDetailAsync(db, task, now, ct);
+
+        var resolved = TaskRules.ResolveWorkTime(command.CompletedAt, now, "task.completed_at_out_of_range", "completedAt");
+        if (resolved.IsFailure) return resolved.Error!;
+        var at = resolved.Value;
+
+        if (TaskRules.CheckWorkable(task, at) is { } notWorkable) return notWorkable;
 
         bool hasFailures;
         if (task.Kind == TaskKind.RecordLog)
@@ -41,13 +52,15 @@ public sealed class CompleteTaskHandler(
         }
         else
         {
-            var submitted = await SubmitEntryAsync(task, command, now, ct);
+            var submitted = await SubmitEntryAsync(task, command, at, ct);
             if (submitted.IsFailure) return submitted.Error!;
             hasFailures = submitted.Value.HasFailures;
             await issues.RaiseForFailuresAsync(task, submitted.Value, now, user.UserId, ct);
         }
 
-        task.Complete(now, user.UserId, hasFailures);
+        task.Complete(at, user.UserId, hasFailures);
+        task.CompletionRequestId = command.RequestId ?? task.CompletionRequestId;
+        task.SyncedAt = command.CompletedAt is null ? null : now;
         await db.SaveChangesAsync(ct);
         return await TaskMapping.ToDetailAsync(db, task, now, ct);
     }
@@ -75,7 +88,7 @@ public sealed class CompleteTaskHandler(
     }
 
     /// <returns>The submitted entry.</returns>
-    private async Task<Result<TaskEntry>> SubmitEntryAsync(SiteTask task, CompleteTaskCommand command, DateTime now, CancellationToken ct)
+    private async Task<Result<TaskEntry>> SubmitEntryAsync(SiteTask task, CompleteTaskCommand command, DateTime at, CancellationToken ct)
     {
         if (TaskRules.CheckKind(task, TaskKind.Checklist, TaskKind.Form) is { } wrongKind) return wrongKind;
 
@@ -102,7 +115,7 @@ public sealed class CompleteTaskHandler(
         entry.Failures = [.. evaluation.Failures];
         entry.PhotoIds = [.. photoIds];
         if (command.Note is not null) entry.Note = command.Note.Trim().NullIfEmpty();
-        entry.SubmittedAt = now;
+        entry.SubmittedAt = at;
         entry.SubmittedById = user.UserId;
         return entry;
     }

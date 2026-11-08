@@ -67,7 +67,7 @@ internal static class TaskMapping
         var entries = task.Entries
             .OrderBy(e => e.CreatedAt).ThenBy(e => e.SubmittedAt)
             .Select(e => new TaskEntryResponse(
-                e.Id, e.Answers, e.PhotoIds, e.Note, e.Failures, e.HasFailures, e.SubmittedAt, e.SubmittedById, Name(e.SubmittedById)))
+                e.Id, e.Answers, e.PhotoIds, e.Note, e.Failures, e.HasFailures, e.SubmittedAt, e.SubmittedById, Name(e.SubmittedById), e.SyncedAt))
             .ToList();
 
         return new TaskDetailResponse(
@@ -75,7 +75,7 @@ internal static class TaskMapping
             task.Fields, task.RequiresApproval, task.RequiresPhoto, task.DepartmentId, task.DueDate, task.DueAt, task.AvailableAt,
             task.IsOverdue(now), task.IsAwaitingApproval, CanCompleteLate(task.Status, task.DueAt, now), task.SnoozeCount,
             task.CompletedAt, task.CompletedById, Name(task.CompletedById), task.CompletedLate, task.HasFailures,
-            task.ApprovedAt, task.ApprovedById, Name(task.ApprovedById), task.ApprovalNote, entries);
+            task.ApprovedAt, task.ApprovedById, Name(task.ApprovedById), task.ApprovalNote, entries, task.SyncedAt);
     }
 
     private static async Task<Dictionary<Guid, string>> UserNamesAsync(IAppDbContext db, IEnumerable<Guid> ids, CancellationToken ct)

@@ -29,4 +29,7 @@ public sealed class Attachment : TenantEntity
 
     /// <summary>Site the file was captured at, so site-scoped members can only see their sites' files.</summary>
     public Guid? SiteId { get; set; }
+
+    /// <summary>Client-generated id that makes replaying an upload safe; unique per creator.</summary>
+    public Guid? RequestId { get; set; }
 }

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { formatTime } from '@/lib/dates'
 import { cn } from '@/lib/utils'
+import { usePendingForTask } from '@/offline/context'
 
 import type { TaskGroupKey, TaskItem } from './groups'
 
@@ -42,6 +43,8 @@ export function TaskCard({
   timeZone: string
 }) {
   const { icon: Icon, className, label } = STYLE[group]
+  const queued = usePendingForTask(task.id)
+  const syncFailed = queued.some((i) => i.status === 'failed')
   const done = group === 'completed' || group === 'awaiting-approval'
 
   return (
@@ -80,6 +83,11 @@ export function TaskCard({
             </Badge>
             {task.hasFailures && <Badge variant="destructive">Failed checks</Badge>}
             {task.canCompleteLate && <Badge variant="outline">Can still be completed</Badge>}
+            {syncFailed ? (
+              <Badge variant="destructive">Sync failed</Badge>
+            ) : (
+              queued.length > 0 && <Badge variant="outline">Waiting to sync</Badge>
+            )}
           </div>
         </div>
       </Card>

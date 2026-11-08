@@ -50,6 +50,31 @@ internal static class TaskRules
             : null;
     }
 
+    /// <summary>
+    /// Resolves a client-supplied work time: UTC, no earlier than <see cref="SiteTask.OfflineGrace"/> ago and at most
+    /// two minutes ahead (clock skew; clamped to <paramref name="now"/>). Null means the work happened now.
+    /// </summary>
+    public static Result<DateTime> ResolveWorkTime(DateTime? supplied, DateTime now, string code, string field)
+    {
+        if (supplied is not { } value) return now;
+
+        value = value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc),
+        };
+        if (value < now - SiteTask.OfflineGrace || value > now + MaxClockSkew)
+        {
+            return Error.Validation(code, "The time is outside the allowed range.",
+                new Dictionary<string, string[]> { [field] = ["The time must be within the last 24 hours and not in the future."] });
+        }
+
+        return value > now ? now : value;
+    }
+
+    private static readonly TimeSpan MaxClockSkew = TimeSpan.FromMinutes(2);
+
     public static Error InvalidAnswers(IReadOnlyList<AnswerProblem> problems) => Error.Validation(
         "task.invalid_answers", "Some answers are not valid.",
         problems.GroupBy(p => $"answers.{p.FieldKey}").ToDictionary(g => g.Key, g => g.Select(p => p.Message).ToArray()));
