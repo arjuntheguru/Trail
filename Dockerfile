@@ -26,7 +26,7 @@ USER $APP_UID
 ENTRYPOINT ["sh", "-c", "exec ./efbundle --connection \"$Database__ConnectionString\""]
 
 # ---- runtime (default target) ----
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS final
 WORKDIR /app
 RUN mkdir -p /app/App_Data/uploads && chown -R $APP_UID:$APP_UID /app/App_Data
 COPY --from=build /app .
