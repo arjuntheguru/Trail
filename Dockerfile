@@ -18,7 +18,7 @@ RUN dotnet tool restore
 RUN dotnet ef migrations bundle -p src/Trail.Infrastructure -s src/Trail.Api \
     -o /bundle/efbundle --self-contained -r linux-x64 --force
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS migrator
+FROM mcr.microsoft.com/dotnet/runtime-deps:11.0 AS migrator
 WORKDIR /migrator
 COPY --from=bundle /bundle/efbundle ./efbundle
 USER $APP_UID
